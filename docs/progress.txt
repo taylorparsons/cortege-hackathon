@@ -1,0 +1,21 @@
+Session: 2026-03-14 13:20
+Agent: Claude Code
+Model: claude-opus-4-6
+Skills: athena
+Feature: 20260314-hackathon-setup
+Input: CR-20260314-1320
+Decisions: D-20260314-1320
+Spec: docs/specs/20260314-hackathon-setup/spec.md
+Tasks: docs/specs/20260314-hackathon-setup/tasks.md
+Goal: Scaffold a Vite+React project around the existing CORTEGE v2 prototype and push to GitHub.
+
+DONE
+
+IN PROGRESS
+- T-001: Scaffold Vite+React project and integrate prototype. (Skills: athena)
+
+NEXT
+- T-002: Push to GitHub
+- T-003: Verify dev server runs
+
+NOTES
