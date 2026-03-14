@@ -10,12 +10,16 @@ Tasks: docs/specs/20260314-hackathon-setup/tasks.md
 Goal: Scaffold a Vite+React project around the existing CORTEGE v2 prototype and push to GitHub.
 
 DONE
+- [2026-03-14 13:25] T-001: Scaffold Vite+React project with existing prototype as main component. (Skills: athena)
+- [2026-03-14 13:26] T-002: Push to GitHub remote. (Skills: athena)
+- [2026-03-14 13:25] T-003: Verify dev server runs (build verified). (Skills: athena)
 
 IN PROGRESS
-- T-001: Scaffold Vite+React project and integrate prototype. (Skills: athena)
 
 NEXT
-- T-002: Push to GitHub
-- T-003: Verify dev server runs
 
 NOTES
+- Commands run: `npm install` -> 64 packages, 0 vulnerabilities
+- Commands run: `npx vite build` -> ✓ built in 414ms, 28 modules transformed
+- Commands run: `git push -u origin main` -> pushed to https://github.com/taylorparsons/cortege-hackathon
+- Commit: 327c90d (T-001 initial scaffold)

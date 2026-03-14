@@ -1,6 +1,6 @@
 # Feature Spec: 20260314-hackathon-setup
 
-Status: Active
+Status: Done
 Created: 2026-03-14 13:20
 Inputs: CR-20260314-1320
 Decisions: D-20260314-1320
