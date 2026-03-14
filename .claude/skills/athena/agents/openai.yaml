@@ -1,0 +1,6 @@
+interface:
+  display_name: "ATHENA Delivery Loop"
+  short_description: "PRD-to-shipped workflow with traceability"
+  icon_small: "./assets/athena-warrior-icon.svg"
+  icon_large: "./assets/athena-warrior-icon.svg"
+  default_prompt: "Use $athena to capture my request, update PRD/specs, and track tasks to completion."
