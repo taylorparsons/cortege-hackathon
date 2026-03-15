@@ -2,14 +2,15 @@
 
 ## D-20260314-1320
 Date: 2026-03-14 13:20
-Inputs: CR-20260314-1320
-PRD: Project Setup
+Inputs: [CR-20260314-1320](requests.md#cr-20260314-1320)
+PRD: [Project Setup](PRD.md#immediate-goals-hackathon)
+Spec: [`specs/20260314-hackathon-setup/spec.md`](specs/20260314-hackathon-setup/spec.md)
 
 Decision:
 Scaffold as a Vite + React project since the existing prototype is a JSX React component. Add a .gitignore for Node.js projects.
 
 Rationale:
-The existing cortege-v2-prototype.jsx imports React hooks and exports a default component — it's designed for a React build pipeline. Vite is the fastest way to get a working dev environment for a hackathon.
+The existing [`cortege-v2-prototype.jsx`](../cortege-v2-prototype.jsx) imports React hooks and exports a default component — it's designed for a React build pipeline. Vite is the fastest way to get a working dev environment for a hackathon.
 
 Alternatives considered:
 - Next.js (rejected because the prototype is a single-page SPA with no routing or SSR needs)
@@ -20,8 +21,9 @@ Acceptance / test:
 
 ## D-20260314-1500
 Date: 2026-03-14 15:00
-Inputs: CR-20260314-1500
-PRD: Skills Setup
+Inputs: [CR-20260314-1500](requests.md#cr-20260314-1500)
+PRD: [Skills Setup](PRD.md#skills-setup-sources-cr-20260314-1500-d-20260314-1500)
+Spec: [`specs/20260314-skill-setup/spec.md`](specs/20260314-skill-setup/spec.md)
 
 Decision:
 Install daisy, verification-before-completion, peas, and skill-creator from global skills into the project. Exclude career-graph-resume-writer, squarespace-brine-7 (irrelevant domains), create-plan (global-only sufficient), and taylor-style-voice (global-only sufficient).
@@ -35,23 +37,24 @@ Rationale:
 
 Alternatives considered:
 - Symlink to global skills (rejected because symlinks break on other machines/CI)
-- Include all global skills (rejected — keeps CLAUDE.md clean and relevant)
+- Include all global skills (rejected — keeps [`CLAUDE.md`](../CLAUDE.md) clean and relevant)
 
 Acceptance / test:
-- Each skill's SKILL.md readable from .claude/skills/<skill>/SKILL.md
-- CLAUDE.md lists all four skills with correct paths and triggers
+- Each skill's SKILL.md readable from `.claude/skills/<skill>/SKILL.md`
+- [`CLAUDE.md`](../CLAUDE.md) lists all four skills with correct paths and triggers
 
 ## D-20260314-1510
 Date: 2026-03-14 15:10
-Inputs: CR-20260314-1510
-PRD: Skills Setup — Superpowers
+Inputs: [CR-20260314-1510](requests.md#cr-20260314-1510)
+PRD: [Skills Setup — Superpowers](PRD.md#superpowers-skills-setup-sources-cr-20260314-1510-d-20260314-1510)
+Spec: [`specs/20260314-superpowers-setup/spec.md`](specs/20260314-superpowers-setup/spec.md)
 
 Decision:
-Copy all 14 non-deprecated superpowers skills from the plugin cache (v5.0.2) into .claude/skills/superpowers/<name>/. Also create a project-level settings.json enabling the superpowers plugin explicitly. Skip deprecated aliases (execute-plan, brainstorm, write-plan).
+Copy all 14 non-deprecated superpowers skills from the plugin cache (v5.0.2) into `.claude/skills/superpowers/<name>/`. Also create a project-level [`settings.json`](../.claude/settings.json) enabling the superpowers plugin explicitly. Skip deprecated aliases (execute-plan, brainstorm, write-plan).
 
 Rationale:
 - Makes the project self-contained — skills work without depending on global plugin state
-- settings.json ensures the plugin is active even if a collaborator's global config differs
+- [`settings.json`](../.claude/settings.json) ensures the plugin is active even if a collaborator's global config differs
 - Copying from the current cached version (5.0.2) pins a known-good snapshot for the hackathon
 
 Alternatives considered:
@@ -59,14 +62,15 @@ Alternatives considered:
 - Rely only on global plugin enablement (rejected — not portable, no local audit trail)
 
 Acceptance / test:
-- All 14 superpowers/*/SKILL.md files present in .claude/skills/superpowers/
-- .claude/settings.json has enabledPlugins.superpowers@claude-plugins-official = true
-- CLAUDE.md lists all skills with triggers
+- All 14 `superpowers/*/SKILL.md` files present in `.claude/skills/superpowers/`
+- [`.claude/settings.json`](../.claude/settings.json) has `enabledPlugins.superpowers@claude-plugins-official = true`
+- [`CLAUDE.md`](../CLAUDE.md) lists all skills with triggers
 
 ## D-20260314-1600
 Date: 2026-03-14 16:00
-Inputs: CR-20260314-1600
-PRD: Agent Orchestration System
+Inputs: [CR-20260314-1600](requests.md#cr-20260314-1600)
+PRD: [Agent Orchestration System](PRD.md#agent-orchestration-system-sources-cr-20260314-1600-d-20260314-1600)
+Design spec: [`superpowers/specs/2026-03-14-agent-orchestration-design.md`](superpowers/specs/2026-03-14-agent-orchestration-design.md)
 
 Decision:
 Event Bus + Agent Pool architecture with Node.js orchestrator and Claude API-powered companion agents. Agents defined as markdown templates (YAML frontmatter for config + markdown body for Claude system prompt). Agent factory pattern for hackathon extensibility.
@@ -86,6 +90,6 @@ Alternatives considered:
 - Code-based agent definition (rejected — too high barrier for hackathon participants)
 
 Acceptance / test:
-- Design spec passes automated review (3 passes)
+- [Design spec](superpowers/specs/2026-03-14-agent-orchestration-design.md) passes automated review (3 passes)
 - Spec covers: template format, architecture, learning system, event model, API contracts, household config, accelerated learning, model config, validation, error handling
 - Architecture supports any use case via swappable agent templates and scenario files
