@@ -23,3 +23,32 @@ NOTES
 - Commands run: `npx vite build` -> ✓ built in 414ms, 28 modules transformed
 - Commands run: `git push -u origin main` -> pushed to https://github.com/taylorparsons/cortege-hackathon
 - Commit: 327c90d (T-001 initial scaffold)
+
+---
+
+Session: 2026-03-14 15:00
+Agent: Claude Code
+Model: claude-opus-4-6
+Skills: athena
+Feature: 20260314-skill-setup
+Input: CR-20260314-1500
+Decisions: D-20260314-1500
+Spec: docs/specs/20260314-skill-setup/spec.md
+Tasks: docs/specs/20260314-skill-setup/tasks.md
+Goal: Install project-local skills (daisy, verification-before-completion, peas, skill-creator) and register them in CLAUDE.md.
+
+DONE
+- [2026-03-14 15:00] T-001: Copy daisy to .claude/skills/daisy/. (Skills: athena)
+- [2026-03-14 15:00] T-002: Copy verification-before-completion to .claude/skills/verification-before-completion/. (Skills: athena)
+- [2026-03-14 15:00] T-003: Copy peas to .claude/skills/peas/. (Skills: athena)
+- [2026-03-14 15:00] T-004: Copy skill-creator to .claude/skills/skill-creator/. (Skills: athena)
+- [2026-03-14 15:00] T-005: Update CLAUDE.md to register all four skills with paths and triggers. (Skills: athena)
+
+IN PROGRESS
+
+NEXT
+
+NOTES
+- Commands run: `cp -r` for all 4 skills -> all SKILL.md files verified present
+- All skills copied from /Users/taylorparsons/.claude/skills/ (not symlinked — portable)
+- Decision: excluded career-graph-resume-writer, squarespace-brine-7, create-plan, taylor-style-voice (see D-20260314-1500)

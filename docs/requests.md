@@ -10,3 +10,15 @@ review the files in the folder, create a project for this hackathon and create, 
 Notes:
 - Existing files: cortege-v2-prototype.jsx (React UI prototype) and GUARDIAN_PRD_v2_Addendum.docx (PRD for Companion Model)
 - Goal: Initialize as a proper project, commit, and push to GitHub
+
+## CR-20260314-1500
+Date: 2026-03-14 15:00
+Source: chat
+
+Request (verbatim):
+setup the skills needed for this project / max effort
+
+Notes:
+- Project is a Vite + React hackathon prototype for an AI security companion product
+- Only athena is currently installed in .claude/skills/
+- Global skills available: daisy, verification-before-completion, peas, skill-creator, taylor-style-voice, create-plan, career-graph-resume-writer, squarespace-brine-7

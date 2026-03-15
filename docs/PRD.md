@@ -13,5 +13,9 @@ See `GUARDIAN_PRD_v2_Addendum.docx` for the full product philosophy and feature 
 - Scaffold a runnable Vite + React project around the existing prototype (Sources: CR-20260314-1320; D-20260314-1320)
 - Push to GitHub at taylorparsons/cortege-hackathon (Sources: CR-20260314-1320)
 
+## Skills Setup (Sources: CR-20260314-1500; D-20260314-1500)
+- Project-local skills installed: `daisy`, `verification-before-completion`, `peas`, `skill-creator` (Sources: CR-20260314-1500; D-20260314-1500)
+- All skills registered in `CLAUDE.md` with paths and triggers (Sources: CR-20260314-1500)
+
 ## Next / Backlog
 - TBD — awaiting next hackathon session priorities
