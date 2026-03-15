@@ -33,3 +33,18 @@ add in all superskills
 Notes:
 - "superskills" interpreted as the superpowers plugin skills (superpowers@claude-plugins-official)
 - Plugin is globally enabled; user wants them added to the project
+
+## CR-20260314-1600
+Date: 2026-03-14 16:00
+Source: chat
+
+Request (verbatim):
+use the superpowers to brain storm on how create the group of agents that will run based on events and timing that will report back and a central orchestrator to interact with the user to assure that the account is protected. read the documentation to get the scope and offer options and of course work with Athena
+
+Notes:
+- User wants to design the companion agent system from the GUARDIAN PRD v2
+- Agents should be event-driven and time-driven with a central orchestrator
+- Must support hackathon participants creating new agents from a pattern
+- Twilio integration for real inbound calls (account exists, plug in later)
+- Demo should show agents learning over time
+- Scope narrowed to: architecture design + lightweight PoC, one fully working agent, agent factory pattern for extensibility

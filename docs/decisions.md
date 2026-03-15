@@ -62,3 +62,30 @@ Acceptance / test:
 - All 14 superpowers/*/SKILL.md files present in .claude/skills/superpowers/
 - .claude/settings.json has enabledPlugins.superpowers@claude-plugins-official = true
 - CLAUDE.md lists all skills with triggers
+
+## D-20260314-1600
+Date: 2026-03-14 16:00
+Inputs: CR-20260314-1600
+PRD: Agent Orchestration System
+
+Decision:
+Event Bus + Agent Pool architecture with Node.js orchestrator and Claude API-powered companion agents. Agents defined as markdown templates (YAML frontmatter for config + markdown body for Claude system prompt). Agent factory pattern for hackathon extensibility.
+
+Rationale:
+- Event Bus + Agent Pool is the simplest architecture that demonstrates real patterns without production-scale complexity (vs. Actor Model or Pipeline alternatives)
+- Hybrid runtime (Node.js plumbing + Claude intelligence) matches the product vision where companions are genuinely intelligent, not rule-based
+- Markdown templates chosen over config-only or code-based approaches because hackathon participants are comfortable with structured markdown, it's self-documenting, and it mirrors the existing skills pattern
+- Agent factory pattern (vs. self-generating agents) is buildable and demoable at a hackathon while establishing the extensibility story
+- One fully working agent for PoC (vs. all three) tells a better demo story and proves the factory pattern works
+
+Alternatives considered:
+- Actor Model / agent-per-process (rejected — overkill for PoC, IPC debugging too complex for hackathon pace)
+- Pipeline Architecture (rejected — too rigid for household coordination which is graph-shaped, not linear)
+- Self-generating agents (rejected — unreliable for hackathon, factory pattern proves extensibility without the risk)
+- Config-only agent definition (rejected — less expressive than markdown for defining agent personality and reasoning)
+- Code-based agent definition (rejected — too high barrier for hackathon participants)
+
+Acceptance / test:
+- Design spec passes automated review (3 passes)
+- Spec covers: template format, architecture, learning system, event model, API contracts, household config, accelerated learning, model config, validation, error handling
+- Architecture supports any use case via swappable agent templates and scenario files

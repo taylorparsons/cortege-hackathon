@@ -22,5 +22,23 @@ See `GUARDIAN_PRD_v2_Addendum.docx` for the full product philosophy and feature 
 - `.claude/settings.json` enables plugin explicitly (Sources: CR-20260314-1510)
 - CLAUDE.md updated with full skill registry (Sources: CR-20260314-1510)
 
+## Agent Orchestration System (Sources: CR-20260314-1600; D-20260314-1600)
+- Design spec completed and approved: `docs/superpowers/specs/2026-03-14-agent-orchestration-design.md`
+- Architecture: Event Bus + Agent Pool — Node.js orchestrator + Claude API-powered companion agents
+- Agent templates defined as markdown files (YAML frontmatter + markdown body → Claude system prompt)
+- Hackathon participants create new agent types by writing an `agent.md` file — no code required
+- Agent factory pattern: scans `agents/` directory, parses templates, instantiates per household member
+- Per-agent-instance JSON memory store for behavioral learning (4 maturity stages: Baseline → Pattern Recognition → Predictive → Cortege Mode)
+- Event ingestion: simulator (default), manual injection API, Twilio voice webhook (plug in later)
+- Orchestrator exposes REST + WebSocket API to React frontend
+- Escalation handler routes agent decisions by threat level (L0-L4)
+- Accelerated learning mode for hackathon demos via env var configuration
+
 ## Next / Backlog
-- TBD — awaiting next hackathon session priorities
+- Create implementation plan from agent orchestration design spec (invoke `superpowers:writing-plans`)
+- Build the agent framework (server-side: orchestrator, event bus, agent factory, memory store, Claude integration)
+- Build agent templates (ANCHOR, SCOUT, SENTINEL + starter template)
+- Create demo scenarios for event simulator
+- Wire React UI to backend via WebSocket for live agent status
+- Plug in Twilio voice webhook when account is configured
+- Decide final demo use case
