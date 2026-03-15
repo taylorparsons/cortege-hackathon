@@ -40,3 +40,25 @@ Alternatives considered:
 Acceptance / test:
 - Each skill's SKILL.md readable from .claude/skills/<skill>/SKILL.md
 - CLAUDE.md lists all four skills with correct paths and triggers
+
+## D-20260314-1510
+Date: 2026-03-14 15:10
+Inputs: CR-20260314-1510
+PRD: Skills Setup — Superpowers
+
+Decision:
+Copy all 14 non-deprecated superpowers skills from the plugin cache (v5.0.2) into .claude/skills/superpowers/<name>/. Also create a project-level settings.json enabling the superpowers plugin explicitly. Skip deprecated aliases (execute-plan, brainstorm, write-plan).
+
+Rationale:
+- Makes the project self-contained — skills work without depending on global plugin state
+- settings.json ensures the plugin is active even if a collaborator's global config differs
+- Copying from the current cached version (5.0.2) pins a known-good snapshot for the hackathon
+
+Alternatives considered:
+- Symlink to plugin cache (rejected — paths are machine-specific)
+- Rely only on global plugin enablement (rejected — not portable, no local audit trail)
+
+Acceptance / test:
+- All 14 superpowers/*/SKILL.md files present in .claude/skills/superpowers/
+- .claude/settings.json has enabledPlugins.superpowers@claude-plugins-official = true
+- CLAUDE.md lists all skills with triggers

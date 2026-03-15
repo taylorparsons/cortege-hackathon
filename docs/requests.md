@@ -22,3 +22,14 @@ Notes:
 - Project is a Vite + React hackathon prototype for an AI security companion product
 - Only athena is currently installed in .claude/skills/
 - Global skills available: daisy, verification-before-completion, peas, skill-creator, taylor-style-voice, create-plan, career-graph-resume-writer, squarespace-brine-7
+
+## CR-20260314-1510
+Date: 2026-03-14 15:10
+Source: chat
+
+Request (verbatim):
+add in all superskills
+
+Notes:
+- "superskills" interpreted as the superpowers plugin skills (superpowers@claude-plugins-official)
+- Plugin is globally enabled; user wants them added to the project

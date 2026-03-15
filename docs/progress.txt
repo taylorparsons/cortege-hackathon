@@ -26,6 +26,33 @@ NOTES
 
 ---
 
+Session: 2026-03-14 15:10
+Agent: Claude Code
+Model: claude-opus-4-6
+Skills: athena
+Feature: 20260314-superpowers-setup
+Input: CR-20260314-1510
+Decisions: D-20260314-1510
+Spec: docs/specs/20260314-superpowers-setup/spec.md
+Tasks: docs/specs/20260314-superpowers-setup/tasks.md
+Goal: Copy all 14 superpowers plugin skills into the project and enable via settings.json.
+
+DONE
+- [2026-03-14 15:10] T-001: Copy all 14 superpowers skills to .claude/skills/superpowers/. (Skills: athena)
+- [2026-03-14 15:10] T-002: Create .claude/settings.json enabling superpowers plugin. (Skills: athena)
+- [2026-03-14 15:10] T-003: Update CLAUDE.md with all 14 superpowers skills. (Skills: athena)
+
+IN PROGRESS
+
+NEXT
+
+NOTES
+- Source: /Users/taylorparsons/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.2/skills/
+- All 14 non-deprecated skills copied; deprecated aliases (execute-plan, brainstorm, write-plan) excluded
+- settings.json added at .claude/settings.json (new file)
+
+---
+
 Session: 2026-03-14 15:00
 Agent: Claude Code
 Model: claude-opus-4-6

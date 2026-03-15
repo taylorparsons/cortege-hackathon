@@ -17,5 +17,10 @@ See `GUARDIAN_PRD_v2_Addendum.docx` for the full product philosophy and feature 
 - Project-local skills installed: `daisy`, `verification-before-completion`, `peas`, `skill-creator` (Sources: CR-20260314-1500; D-20260314-1500)
 - All skills registered in `CLAUDE.md` with paths and triggers (Sources: CR-20260314-1500)
 
+## Superpowers Skills Setup (Sources: CR-20260314-1510; D-20260314-1510)
+- All 14 superpowers plugin skills copied to `.claude/skills/superpowers/` (Sources: CR-20260314-1510)
+- `.claude/settings.json` enables plugin explicitly (Sources: CR-20260314-1510)
+- CLAUDE.md updated with full skill registry (Sources: CR-20260314-1510)
+
 ## Next / Backlog
 - TBD — awaiting next hackathon session priorities
