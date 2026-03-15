@@ -22,3 +22,4 @@ Start here:
 | Skill Setup | [`specs/20260314-skill-setup/spec.md`](specs/20260314-skill-setup/spec.md) | Project-local skills spec |
 | Superpowers Setup | [`specs/20260314-superpowers-setup/spec.md`](specs/20260314-superpowers-setup/spec.md) | Superpowers plugin skills spec |
 | Agent Orchestration | [`superpowers/specs/2026-03-14-agent-orchestration-design.md`](superpowers/specs/2026-03-14-agent-orchestration-design.md) | Agent system design spec |
+| Agent Diagrams | [`superpowers/specs/2026-03-14-agent-orchestration-diagrams.md`](superpowers/specs/2026-03-14-agent-orchestration-diagrams.md) | Mermaid system diagrams |

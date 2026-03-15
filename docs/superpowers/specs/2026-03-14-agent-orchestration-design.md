@@ -3,6 +3,7 @@
 **Date:** 2026-03-14
 **Status:** Draft
 **Scope:** Architecture design + lightweight proof-of-concept for the CORTEGE companion agent system
+**Diagrams:** [System Diagrams](2026-03-14-agent-orchestration-diagrams.md)
 
 ## Summary
 
