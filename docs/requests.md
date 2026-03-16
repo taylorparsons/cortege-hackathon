@@ -56,3 +56,59 @@ Notes:
 - Twilio integration for real inbound calls (account exists, plug in later)
 - Demo should show agents learning over time
 - Scope narrowed to: architecture design + lightweight PoC, one fully working agent, agent factory pattern for extensibility
+## CR-20260314-1600
+Date: 2026-03-14 16:00
+Source: chat
+Decision: [D-20260314-1600](decisions.md#d-20260314-1600)
+Design spec: [`superpowers/specs/2026-03-14-agent-orchestration-design.md`](superpowers/specs/2026-03-14-agent-orchestration-design.md)
+
+Request (verbatim):
+use the superpowers to brain storm on how create the group of agents that will run based on events and timing that will report back and a central orchestrator to interact with the user to assure that the account is protected. read the documentation to get the scope and offer options and of course work with Athena
+
+Notes:
+- User wants to design the companion agent system from the [GUARDIAN PRD v2](../GUARDIAN_PRD_v2_Addendum.docx)
+- Agents should be event-driven and time-driven with a central orchestrator
+- Must support hackathon participants creating new agents from a pattern
+- Twilio integration for real inbound calls (account exists, plug in later)
+- Demo should show agents learning over time
+- Scope narrowed to: architecture design + lightweight PoC, one fully working agent, agent factory pattern for extensibility
+
+## CR-20260315-1155
+Date: 2026-03-15 11:55
+Source: chat
+
+Request (verbatim):
+what type of storage would be a good fit for this?
+
+Notes:
+- User asked about storage options for the agent orchestration system design
+
+## CR-20260315-1202
+Date: 2026-03-15 12:02
+Source: chat
+
+Request (verbatim):
+the system needs to be auditable
+
+Notes:
+- User added auditability as a non-functional requirement
+
+## CR-20260315-1203
+Date: 2026-03-15 12:03
+Source: chat
+
+Request (verbatim):
+what about a mern stack ?
+
+Notes:
+- User asked about MERN stack as an alternative architecture
+
+## CR-20260315-1252
+Date: 2026-03-15 12:52
+Source: chat
+
+Request (verbatim):
+will graph dp help as a knowledge store?
+
+Notes:
+- User asked about graph databases for the knowledge store

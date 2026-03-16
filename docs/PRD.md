@@ -34,6 +34,22 @@ See [`GUARDIAN_PRD_v2_Addendum.docx`](../GUARDIAN_PRD_v2_Addendum.docx) for the 
 - Escalation handler routes agent decisions by threat level (L0-L4)
 - Accelerated learning mode for hackathon demos via env var configuration
 
+## Storage (Sources: [CR-20260315-1155](requests.md#cr-20260315-1155); [D-20260315-1155](decisions.md#d-20260315-1155))
+- PoC: JSON files (`data/events/YYYY-MM-DD.jsonl`, `data/memories/<agent>-<member>.json`)
+- Production: SQLite with JSON1 extension for reliability and query capabilities
+- Rationale: JSON files match current design, human-readable for debugging, low event volume in demo
+
+## Auditability (Sources: [CR-20260315-1202](requests.md#cr-20260315-1202); [D-20260315-1202](decisions.md#d-20260315-1202))
+- Immutable event log with hash chain for tamper evidence
+- SQLite with triggers enforces append-only
+- Query capability for audit trails ("show all decisions for member X")
+- Full replayability of events
+
+## Architecture Decisions (Sources: [CR-20260315-1203](requests.md#cr-20260315-1203); [CR-20260315-1252](requests.md#cr-20260315-1252); [D-20260315-1203](decisions.md#d-20260315-1203); [D-20260315-1252](decisions.md#d-20260315-1252))
+- MERN stack: Overkill — rejected for PoC
+- Graph DB: Future enhancement for relationship queries (e.g., threat pattern analysis across members)
+- Current design (Node.js + JSON/SQLite) is simpler, more auditable, and easier to demo
+
 ## Traceability
 See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail across docs.
 

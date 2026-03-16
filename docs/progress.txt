@@ -79,3 +79,36 @@ NOTES
 - Commands run: `cp -r` for all 4 skills -> all SKILL.md files verified present
 - All skills copied from /Users/taylorparsons/.claude/skills/ (not symlinked — portable)
 - Decision: excluded career-graph-resume-writer, squarespace-brine-7, create-plan, taylor-style-voice (see D-20260314-1500)
+NOTES
+- Commands run: `cp -r` for all 4 skills -> all SKILL.md files verified present
+- All skills copied from /Users/taylorparsons/.claude/skills/ (not symlinked — portable)
+- Decision: excluded career-graph-resume-writer, squarespace-brine-7, create-plan, taylor-style-voice (see D-20260314-1500)
+
+---
+
+Session: 2026-03-15 11:55
+Agent: Kiro CLI
+Model: claude-sonnet-4-6
+Skills: athena
+Feature: 20260315-storage-auditability
+Input: CR-20260315-1155, CR-20260315-1202, CR-20260315-1203, CR-20260315-1252
+Decisions: D-20260315-1155, D-20260315-1202, D-20260315-1203, D-20260315-1252
+Spec: docs/specs/20260314-agent-orchestration-design.md
+Goal: Review storage options and auditability requirements for agent orchestration system
+
+DONE
+- [2026-03-15 11:55] T-001: Review storage options (JSON files vs SQLite vs MERN vs Graph DB). (Skills: athena)
+- [2026-03-15 11:55] T-002: Document auditability requirements. (Skills: athena)
+- [2026-03-15 11:55] T-003: Update PRD with storage and auditability decisions. (Skills: athena)
+
+IN PROGRESS
+
+NEXT
+
+NOTES
+- Storage: Keep JSON files for PoC, SQLite with JSON1 for production
+- Auditability: SQLite with hash chain for tamper-evident events
+- MERN stack: Overkill — rejected
+- Graph DB: Future enhancement for relationship queries
+- Commands run: Read design spec, PRD, progress.txt
+- Commands run: Updated docs/requests.md, docs/decisions.md, docs/progress.txt

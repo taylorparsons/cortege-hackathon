@@ -1,0 +1,4 @@
+interface:
+  display_name: "daisy"
+  short_description: "Build UI/UX with Tailwind and DaisyUI."
+  default_prompt: "Create or update UI/UX using Tailwind CSS and DaisyUI; use DaisyUI components and themes, Tailwind utilities for layout, and follow repo conventions."

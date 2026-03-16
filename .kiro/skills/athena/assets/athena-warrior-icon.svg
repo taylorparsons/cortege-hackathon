@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="ATHENA warrior icon">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F1F3D"/>
+      <stop offset="100%" stop-color="#2A4F8B"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F6E7B0"/>
+      <stop offset="100%" stop-color="#C9A24A"/>
+    </linearGradient>
+    <linearGradient id="crest" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D94B3D"/>
+      <stop offset="100%" stop-color="#9E261D"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="128" cy="128" r="118" fill="url(#bg)" stroke="#E6C978" stroke-width="8"/>
+  <path d="M87 120c0-34 18-54 41-61 23 7 41 27 41 61v43H87z" fill="url(#metal)" stroke="#8B6A2E" stroke-width="4"/>
+  <path d="M128 41l-20 23h40z" fill="url(#crest)"/>
+  <path d="M99 63h58l-6 22h-46z" fill="url(#crest)"/>
+  <rect x="118" y="96" width="20" height="74" rx="10" fill="#8B6A2E"/>
+  <path d="M84 169h88l-12 23H96z" fill="#8B6A2E"/>
+  <path d="M194 44l10 18-10 16V212h-13V78l-10-16 10-18z" fill="url(#metal)" stroke="#8B6A2E" stroke-width="3"/>
+  <circle cx="109" cy="127" r="6" fill="#203657"/>
+  <circle cx="147" cy="127" r="6" fill="#203657"/>
+</svg>
