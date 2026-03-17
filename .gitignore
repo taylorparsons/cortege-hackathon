@@ -3,3 +3,10 @@ dist
 .DS_Store
 *.local
 .superpowers/
+
+# Runtime data (gitignored, except household config)
+data/memories/
+data/events/
+
+# Environment variables
+.env

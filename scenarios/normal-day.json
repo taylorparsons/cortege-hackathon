@@ -1,0 +1,57 @@
+{
+  "name": "normal-day",
+  "description": "4-event baseline sequence showing normal household activity for Mom. Used to establish behavioral patterns before running threat scenarios.",
+  "target_member": "member_002",
+  "learning_boost": 2,
+  "events": [
+    {
+      "delay_ms": 0,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-0101",
+          "caller_name": "Taylor",
+          "duration_seconds": 240,
+          "transcript": "Good morning Mom! Just wanted to check in before work. Did you sleep okay? Don't forget your 10am appointment today. Love you, talk later!"
+        }
+      }
+    },
+    {
+      "delay_ms": 2000,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-0300",
+          "caller_name": "Dr. Patel's Office",
+          "duration_seconds": 60,
+          "transcript": "Hello, this is a reminder call from Dr. Patel's office. You have an appointment scheduled for tomorrow at 10am. Please call us at 555-0300 if you need to reschedule. Thank you!"
+        }
+      }
+    },
+    {
+      "delay_ms": 2000,
+      "event": {
+        "type": "financial_transaction",
+        "payload": {
+          "merchant": "Safeway",
+          "amount": 47.23,
+          "category": "grocery",
+          "payment_method": "debit_card",
+          "location": "Seattle, WA"
+        }
+      }
+    },
+    {
+      "delay_ms": 2000,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-0202",
+          "caller_name": "Alex",
+          "duration_seconds": 120,
+          "transcript": "Goodnight Grandma! I got an A on my math test today. Dad says hi. Sweet dreams, love you!"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "_comment": "Copy this file to scenarios/my-scenario.json and edit it. Remove the _comment fields before use.",
+  "name": "my-scenario",
+  "description": "Description of what this scenario demonstrates",
+  "target_member": "member_001",
+  "learning_boost": 1,
+  "events": [
+    {
+      "_comment": "delay_ms: milliseconds to wait before firing this event (relative to the previous event). First event is typically 0.",
+      "delay_ms": 0,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-0000",
+          "caller_name": "Example Caller",
+          "duration_seconds": 60,
+          "transcript": "Example transcript"
+        }
+      }
+    }
+  ]
+}

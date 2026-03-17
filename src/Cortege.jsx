@@ -1,4 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { EventFeed } from "./components/EventFeed.jsx";
+import { AgentStatus } from "./components/AgentStatus.jsx";
+import { ScenarioRunner } from "./components/ScenarioRunner.jsx";
+import { EventInjector } from "./components/EventInjector.jsx";
+import { MemoryViewer } from "./components/MemoryViewer.jsx";
+
+const WS_URL = "ws://localhost:3001/ws";
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap');`;
 
@@ -401,6 +408,32 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .compare-item:last-child { border-bottom: none; }
 .compare-item strong { color: var(--text); }
 
+/* ── LIVE FEED TAB ── */
+.live-feed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.live-panel {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px 24px;
+}
+.live-panel-title {
+  font-family: var(--serif); font-size: 17px; color: var(--cream);
+  margin-bottom: 16px;
+}
+
+/* ── TOAST ── */
+.toast-banner {
+  position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+  z-index: 300; padding: 12px 24px; border-radius: 12px;
+  background: rgba(220,80,60,0.92); border: 1px solid rgba(220,80,60,0.5);
+  color: #fff; font-size: 13px; font-family: var(--sans);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  animation: toastIn 0.25s ease;
+  max-width: 480px; text-align: center;
+}
+@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(-8px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
+/* ── PULSE DOT VARIANTS ── */
+.pulse-dot-amber { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); animation: breathe 2s ease-in-out infinite; }
+
 /* ── SCROLL ── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -759,6 +792,94 @@ export default function Cortege() {
   const [modal, setModal] = useState(null);
   const [time, setTime] = useState(new Date().toLocaleTimeString());
 
+  // ── WebSocket state ──────────────────────────────────────────────────────
+  const [wsConnected, setWsConnected] = useState(false);
+  const [liveEvents, setLiveEvents] = useState([]);
+  const [toast, setToast] = useState(null);
+  const [processingStates, setProcessingStates] = useState(new Map());
+  const [liveCompanions, setLiveCompanions] = useState([]);
+  const wsRef = useRef(null);
+  const reconnectTimer = useRef(null);
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  }, []);
+
+  const connectWs = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState < 2) return; // already open/connecting
+
+    const socket = new WebSocket(WS_URL);
+    wsRef.current = socket;
+
+    socket.onopen = () => {
+      setWsConnected(true);
+      if (reconnectTimer.current) {
+        clearTimeout(reconnectTimer.current);
+        reconnectTimer.current = null;
+      }
+    };
+
+    socket.onmessage = (e) => {
+      let msg;
+      try { msg = JSON.parse(e.data); } catch { return; }
+      const { event, data } = msg;
+
+      if (event === "event:received") {
+        setLiveEvents(prev => [data, ...prev].slice(0, 50));
+      } else if (event === "escalation:fired") {
+        const level = data?.level ?? data?.escalation_level ?? "";
+        const member = data?.member_id ?? data?.target_member ?? "";
+        showToast(`🚨 Escalation L${level} — ${member}`);
+      } else if (event === "stage:transition") {
+        setLiveCompanions(prev => prev.map(c =>
+          c.instanceId === data?.instanceId
+            ? { ...c, stage: data.newStage ?? data.stage ?? c.stage }
+            : c
+        ));
+      } else if (event === "agent:processing") {
+        setProcessingStates(prev => {
+          const next = new Map(prev);
+          next.set(data?.instanceId, true);
+          return next;
+        });
+      } else if (event === "agent:response" || event === "agent:error") {
+        setProcessingStates(prev => {
+          const next = new Map(prev);
+          next.set(data?.instanceId, false);
+          return next;
+        });
+      } else if (event === "companion:status") {
+        setLiveCompanions(prev => {
+          const idx = prev.findIndex(c => c.instanceId === data?.instanceId);
+          if (idx === -1) return [...prev, data];
+          const next = [...prev];
+          next[idx] = { ...next[idx], ...data };
+          return next;
+        });
+      }
+    };
+
+    socket.onclose = () => {
+      setWsConnected(false);
+      reconnectTimer.current = setTimeout(connectWs, 3000);
+    };
+
+    socket.onerror = () => {
+      setWsConnected(false);
+      socket.close();
+    };
+  }, [showToast]);
+
+  useEffect(() => {
+    connectWs();
+    return () => {
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [connectWs]);
+  // ────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     const t = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(t);
@@ -783,6 +904,7 @@ export default function Cortege() {
               { id: "household", label: "Household" },
               { id: "network", label: "Companion Network" },
               { id: "philosophy", label: "The Model" },
+              { id: "livefeed", label: "Live Feed" },
             ].map(t => (
               <button key={t.id} className={`nav-tab ${tab === t.id ? "active" : ""}`} onClick={() => { setTab(t.id); setSelected(null); }}>
                 {t.label}
@@ -790,8 +912,8 @@ export default function Cortege() {
             ))}
           </div>
           <div className="nav-status">
-            <div className="pulse-dot" />
-            <span>All companions active</span>
+            <div className={wsConnected ? "pulse-dot" : "pulse-dot-amber"} />
+            <span>{wsConnected ? "All companions active" : "Backend offline"}</span>
             <span style={{ marginLeft: 8, color: "var(--muted2)" }}>{time}</span>
           </div>
         </nav>
@@ -840,10 +962,21 @@ export default function Cortege() {
 
               {/* Detail panel */}
               {selected && (
-                <DetailPanel
-                  c={selected}
-                  onControl={(btn) => setModal(CONTROL_MODALS[btn.key])}
-                />
+                <>
+                  <DetailPanel
+                    c={selected}
+                    onControl={(btn) => setModal(CONTROL_MODALS[btn.key])}
+                  />
+                  <div style={{
+                    background: "var(--bg2)", border: "1px solid var(--border)",
+                    borderRadius: 20, padding: "24px 32px", marginBottom: 36,
+                  }}>
+                    <MemoryViewer
+                      companionId={selected.id}
+                      companionName={selected.name}
+                    />
+                  </div>
+                </>
               )}
 
               {!selected && (
@@ -869,6 +1002,37 @@ export default function Cortege() {
               <PhilosophyView />
             </>
           )}
+
+          {tab === "livefeed" && (
+            <>
+              <div className="section-eyebrow">Real-Time Backend</div>
+              <div className="section-title">Live Feed</div>
+
+              {/* Top row: EventFeed + AgentStatus */}
+              <div className="live-feed-grid">
+                <div className="live-panel">
+                  <div className="live-panel-title">Event Stream</div>
+                  <EventFeed events={liveEvents} wsConnected={wsConnected} />
+                </div>
+                <div className="live-panel">
+                  <div className="live-panel-title">Agent Status</div>
+                  <AgentStatus companions={liveCompanions} processingStates={processingStates} />
+                </div>
+              </div>
+
+              {/* Bottom row: ScenarioRunner + EventInjector */}
+              <div className="live-feed-grid">
+                <div className="live-panel">
+                  <div className="live-panel-title">Scenario Runner</div>
+                  <ScenarioRunner />
+                </div>
+                <div className="live-panel">
+                  <div className="live-panel-title">Event Injector</div>
+                  <EventInjector />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -881,6 +1045,10 @@ export default function Cortege() {
             <button className="modal-btn" onClick={() => setModal(null)}>Close</button>
           </div>
         </div>
+      )}
+
+      {toast && (
+        <div className="toast-banner">{toast}</div>
       )}
     </>
   );

@@ -1,0 +1,33 @@
+{
+  "household_id": "hh_parsons_001",
+  "name": "The Parsons Household",
+  "location": "Seattle, WA",
+  "created": "2026-03-14T10:00:00Z",
+  "members": [
+    {
+      "id": "member_001",
+      "name": "Alex",
+      "age": 14,
+      "profile_type": "child",
+      "companion": "scout",
+      "is_primary": false
+    },
+    {
+      "id": "member_002",
+      "name": "Mom",
+      "age": 71,
+      "profile_type": "senior",
+      "companion": "anchor",
+      "is_primary": false,
+      "primary_contact": "member_003"
+    },
+    {
+      "id": "member_003",
+      "name": "Taylor",
+      "age": 38,
+      "profile_type": "adult",
+      "companion": "sentinel",
+      "is_primary": true
+    }
+  ]
+}

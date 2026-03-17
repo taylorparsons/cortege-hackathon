@@ -1,0 +1,68 @@
+{
+  "name": "grandparent-scam",
+  "description": "5-event demo sequence: two normal baseline calls establish trusted contacts, then three escalating scam attempts demonstrate the full learning arc from anomaly detection to confirmed threat.",
+  "target_member": "member_002",
+  "learning_boost": 5,
+  "events": [
+    {
+      "delay_ms": 0,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-0101",
+          "caller_name": "Taylor",
+          "duration_seconds": 180,
+          "transcript": "Hi Mom, just checking in. How was your doctor appointment? Love you!"
+        }
+      }
+    },
+    {
+      "delay_ms": 2000,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-0202",
+          "caller_name": "Alex",
+          "duration_seconds": 90,
+          "transcript": "Grandma, can you come to my soccer game Saturday?"
+        }
+      }
+    },
+    {
+      "delay_ms": 2000,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-8888",
+          "caller_name": null,
+          "duration_seconds": 45,
+          "transcript": "Hello, this is Medicare calling about your benefits. Can you confirm your Social Security number?"
+        }
+      }
+    },
+    {
+      "delay_ms": 2000,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-9998",
+          "caller_name": null,
+          "duration_seconds": 60,
+          "transcript": "Hi, I'm calling from your bank. We've detected unusual activity. I need your account number to verify your identity."
+        }
+      }
+    },
+    {
+      "delay_ms": 2000,
+      "event": {
+        "type": "inbound_call",
+        "payload": {
+          "caller_id": "+1-555-9999",
+          "caller_name": null,
+          "duration_seconds": 45,
+          "transcript": "Grandma? It's me, your grandson. I'm in trouble and I need help right now. Please don't tell Mom. Can you send $2,000 in gift cards? I'll pay you back, I promise."
+        }
+      }
+    }
+  ]
+}
