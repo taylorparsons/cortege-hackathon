@@ -60,11 +60,25 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 | [`progress.txt`](progress.txt) | Execution log of completed sessions |
 | [`specs/`](specs/) | Feature specifications and task lists |
 
+## Agent Orchestration Implementation (Sources: [CR-20260317-1400](requests.md#cr-20260317-1400); [D-20260317-1400](decisions.md#d-20260317-1400))
+- Implementation spec created: [`.kiro/specs/agent-orchestration-implementation/requirements.md`](../.kiro/specs/agent-orchestration-implementation/requirements.md)
+- Task breakdown: [`.kiro/specs/agent-orchestration-implementation/tasks.md`](../.kiro/specs/agent-orchestration-implementation/tasks.md)
+- 48 functional requirements, 15 non-functional requirements, 10 edge cases
+- 10 implementation phases: Foundation → Agent Instances → Claude Integration → Escalation → Ingestion → API → Scheduler → Templates → Frontend → Testing
+- Estimated effort: 10-17 days (2-3.5 weeks)
+
 ## Next / Backlog
-- Create implementation plan from [agent orchestration design spec](superpowers/specs/2026-03-14-agent-orchestration-design.md) (invoke `superpowers:writing-plans`)
-- Build the agent framework (server-side: orchestrator, event bus, agent factory, memory store, Claude integration)
-- Build agent templates (ANCHOR, SCOUT, SENTINEL + starter template)
-- Create demo scenarios for event simulator
-- Wire React UI to backend via WebSocket for live agent status
+- Execute implementation tasks from [agent orchestration spec](../.kiro/specs/agent-orchestration-implementation/tasks.md)
+- Decide final demo use case (ANCHOR/grandparent scam is designed but team may choose different scenario)
 - Plug in Twilio voice webhook when account is configured
-- Decide final demo use case
+
+## Agent Orchestration Implementation (Sources: [CR-20260317-1400](requests.md#cr-20260317-1400))
+- Implementation spec created: [`.kiro/specs/agent-orchestration-implementation/requirements.md`](../.kiro/specs/agent-orchestration-implementation/requirements.md)
+- Derived from design documents: [`2026-03-14-agent-orchestration-design.md`](superpowers/specs/2026-03-14-agent-orchestration-design.md), [`2026-03-14-agent-orchestration-diagrams.md`](superpowers/specs/2026-03-14-agent-orchestration-diagrams.md)
+- 48 functional requirements covering: agent templates, event bus, Claude integration, memory store, escalation, ingestion, API, household config, accelerated learning, scheduler
+- 15 non-functional requirements covering: performance, reliability, auditability, extensibility, security
+- 10 edge cases documented
+- 10 implementation phases with 100+ tasks
+- Estimated effort: 10-17 days (2-3.5 weeks)
+- Success criteria: All requirements verified, demo scenario runs successfully, hackathon participants can create new agents via markdown files
+
