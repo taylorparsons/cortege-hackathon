@@ -240,3 +240,74 @@ Acceptance / test:
 - parseAgentResponse accepts responses without event_id/agent/instance/stage_check
 - agent-instance backfills those fields before passing to escalation handler
 - callClaude sends system message array with cache_control when templateBody is provided
+
+## D-20260318-1100
+Date: 2026-03-18 11:00
+Inputs: CR-20260318-1000
+PRD: [Cost Optimization](PRD.md#cost-optimization)
+
+Decision:
+Add CLAUDE_DEBUG environment variable to claude-client.js that logs cache hit/miss status, input/output token counts, cache_creation_input_tokens, and cache_read_input_tokens per API call. Also logs SDK usage keys and system message type on first call for diagnostics.
+
+Rationale:
+- Prompt caching showed `cache=NONE` on all calls with no visibility into why
+- Need to verify: (a) SDK returns cache fields, (b) system message is sent as array, (c) token counts are as expected
+- Debug mode must be opt-in to avoid noisy production logs
+- One-time diagnostic (usage keys, system type) helps verify SDK + API compatibility without repeated noise
+
+Alternatives considered:
+- Always-on logging (rejected — too noisy for production/demo)
+- Separate debug script (rejected — need to observe real API calls in context)
+
+Acceptance / test:
+- `CLAUDE_DEBUG=1` shows per-call cache status, token counts, and one-time SDK diagnostics
+- No output when CLAUDE_DEBUG is unset
+
+## D-20260318-1130
+Date: 2026-03-18 11:30
+Inputs: CR-20260318-1000
+PRD: [Cost Optimization](PRD.md#cost-optimization)
+
+Decision:
+Add Array.isArray guards for actions and signals in both agent-instance.js (before downstream processing) and escalation-handler.js (_processActions entry). When Claude returns these fields as free-text strings instead of arrays, coerce to empty arrays with a console.warn.
+
+Rationale:
+- Claude nondeterministically returned `actions` as a free-text string ("Log this event and monitor the caller for future reference.") instead of an array of action objects
+- `for (const action of "string")` iterates individual characters, where `char.type === undefined`
+- This produced hundreds of `Unknown action type "undefined"` log lines per event — a "wall of text" bug that cost real money in a live API test
+- Defense in depth: guard in agent-instance.js (before backfill) AND escalation-handler.js (at consumption point)
+
+Alternatives considered:
+- Strict schema validation that rejects string responses (rejected — would lose the assessment data; better to log warning and continue)
+- Only guard in one location (rejected — defense in depth is warranted given the cost of the failure mode)
+
+Acceptance / test:
+- Regression tests: escalation handler skips string actions without throw; parseAgentResponse + backfill coerces strings to arrays
+- 111 tests pass (110 + 1 skipped)
+
+## D-20260318-1200
+Date: 2026-03-18 12:00
+Inputs: CR-20260318-1000
+PRD: [Cost Optimization](PRD.md#cost-optimization)
+
+Decision:
+Expand agent template bodies with "Worked Examples" section (3 examples per agent: L0/L3/L4) to push past Haiku's 2048-token minimum for prompt cache activation. Template bodies were ~1,960 tokens (88 short of threshold).
+
+Rationale:
+- Live API test confirmed `cache_creation_input_tokens=0` and `cache_read_input_tokens=0` on all 5 calls
+- Diagnostic logging confirmed: SDK returns cache fields, system message is array with cache_control — but block was undersized
+- gray-matter strips YAML frontmatter (~691 bytes), leaving only markdown body (~7,838 bytes / ~1,960 tokens)
+- Haiku requires minimum 2048 tokens in a cached block; API silently skips cache creation for undersized blocks
+- Worked examples add genuine value: they show Claude the expected signal codes, action patterns, and threat level reasoning, improving response quality alongside enabling caching
+- After expansion: ANCHOR ~2,288 tokens, SENTINEL ~2,283 tokens, SCOUT ~2,100 tokens — all above threshold with buffer
+
+Alternatives considered:
+- Include frontmatter in cached block (rejected — frontmatter is config YAML, not a Claude instruction; would confuse the model)
+- Merge tool definition into cached block (rejected — tool_choice is a separate API parameter, can't be cached this way)
+- Leave as-is / accept no caching (rejected — caching is the primary cost lever, worth the template expansion)
+- Pad with filler text (rejected — every token should earn its keep; worked examples improve quality)
+
+Acceptance / test:
+- Body byte counts: ANCHOR 9152B, SENTINEL 9132B, SCOUT 8403B — all estimate >2048 tokens
+- Re-run live test with CLAUDE_DEBUG=1 should show cache=WRITE on first call, cache=HIT on subsequent calls
+- 111 tests pass (110 + 1 skipped)

@@ -67,12 +67,15 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - 10 implementation phases: Foundation → Agent Instances → Claude Integration → Escalation → Ingestion → API → Scheduler → Templates → Frontend → Testing
 - Estimated effort: 10-17 days (2-3.5 weeks)
 
-## Cost Optimization (Sources: [CR-20260318-1000](requests.md#cr-20260318-1000); [D-20260318-1000](decisions.md#d-20260318-1000))
+## Cost Optimization (Sources: [CR-20260318-1000](requests.md#cr-20260318-1000); [D-20260318-1000](decisions.md#d-20260318-1000), [D-20260318-1100](decisions.md#d-20260318-1100), [D-20260318-1130](decisions.md#d-20260318-1130), [D-20260318-1200](decisions.md#d-20260318-1200))
 - Slim response schema: remove event_id, agent, instance, stage_check from submit_assessment tool output
 - Assessment constraint: "One sentence, max 30 words"
 - Signal enum vocabulary: soft-guided codes per agent type (global + agent-specific)
 - Server-side backfill of removed fields in agent-instance.js after parsing
 - Prompt caching: split system prompt into static template (cached) + dynamic memory (uncached)
+- CLAUDE_DEBUG env var for cache hit/miss and token count logging (Sources: [D-20260318-1100](decisions.md#d-20260318-1100))
+- String coercion guards: Array.isArray on actions/signals in agent-instance.js and escalation-handler.js (Sources: [D-20260318-1130](decisions.md#d-20260318-1130))
+- Template expansion: Worked Examples section pushes body past Haiku's 2048-token cache minimum (Sources: [D-20260318-1200](decisions.md#d-20260318-1200))
 - Target: ~64% cost reduction per event with cache hits
 
 ## Next / Backlog
