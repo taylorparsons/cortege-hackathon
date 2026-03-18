@@ -6,6 +6,9 @@
 import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import path from 'node:path';
+import StorageAdapter from '../storage/storage-adapter.js';
+
+const adapter = new StorageAdapter();
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -123,10 +126,7 @@ function ensureEventsDir() {
 }
 
 function persistEvent(event) {
-  ensureEventsDir();
-  const filename = dateToFilename(new Date(event.timestamp));
-  const filepath = path.join(EVENTS_DIR, filename);
-  fs.appendFileSync(filepath, JSON.stringify(event) + '\n', 'utf8');
+  adapter.writeEvent(event);
 }
 
 // ---------------------------------------------------------------------------

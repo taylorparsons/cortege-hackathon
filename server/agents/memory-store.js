@@ -5,6 +5,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import StorageAdapter from '../storage/storage-adapter.js';
+
+const adapter = new StorageAdapter();
 
 // ---------------------------------------------------------------------------
 // Learning stage helpers (Phase 2.3)
@@ -128,34 +131,27 @@ export class MemoryStore {
    * EC2: Corrupted files are logged and replaced with a fresh store.
    */
   load() {
-    if (fs.existsSync(this.filePath)) {
-      try {
-        const raw = fs.readFileSync(this.filePath, 'utf8');
-        this.memory = JSON.parse(raw);
+    try {
+      const loadedMemory = adapter.readMemory(this.instanceId);
+      if (loadedMemory) {
+        this.memory = loadedMemory;
         return;
-      } catch (err) {
-        console.error(
-          `[memory-store] Corrupted memory file "${this.filePath}", initializing fresh: ${err.message}`
-        );
       }
+    } catch (err) {
+      console.error(
+        `[memory-store] Failed to load memory for "${this.instanceId}", initializing fresh: ${err.message}`
+      );
     }
 
     this.memory = this._freshMemory();
   }
 
   /**
-   * Atomically writes memory to disk.
-   * NFR-003: Write to .tmp file first, then fs.renameSync.
+   * Atomically writes memory to disk via StorageAdapter.
+   * NFR-003: Adapter handles atomic writes based on storage mode.
    */
   save() {
-    // Ensure directory exists
-    fs.mkdirSync(this.dataDir, { recursive: true });
-
-    const tmpPath = `${this.filePath}.tmp`;
-    const json = JSON.stringify(this.memory, null, 2);
-
-    fs.writeFileSync(tmpPath, json, 'utf8');
-    fs.renameSync(tmpPath, this.filePath);
+    adapter.writeMemory(this.instanceId, this.memberId, this.memory);
   }
 
   // -------------------------------------------------------------------------

@@ -262,6 +262,413 @@ Edit `data/household.json` with real member information.
 
 ---
 
+## SQLite Migration Guide
+
+CORTEGE now supports SQLite storage with tamper-evident audit trails. This section guides you through migrating from JSON storage to SQLite.
+
+### Why Migrate to SQLite?
+
+**Benefits:**
+- **Tamper-evident audit trail**: SHA-256 hash chain prevents event modification
+- **Fast queries**: Indexed queries by member, threat level, time range, signals
+- **Crash recovery**: WAL mode ensures data integrity
+- **Atomic transactions**: Memory snapshots tied to events
+- **Production-ready**: Better performance and reliability than JSONL files
+
+**When to migrate:**
+- Before production launch (recommended)
+- When audit compliance is required
+- When query performance becomes an issue
+- When you need tamper detection
+
+---
+
+### Migration Strategy: Five-Phase Approach
+
+#### Phase 1: Backup (5 minutes)
+
+**Goal**: Create backup of existing JSON data
+
+```bash
+# Stop the server
+pm2 stop cortege
+
+# Create backup directory with timestamp
+BACKUP_DIR="data/backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+
+# Backup JSON files
+cp -r data/events "$BACKUP_DIR/"
+cp -r data/memories "$BACKUP_DIR/"
+
+# Verify backup
+ls -lh "$BACKUP_DIR/events/"
+ls -lh "$BACKUP_DIR/memories/"
+
+echo "Backup created at: $BACKUP_DIR"
+```
+
+**Verification:**
+- Confirm backup directory exists
+- Confirm all JSONL and JSON files copied
+- Note backup path for rollback
+
+---
+
+#### Phase 2: Dual-Write Mode (1-7 days)
+
+**Goal**: Write to both SQLite and JSON simultaneously to build confidence
+
+**Step 1: Enable dual-write mode**
+
+Edit `.env`:
+
+```env
+# Enable dual-write mode
+STORAGE_MODE=dual-write
+
+# SQLite database path
+SQLITE_DB_PATH=data/cortege.db
+
+# Enable JSON fallback on SQLite errors
+ENABLE_JSON_FALLBACK=true
+```
+
+**Step 2: Migrate historical data**
+
+```bash
+# Run migration script (reconstructs hash chain from JSON)
+node scripts/migrate-to-sqlite.js
+
+# Expected output:
+# Migrating events from JSON to SQLite...
+# Found 1523 events across 45 days
+# Migrated 1523 events with hash chain
+# Migration completed in 2.3s
+```
+
+**Step 3: Restart server**
+
+```bash
+pm2 restart cortege
+pm2 logs cortege --lines 50
+```
+
+**Step 4: Monitor dual-write period**
+
+Run for 1-7 days depending on confidence level:
+
+```bash
+# Check SQLite database size
+ls -lh data/cortege.db
+
+# Validate hash chain daily
+node scripts/validate-hash-chain.js
+
+# Expected output:
+# Validating hash chain...
+# ✓ Validated 1523 events
+# ✓ Hash chain is valid
+# No tampering detected
+```
+
+**Verification checklist:**
+- [ ] Server starts without errors
+- [ ] New events appear in both SQLite and JSON
+- [ ] Hash chain validation passes daily
+- [ ] No SQLite write errors in logs
+- [ ] Query performance acceptable
+
+---
+
+#### Phase 3: SQLite-Only Mode (Cutover)
+
+**Goal**: Switch to SQLite as primary storage
+
+**Step 1: Enable SQLite mode**
+
+Edit `.env`:
+
+```env
+# Switch to SQLite-only mode
+STORAGE_MODE=sqlite
+
+# Keep JSON fallback for reads during transition
+ENABLE_JSON_FALLBACK=true
+
+# SQLite database path
+SQLITE_DB_PATH=data/cortege.db
+```
+
+**Step 2: Restart server**
+
+```bash
+pm2 restart cortege
+pm2 logs cortege --lines 50
+```
+
+**Step 3: Verify SQLite-only writes**
+
+```bash
+# Trigger test event
+curl -X POST http://localhost:3001/api/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_type": "test",
+    "target_member": "member-001",
+    "content": "SQLite cutover test"
+  }'
+
+# Verify event in SQLite
+sqlite3 data/cortege.db "SELECT event_id, type, timestamp FROM events ORDER BY id DESC LIMIT 5;"
+
+# Verify NO new JSONL entries (check file modification time)
+ls -lt data/events/*.jsonl | head -5
+```
+
+**Verification:**
+- [ ] New events only in SQLite (not in JSONL)
+- [ ] Hash chain validation passes
+- [ ] API queries return correct data
+- [ ] WebSocket events broadcast correctly
+
+---
+
+#### Phase 4: Deprecate JSON Storage (1-7 days)
+
+**Goal**: Run SQLite-only for observation period
+
+**Monitor for 1-7 days:**
+
+```bash
+# Daily validation
+node scripts/validate-hash-chain.js
+
+# Check for any JSON fallback reads in logs
+pm2 logs cortege | grep "falling back to JSON"
+
+# Verify query performance
+curl "http://localhost:3001/api/events/query?member_id=member-001&threat_level_min=3"
+```
+
+**If issues arise:**
+- Check logs for SQLite errors
+- Verify database file permissions (should be 0600)
+- Ensure disk space available
+- Consider rollback if critical issues
+
+---
+
+#### Phase 5: Archive JSON Files (Final)
+
+**Goal**: Archive old JSON files after successful SQLite operation
+
+```bash
+# Create archive directory
+mkdir -p data/archive-json
+
+# Move JSON files to archive
+mv data/events/*.jsonl data/archive-json/
+mv data/memories/*.json data/archive-json/
+
+# Disable JSON fallback
+# Edit .env:
+# ENABLE_JSON_FALLBACK=false
+
+# Restart server
+pm2 restart cortege
+```
+
+**Final verification:**
+- [ ] Server runs without JSON files
+- [ ] All queries work correctly
+- [ ] Hash chain validation passes
+- [ ] No errors in logs
+
+---
+
+### Rollback Procedure
+
+If issues arise during migration, rollback to JSON storage:
+
+**Step 1: Stop server**
+
+```bash
+pm2 stop cortege
+```
+
+**Step 2: Restore JSON files from backup**
+
+```bash
+# Replace with your backup directory
+BACKUP_DIR="data/backup-20260318-120000"
+
+# Restore JSON files
+cp -r "$BACKUP_DIR/events/"* data/events/
+cp -r "$BACKUP_DIR/memories/"* data/memories/
+```
+
+**Step 3: Switch back to JSON mode**
+
+Edit `.env`:
+
+```env
+STORAGE_MODE=json
+```
+
+**Step 4: Restart server**
+
+```bash
+pm2 restart cortege
+pm2 logs cortege --lines 50
+```
+
+**Step 5: Verify rollback**
+
+```bash
+# Check recent events
+curl "http://localhost:3001/api/events?limit=10"
+
+# Verify server health
+curl http://localhost:3001/health
+```
+
+---
+
+### Storage Mode Configuration Reference
+
+**Environment Variables:**
+
+```env
+# Storage mode: sqlite | json | dual-write
+STORAGE_MODE=sqlite
+
+# SQLite database path (default: data/cortege.db)
+SQLITE_DB_PATH=data/cortege.db
+
+# Enable JSON fallback on SQLite errors (default: false)
+ENABLE_JSON_FALLBACK=false
+```
+
+**Storage Mode Comparison:**
+
+| Feature | JSON | SQLite | Dual-Write |
+|---------|------|--------|------------|
+| Tamper detection | ❌ | ✅ | ✅ |
+| Fast queries | ❌ | ✅ | ✅ |
+| Crash recovery | ❌ | ✅ | ✅ |
+| Audit compliance | ❌ | ✅ | ✅ |
+| Production-ready | ❌ | ✅ | ⚠️ (migration only) |
+| Disk usage | Low | Medium | High (2x) |
+
+---
+
+### Hash Chain Validation
+
+**Manual validation:**
+
+```bash
+node scripts/validate-hash-chain.js
+```
+
+**Automated validation (cron job):**
+
+```bash
+# Add to crontab (daily at 2 AM)
+crontab -e
+
+# Add this line:
+0 2 * * * cd /path/to/cortege && node scripts/validate-hash-chain.js >> logs/hash-validation.log 2>&1
+```
+
+**API endpoint:**
+
+```bash
+curl http://localhost:3001/api/events/validate-chain
+```
+
+**Expected output (valid chain):**
+
+```json
+{
+  "valid": true,
+  "total_events": 1523,
+  "validated_at": "2026-03-18T17:00:00.000Z"
+}
+```
+
+**Expected output (tampering detected):**
+
+```json
+{
+  "valid": false,
+  "total_events": 1523,
+  "first_invalid_id": 842,
+  "first_invalid_event_id": "evt-20260315-120000-xyz789",
+  "error": "Hash mismatch at event 842",
+  "validated_at": "2026-03-18T17:00:00.000Z"
+}
+```
+
+**Response to tampering:**
+1. Alert security team immediately
+2. Preserve database file as evidence
+3. Investigate access logs
+4. Restore from last known good backup
+5. Review security controls
+
+---
+
+### SQLite Database Maintenance
+
+**Check database size:**
+
+```bash
+ls -lh data/cortege.db
+du -h data/cortege.db*
+```
+
+**Vacuum database (reclaim space):**
+
+```bash
+sqlite3 data/cortege.db "VACUUM;"
+```
+
+**Check WAL file size:**
+
+```bash
+ls -lh data/cortege.db-wal
+```
+
+**Checkpoint WAL (merge into main database):**
+
+```bash
+sqlite3 data/cortege.db "PRAGMA wal_checkpoint(TRUNCATE);"
+```
+
+**Backup database:**
+
+```bash
+# Online backup (safe while server running)
+sqlite3 data/cortege.db ".backup data/cortege-backup-$(date +%Y%m%d).db"
+```
+
+**Inspect database:**
+
+```bash
+# Open SQLite CLI
+sqlite3 data/cortege.db
+
+# Useful queries:
+.schema events
+.schema memory_snapshots
+SELECT COUNT(*) FROM events;
+SELECT COUNT(*) FROM memory_snapshots;
+SELECT * FROM events ORDER BY id DESC LIMIT 10;
+```
+
+---
+
 ## Security Best Practices
 
 1. **HTTPS Only**: Always use HTTPS with valid SSL certificate
@@ -269,6 +676,16 @@ Edit `data/household.json` with real member information.
 3. **API Key Management**: Store in `.env`, never commit to Git, rotate quarterly
 4. **Rate Limiting**: Configure nginx to limit webhook requests
 5. **Firewall**: Only open ports 22, 80, 443
+6. **Database Security**:
+   - SQLite file permissions: 0600 (owner read/write only)
+   - Regular hash chain validation (daily cron job)
+   - Backup database before maintenance
+   - Monitor for tampering alerts
+7. **Access Control**:
+   - Restrict SSH access to authorized IPs
+   - Use SSH keys (disable password auth)
+   - Audit database access logs
+   - Implement API authentication for production
 
 ---
 
@@ -281,6 +698,29 @@ Track:
 - Escalations per day
 - Claude API latency
 - WebSocket connection status
+- SQLite database size and WAL file size
+- Hash chain validation status (daily)
+- Storage mode and fallback usage
+
+**Recommended Monitoring:**
+
+```bash
+# Daily hash chain validation (cron job)
+0 2 * * * cd /path/to/cortege && node scripts/validate-hash-chain.js >> logs/hash-validation.log 2>&1
+
+# Weekly database backup
+0 3 * * 0 cd /path/to/cortege && sqlite3 data/cortege.db ".backup data/backups/cortege-$(date +\%Y\%m\%d).db"
+
+# Disk space monitoring
+df -h /path/to/cortege/data
+```
+
+**Alert on:**
+- Hash chain validation failures (immediate)
+- SQLite write errors (immediate)
+- Disk space < 10% (warning)
+- WAL file > 100MB (checkpoint needed)
+- Escalation rate spike (investigate)
 
 ---
 
@@ -288,7 +728,61 @@ Track:
 
 Common errors and solutions documented in full guide above.
 
+### SQLite-Specific Issues
+
+**Issue: "Database is locked"**
+
+```bash
+# Check for long-running queries
+sqlite3 data/cortege.db "PRAGMA busy_timeout = 5000;"
+
+# Checkpoint WAL to release locks
+sqlite3 data/cortege.db "PRAGMA wal_checkpoint(TRUNCATE);"
+```
+
+**Issue: "Hash chain validation failed"**
+
+```bash
+# Run validation script for details
+node scripts/validate-hash-chain.js
+
+# Check for tampering
+sqlite3 data/cortege.db "SELECT id, event_id, hash, prev_hash FROM events WHERE id >= [first_invalid_id] LIMIT 10;"
+
+# If tampering confirmed:
+# 1. Alert security team
+# 2. Preserve database as evidence
+# 3. Restore from backup
+```
+
+**Issue: "SQLite file permissions error"**
+
+```bash
+# Fix permissions
+chmod 600 data/cortege.db
+chmod 600 data/cortege.db-wal
+chmod 600 data/cortege.db-shm
+
+# Verify
+ls -l data/cortege.db*
+```
+
+**Issue: "Disk full"**
+
+```bash
+# Check disk usage
+df -h
+
+# Vacuum database to reclaim space
+sqlite3 data/cortege.db "VACUUM;"
+
+# Archive old JSON files
+mkdir -p data/archive
+mv data/events/*.jsonl data/archive/
+```
+
 ---
 
 **Last Updated**: 2026-03-18  
-**Version**: 1.0.0
+**Version**: 1.1.0  
+**Sources**: SPEC-20260318-sqlite-auditability

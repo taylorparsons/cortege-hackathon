@@ -202,7 +202,7 @@ curl "http://localhost:3001/api/companions/anchor-member-001/activity?limit=50"
 
 ### GET /api/events
 
-Returns recent events from JSONL storage.
+Returns recent events from storage (SQLite or JSONL).
 
 **Query Parameters:**
 - `limit` (integer, optional): Max events to return (default: 50, max: 500)
@@ -235,6 +235,94 @@ curl "http://localhost:3001/api/events?limit=100"
 # Get events for specific date
 curl "http://localhost:3001/api/events?date=2026-03-18"
 ```
+
+---
+
+### GET /api/events/query
+
+Query events from SQLite storage with advanced filters (requires SQLite mode).
+
+**Query Parameters:**
+- `member_id` (string, optional): Filter by household member ID
+- `threat_level_min` (integer, optional): Minimum threat level (0-5)
+- `start_time` (string, optional): Start timestamp (ISO 8601 format)
+- `end_time` (string, optional): End timestamp (ISO 8601 format)
+- `signals` (string, optional): Comma-separated list of signals to match (e.g., "urgency,authority")
+
+**Response:**
+```json
+[
+  {
+    "id": 42,
+    "event_id": "evt-20260318-163045-abc123",
+    "type": "inbound_call",
+    "source": "twilio",
+    "target_member": "member-001",
+    "payload": "{\"caller_id\":\"+1-555-9999\",\"content\":\"This is the IRS...\",\"threat_level\":4,\"signals\":[\"urgency\",\"authority\"]}",
+    "timestamp": "2026-03-18T16:30:45.000Z",
+    "hash": "a3f5b8c2d1e4f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1",
+    "prev_hash": "b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5"
+  }
+]
+```
+
+**Errors:**
+- `400`: Invalid query parameters
+- `501`: SQLite storage not enabled (STORAGE_MODE must be 'sqlite' or 'dual-write')
+
+**Example:**
+```bash
+# Query high-threat events for a specific member
+curl "http://localhost:3001/api/events/query?member_id=member-001&threat_level_min=3"
+
+# Query events in a time range with specific signals
+curl "http://localhost:3001/api/events/query?start_time=2026-03-18T00:00:00Z&end_time=2026-03-18T23:59:59Z&signals=urgency,authority"
+
+# Query all events for a member
+curl "http://localhost:3001/api/events/query?member_id=member-001"
+```
+
+---
+
+### GET /api/events/validate-chain
+
+Validate the integrity of the event hash chain (requires SQLite mode).
+
+**Query Parameters:** None
+
+**Response:**
+```json
+{
+  "valid": true,
+  "total_events": 1523,
+  "validated_at": "2026-03-18T17:00:00.000Z"
+}
+```
+
+**Response (if tampering detected):**
+```json
+{
+  "valid": false,
+  "total_events": 1523,
+  "first_invalid_id": 842,
+  "first_invalid_event_id": "evt-20260315-120000-xyz789",
+  "error": "Hash mismatch at event 842",
+  "validated_at": "2026-03-18T17:00:00.000Z"
+}
+```
+
+**Errors:**
+- `501`: SQLite storage not enabled
+
+**Example:**
+```bash
+curl http://localhost:3001/api/events/validate-chain
+```
+
+**Recommended Schedule:**
+- Run daily via cron job
+- Alert on validation failures
+- Investigate tampering immediately
 
 ---
 
@@ -565,15 +653,65 @@ Future versions may use `/api/v2/` prefix for breaking changes.
 
 ---
 
+## Storage Configuration
+
+CORTEGE supports multiple storage backends for events and memory snapshots.
+
+### Storage Modes
+
+Configure via environment variables in `.env`:
+
+```env
+# Storage mode: sqlite | json | dual-write
+STORAGE_MODE=sqlite
+
+# SQLite database path (default: data/cortege.db)
+SQLITE_DB_PATH=data/cortege.db
+
+# Enable JSON fallback on SQLite errors (default: false)
+ENABLE_JSON_FALLBACK=false
+```
+
+**Storage Modes:**
+
+1. **sqlite** (recommended for production)
+   - All events and memory snapshots stored in SQLite
+   - Tamper-evident hash chain for audit trail
+   - Fast queries with indexes
+   - Crash recovery with WAL mode
+
+2. **json** (legacy mode)
+   - Events stored in `data/events/*.jsonl`
+   - Memory snapshots in `data/memories/*.json`
+   - No hash chain validation
+   - Suitable for development only
+
+3. **dual-write** (migration mode)
+   - Writes to both SQLite and JSON
+   - Reads from SQLite (with JSON fallback)
+   - Use during migration period
+   - Switch to sqlite mode after validation
+
+### Migration from JSON to SQLite
+
+See [Production Deployment Guide](./PRODUCTION_DEPLOYMENT.md#sqlite-migration-guide) for step-by-step migration instructions.
+
+---
+
 ## Support
 
 For issues or questions:
 - Check server logs: `node server/index.js`
-- Review event storage: `data/events/*.jsonl`
-- Review memory storage: `data/memories/*.json`
+- Review event storage: 
+  - SQLite: `data/cortege.db` (use `sqlite3` CLI or DB Browser)
+  - JSON: `data/events/*.jsonl`
+- Review memory storage:
+  - SQLite: Query `memory_snapshots` table
+  - JSON: `data/memories/*.json`
 - Run tests: `npm test`
+- Validate hash chain: `node scripts/validate-hash-chain.js`
 
 ---
 
 **Last Updated:** 2026-03-18  
-**Sources:** CR-20260318-1700; D-20260318-1700
+**Sources:** CR-20260318-1700; D-20260318-1700; SPEC-20260318-sqlite-auditability
