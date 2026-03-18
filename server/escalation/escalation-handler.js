@@ -174,6 +174,11 @@ export class EscalationHandler {
   _processActions(actions, agentResponse, agentInstance, memoryStore = null) {
     const results = [];
 
+    if (!Array.isArray(actions)) {
+      console.warn(`[escalation] actions is ${typeof actions}, expected array — skipping action processing`);
+      return results;
+    }
+
     for (const action of actions) {
       const type = action.type;
 

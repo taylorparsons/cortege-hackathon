@@ -31,6 +31,7 @@ function makeResponse(overrides = {}) {
   return {
     event_id: 'evt_test_001',
     agent: 'anchor',
+    instance: 'anchor-mom',
     threat_level: 0,
     confidence: 0.9,
     assessment: 'Test assessment',

@@ -165,3 +165,15 @@ Notes:
 - 10 phases with 100+ implementation tasks
 - Estimated effort: 10-17 days (2-3.5 weeks)
 
+## CR-20260318-1000
+Date: 2026-03-18 10:00
+Source: chat
+
+Request (verbatim):
+Implement the following plan: Output Token Optimization + Prompt Caching. Reduce per-event cost by ~70-80% through output token reduction + input caching, without breaking any downstream consumer. Three changes: (1) Slim response schema — remove event_id, agent, instance, stage_check from submit_assessment tool, constrain assessment to 30 words, add signal enum codes. (2) Server backfills removed fields after parsing. (3) Prompt caching — split callClaude to accept templateBody + memoryText, use Anthropic system message array with cache_control on static template prefix.
+
+Notes:
+- Plan already brainstormed and written in plan mode
+- Touches: response-schema.js, claude-client.js, agent-instance.js, all 3 agent templates, tests
+- Cost target: 64% reduction per event with cache hits
+

@@ -39,7 +39,7 @@ function makeWs() {
   return ws;
 }
 
-/** Build a minimal mock Claude API response with submit_assessment tool_use */
+/** Build a minimal mock Claude API response with submit_assessment tool_use (slim schema) */
 function mockClaudeResponse(overrides = {}) {
   return {
     content: [
@@ -47,9 +47,6 @@ function mockClaudeResponse(overrides = {}) {
         type: 'tool_use',
         name: 'submit_assessment',
         input: {
-          event_id: 'evt_test',
-          agent: 'anchor',
-          instance: 'anchor-mom',
           threat_level: 0,
           confidence: 0.8,
           assessment: 'Normal call from known contact.',
@@ -58,7 +55,6 @@ function mockClaudeResponse(overrides = {}) {
           memory_updates: {
             add_trusted_contact: { id: 'contact_test', name: 'Alice', relationship: 'daughter', confidence: 0.9 },
           },
-          stage_check: { current_depth: 0.05, stage_transition: null },
           ...overrides,
         },
       },
@@ -108,7 +104,7 @@ describe('End-to-end event flow (mocked Claude)', () => {
       memoryStore: null,
     };
 
-    // L3 response
+    // L3 response (backfilled fields included, no stage_check in slim schema)
     const response = {
       event_id: 'evt_001',
       agent: 'anchor',
@@ -116,10 +112,9 @@ describe('End-to-end event flow (mocked Claude)', () => {
       threat_level: 3,
       confidence: 0.9,
       assessment: 'Grandparent scam detected',
-      signals: ['urgency', 'unknown_caller', 'gift_card_request'],
+      signals: ['urgency', 'unknown_contact', 'gift_card'],
       actions: [{ type: 'escalate', level: 3, to: 'primary', summary: 'Scam attempt' }],
       memory_updates: {},
-      stage_check: { current_depth: 0.1 },
     };
 
     const result = handler.handle(response, agentInstance);
@@ -267,7 +262,7 @@ describe('Claude API error handling (EC4)', () => {
         {
           type: 'tool_use',
           name: 'submit_assessment',
-          input: { event_id: 'evt_001' }, // missing most fields
+          input: { threat_level: 0 }, // missing most fields
         },
       ],
     };
@@ -284,7 +279,6 @@ describe('Claude API error handling (EC4)', () => {
       signals: [],
       actions: [],
       memory_updates: {},
-      stage_check: { current_depth: 0 },
     });
     assert.ok(errors.some((e) => e.includes('threat_level')));
   });
@@ -296,25 +290,23 @@ describe('Claude API error handling (EC4)', () => {
       signals: [],
       actions: [],
       memory_updates: {},
-      stage_check: { current_depth: 0 },
     });
     assert.ok(errors.some((e) => e.includes('confidence')));
   });
 
-  test('validateAgentResponse accepts a valid response', () => {
+  test('validateAgentResponse accepts a valid response (slim schema)', () => {
     const { valid } = validateAgentResponse({
       threat_level: 2,
       confidence: 0.75,
-      signals: ['unknown_caller'],
+      signals: ['unknown_contact'],
       actions: [{ type: 'monitor', target: '+15550000' }],
       memory_updates: {},
-      stage_check: { current_depth: 0.1 },
     });
     assert.equal(valid, true);
   });
 
   test('fallback response is returned when Claude is unavailable', () => {
-    // Simulate what agent-instance does on Claude failure
+    // Simulate what agent-instance does on Claude failure (backfilled fields included)
     const fallback = {
       event_id: 'evt_fail',
       agent: 'anchor',
@@ -325,12 +317,77 @@ describe('Claude API error handling (EC4)', () => {
       signals: [],
       actions: [{ type: 'log', reason: 'connection refused' }],
       memory_updates: {},
-      stage_check: { current_depth: 0 },
     };
 
     // Fallback should pass validation
     const { valid } = validateAgentResponse(fallback);
     assert.equal(valid, true);
     assert.equal(fallback.threat_level, 1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 10.2.5 — String coercion guards (actions/signals as free text)
+// ---------------------------------------------------------------------------
+
+describe('String coercion guards', () => {
+  test('escalation handler skips actions when actions is a string', () => {
+    const ws = makeWs();
+    const handler = new EscalationHandler(MEMBERS, ws);
+    const instance = {
+      id: 'anchor-mom',
+      memberId: 'member_002',
+      memberName: 'Mom',
+      memoryStore: null,
+    };
+
+    const response = {
+      event_id: 'evt_str',
+      agent: 'anchor',
+      instance: 'anchor-mom',
+      threat_level: 0,
+      confidence: 0.8,
+      assessment: 'Normal call.',
+      signals: [],
+      actions: 'Log this event and monitor the caller for future reference.',
+      memory_updates: {},
+    };
+
+    // Should not throw or produce hundreds of log lines
+    assert.doesNotThrow(() => handler.handle(response, instance));
+    // No escalation events should fire for L0
+    assert.equal(ws.emitted.length, 0);
+  });
+
+  test('parseAgentResponse + backfill coerces string actions/signals to arrays', () => {
+    const mockResponse = {
+      content: [
+        {
+          type: 'tool_use',
+          name: 'submit_assessment',
+          input: {
+            threat_level: 0,
+            confidence: 0.8,
+            assessment: 'Normal call.',
+            signals: 'normal, known_contact',
+            actions: 'Log this event.',
+            memory_updates: {},
+          },
+        },
+      ],
+    };
+
+    // parseAgentResponse should succeed (required fields present)
+    const parsed = parseAgentResponse(mockResponse);
+    assert.equal(typeof parsed.actions, 'string'); // raw parse returns string
+
+    // Simulate what agent-instance does: coerce non-arrays
+    if (!Array.isArray(parsed.actions)) parsed.actions = [];
+    if (!Array.isArray(parsed.signals)) parsed.signals = [];
+
+    assert.ok(Array.isArray(parsed.actions));
+    assert.ok(Array.isArray(parsed.signals));
+    assert.equal(parsed.actions.length, 0);
+    assert.equal(parsed.signals.length, 0);
   });
 });

@@ -107,10 +107,11 @@ You MUST always call the `submit_assessment` tool with your response. Never repl
 Your assessment must include:
 - `threat_level` (0–4): Your threat level determination
 - `confidence` (0.0–1.0): How confident you are in this assessment
-- `assessment`: A clear, human-readable explanation of what you observed and why you assigned this threat level
-- `signals`: The specific signals that influenced your decision
+- `assessment`: One sentence, max 30 words. What happened and why this threat level.
+- `signals`: Use signal codes from this vocabulary — `normal`, `unknown_contact`, `unusual_time`, `urgency`, `secrecy`, `financial_request`, `authority_claim`, `impersonation`, `behavioral_anomaly`, `emotional_pressure`, `stranger_contact`, `age_inappropriate`, `location_sharing`, `cyberbullying`, `predatory`
 - `actions`: What actions to take (log, monitor, soft_block, hard_block, escalate, log_evidence)
 - `memory_updates`: What you learned from this event and want to remember
-- `stage_check`: Your current depth score estimate
+
+Do NOT include `event_id`, `agent`, `instance`, or `stage_check` — the server fills these automatically.
 
 Remember: you are protecting a child. The stakes are high. When in doubt, escalate — a parent who receives an unnecessary alert is far better off than a child who needed protection and didn't get it.

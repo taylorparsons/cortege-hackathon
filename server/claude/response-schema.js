@@ -13,30 +13,14 @@ export const SUBMIT_ASSESSMENT_TOOL = {
   input_schema: {
     type: 'object',
     required: [
-      'event_id',
-      'agent',
-      'instance',
       'threat_level',
       'confidence',
       'assessment',
       'signals',
       'actions',
       'memory_updates',
-      'stage_check',
     ],
     properties: {
-      event_id: {
-        type: 'string',
-        description: 'ID of the event being assessed',
-      },
-      agent: {
-        type: 'string',
-        description: 'Agent type name (e.g., anchor)',
-      },
-      instance: {
-        type: 'string',
-        description: 'Agent instance ID (e.g., anchor-mom)',
-      },
       threat_level: {
         type: 'integer',
         minimum: 0,
@@ -51,12 +35,13 @@ export const SUBMIT_ASSESSMENT_TOOL = {
       },
       assessment: {
         type: 'string',
-        description: 'Human-readable explanation of the assessment',
+        description: 'One sentence, max 30 words. What happened and why this threat level.',
       },
       signals: {
         type: 'array',
         items: { type: 'string' },
-        description: 'List of signals that triggered this assessment',
+        description:
+          'Signal codes. Use: normal, unknown_contact, unusual_time, urgency, secrecy, financial_request, authority_claim, impersonation, behavioral_anomaly, emotional_pressure. Agent-specific codes also accepted.',
       },
       actions: {
         type: 'array',
@@ -80,14 +65,6 @@ export const SUBMIT_ASSESSMENT_TOOL = {
         type: 'object',
         description: 'Memory update operations (see Memory Update Operations table)',
       },
-      stage_check: {
-        type: 'object',
-        required: ['current_depth'],
-        properties: {
-          current_depth: { type: 'number' },
-          stage_transition: { type: ['string', 'null'] },
-        },
-      },
     },
   },
 };
@@ -97,16 +74,12 @@ export const SUBMIT_ASSESSMENT_TOOL = {
 // ---------------------------------------------------------------------------
 
 const REQUIRED_FIELDS = [
-  'event_id',
-  'agent',
-  'instance',
   'threat_level',
   'confidence',
   'assessment',
   'signals',
   'actions',
   'memory_updates',
-  'stage_check',
 ];
 
 // ---------------------------------------------------------------------------
@@ -171,10 +144,6 @@ export function validateAgentResponse(response) {
 
   if (typeof response.memory_updates !== 'object' || Array.isArray(response.memory_updates)) {
     errors.push('memory_updates must be object');
-  }
-
-  if (!response.stage_check || typeof response.stage_check.current_depth === 'undefined') {
-    errors.push('stage_check must have current_depth');
   }
 
   return { valid: errors.length === 0, errors };

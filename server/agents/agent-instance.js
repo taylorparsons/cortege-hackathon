@@ -133,9 +133,9 @@ export class AgentInstance {
       this.initMemory();
     }
 
-    // Build Claude prompt
-    const fullSystemPrompt =
-      this.systemPrompt + '\n\n## Current Memory\n' + this.memoryStore.serialize();
+    // Build Claude prompt — split for prompt caching
+    const templateBody = this.systemPrompt;
+    const memoryText = this.memoryStore.serialize();
 
     const userMessage = JSON.stringify({
       event_type: event.type,
@@ -150,7 +150,7 @@ export class AgentInstance {
     // Call Claude with retry logic
     let apiResponse;
     try {
-      apiResponse = await this._callClaudeWithRetry({ fullSystemPrompt, userMessage, model, event, ws });
+      apiResponse = await this._callClaudeWithRetry({ templateBody, memoryText, userMessage, model, event, ws });
     } catch (err) {
       // After all retries exhausted — treat as L1 / unprocessed
       console.error(`[agent-instance] Claude call failed for event ${event.id}: ${err.message}`);
@@ -168,6 +168,21 @@ export class AgentInstance {
       console.error(`[agent-instance] Malformed response for event ${event.id}: ${parseErr.message}`);
       _emit(ws, 'agent:error', { instanceId: this.id, eventId: event.id, error: parseErr.message });
       return _fallbackResponse(event, this.agentName, this.id, parseErr.message);
+    }
+
+    // Backfill fields removed from slim schema (server knows these)
+    agentResponse.event_id = event.id;
+    agentResponse.agent = this.agentName;
+    agentResponse.instance = this.id;
+
+    // Guard: Claude occasionally returns actions/signals as strings instead of arrays
+    if (!Array.isArray(agentResponse.actions)) {
+      console.warn(`[agent-instance] actions was ${typeof agentResponse.actions}, coercing to empty array`);
+      agentResponse.actions = [];
+    }
+    if (!Array.isArray(agentResponse.signals)) {
+      console.warn(`[agent-instance] signals was ${typeof agentResponse.signals}, coercing to empty array`);
+      agentResponse.signals = [];
     }
 
     // Apply memory updates
@@ -212,19 +227,20 @@ export class AgentInstance {
    *
    * @returns {Promise<object>}  Raw Anthropic API response
    */
-  async _callClaudeWithRetry({ fullSystemPrompt, userMessage, model, event, ws }) {
+  async _callClaudeWithRetry({ templateBody, memoryText, userMessage, model, event, ws }) {
     const tools = [SUBMIT_ASSESSMENT_TOOL];
+    const claudeOpts = { templateBody, memoryText, userMessage, tools, model };
 
     // --- First attempt ---
     try {
-      return await callClaude({ systemPrompt: fullSystemPrompt, userMessage, tools, model });
+      return await callClaude(claudeOpts);
     } catch (err) {
       if (_isTimeout(err)) {
         // Timeout: retry once after 2s
         console.warn(`[agent-instance] Timeout on event ${event.id}, retrying in 2s…`);
         await _sleep(2000);
         try {
-          return await callClaude({ systemPrompt: fullSystemPrompt, userMessage, tools, model });
+          return await callClaude(claudeOpts);
         } catch (retryErr) {
           _emit(ws, 'agent:error', { instanceId: this.id, eventId: event.id, error: retryErr.message });
           throw retryErr;
@@ -238,7 +254,7 @@ export class AgentInstance {
           console.warn(`[agent-instance] Rate limit on event ${event.id}, retry ${i + 1}/3 in ${delays[i]}ms…`);
           await _sleep(delays[i]);
           try {
-            return await callClaude({ systemPrompt: fullSystemPrompt, userMessage, tools, model });
+            return await callClaude(claudeOpts);
           } catch (retryErr) {
             if (!_isRateLimit(retryErr)) throw retryErr;
             // still rate-limited — continue loop
@@ -295,7 +311,6 @@ function _fallbackResponse(event, agentName, instanceId, reason) {
     signals: [],
     actions: [{ type: 'log', reason }],
     memory_updates: {},
-    stage_check: { current_depth: 0, stage_transition: null },
   };
 }
 

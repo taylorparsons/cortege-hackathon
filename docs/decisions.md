@@ -212,3 +212,31 @@ Acceptance / test:
 - requirements.md includes all FR/NFR requirements traced to CR-20260317-1400 and D-20260314-1600
 - tasks.md includes 10 phases with granular task breakdown
 - All requirements reference the design documents as source
+
+## D-20260318-1000
+Date: 2026-03-18 10:00
+Inputs: CR-20260318-1000
+PRD: [Cost Optimization](PRD.md#cost-optimization)
+
+Decision:
+Reduce output tokens by removing redundant fields (event_id, agent, instance, stage_check) from submit_assessment tool schema and backfilling server-side. Add prompt caching via Anthropic system message array with cache_control on static template prefix. Add signal vocabulary as soft guidance (not hard enum) to reduce free-text token usage.
+
+Rationale:
+- Output tokens cost 5x input ($4.00 vs $0.80/MTok on Haiku)
+- Removing 4 fields the server already knows saves ~50-100 output tokens per call
+- Constraining assessment to "one sentence, max 30 words" saves ~100-200 tokens
+- Signal codes vs free-text saves ~10-30 tokens
+- Prompt caching reduces input cost by 90% on cache hits (~4,200 token template)
+- Combined: ~64% cost reduction per event with cache hits
+- No downstream breakage: server backfills fields before escalation handler sees them
+
+Alternatives considered:
+- Hard enum for signals (rejected — too restrictive, agents may need novel signals)
+- Remove memory_updates from output (rejected — agents must drive their own learning)
+- Switch to cheaper model (rejected — already on Haiku, the cheapest option)
+
+Acceptance / test:
+- All 108+ existing tests pass with schema changes
+- parseAgentResponse accepts responses without event_id/agent/instance/stage_check
+- agent-instance backfills those fields before passing to escalation handler
+- callClaude sends system message array with cache_control when templateBody is provided

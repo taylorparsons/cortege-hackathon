@@ -255,7 +255,7 @@ describe('Live API validation (requires ANTHROPIC_API_KEY)', () => {
 
     const ws = makeWs();
     const orchestrator = new Orchestrator();
-    await orchestrator.start(ws.fn);
+    await orchestrator.start(ws);
 
     const escalations = ws.emitted.filter((e) => e.eventName === 'escalation:fired');
 
@@ -263,8 +263,8 @@ describe('Live API validation (requires ANTHROPIC_API_KEY)', () => {
     const result = await orchestrator.simulator.runScenario('grandparent-scam');
     assert.equal(result.completed, true);
 
-    // Wait for async processing
-    await new Promise((r) => setTimeout(r, 5000));
+    // Wait for async processing (5 Claude API calls sequentially)
+    await new Promise((r) => setTimeout(r, 30000));
 
     // Should have at least one L3+ escalation from the scam events
     const highEscalations = ws.emitted.filter(

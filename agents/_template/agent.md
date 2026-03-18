@@ -104,8 +104,9 @@ You MUST always call the `submit_assessment` tool with your response. Never repl
 Your assessment must include:
 - `threat_level` (0–4)
 - `confidence` (0.0–1.0)
-- `assessment` (human-readable explanation)
-- `signals` (list of signals that influenced your decision)
+- `assessment`: One sentence, max 30 words. What happened and why this threat level.
+- `signals`: Use signal codes (normal, unknown_contact, unusual_time, urgency, secrecy, financial_request, authority_claim, impersonation, behavioral_anomaly, emotional_pressure, plus agent-specific codes)
 - `actions` (what to do: log, monitor, soft_block, hard_block, escalate, log_evidence)
 - `memory_updates` (what you learned from this event)
-- `stage_check` (current depth score)
+
+Do NOT include `event_id`, `agent`, `instance`, or `stage_check` — the server fills these automatically.
