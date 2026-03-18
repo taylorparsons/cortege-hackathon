@@ -100,6 +100,66 @@ Agents evolve through four maturity stages:
 
 ## 🛠️ Development
 
+### Storage
+
+CORTEGE uses SQLite for production storage with tamper-evident audit trail.
+
+#### Storage Modes
+
+Configure via `STORAGE_MODE` environment variable:
+
+- **sqlite** (default) - Production mode with tamper-evident hash chain
+- **json** - Legacy mode using JSON files (for development)
+- **dual-write** - Write to both SQLite and JSON (for migration)
+
+#### Environment Variables
+
+```bash
+# Storage configuration
+STORAGE_MODE=sqlite                      # sqlite | json | dual-write
+SQLITE_DB_PATH=data/cortege.db          # SQLite database path
+ENABLE_JSON_FALLBACK=false              # Fall back to JSON on SQLite errors
+```
+
+#### Migration from JSON
+
+To migrate existing JSON files to SQLite:
+
+```bash
+node scripts/migrate-to-sqlite.js
+```
+
+The migration script will:
+- Backup existing SQLite database (if it exists)
+- Import all events from `data/events/*.jsonl`
+- Reconstruct hash chain for tamper evidence
+- Import memory snapshots from `data/memories/*.json`
+- Validate hash chain integrity
+- Report progress and errors
+
+#### Hash Chain Validation
+
+Validate event log integrity:
+
+```bash
+node scripts/validate-hash-chain.js
+```
+
+This verifies:
+- Each event's hash is correctly computed
+- Each event's prev_hash matches the previous event's hash
+- No events have been tampered with or deleted
+
+Run this daily in production (e.g., via cron job) to ensure audit trail integrity.
+
+#### SQLite Features
+
+- **Tamper-evident**: Append-only event log with SHA-256 hash chain
+- **Atomic writes**: Events and memory snapshots written in transactions
+- **Query capabilities**: Filter by member, threat level, time range, signals
+- **Crash recovery**: WAL (Write-Ahead Logging) mode enabled
+- **Security**: Database file permissions set to 0600 (owner read/write only)
+
 ### Project Structure
 
 ```
@@ -124,9 +184,10 @@ cortege-hackathon/
 │       └── agent.md                    # Age-appropriate threat detection
 │
 ├── data/                               # Runtime data storage (gitignored)
-│   ├── events/                         # Event logs (append-only JSONL)
+│   ├── cortege.db                      # SQLite database (primary storage)
+│   ├── events/                         # Event logs (legacy JSON mode only)
 │   │   └── YYYY-MM-DD.jsonl           # One file per day, one event per line
-│   ├── memories/                       # Agent memory stores (JSON)
+│   ├── memories/                       # Agent memory stores (legacy JSON mode only)
 │   │   ├── anchor-member-001.json     # Per-agent-instance learning
 │   │   ├── sentinel-member-002.json   # Trusted contacts, patterns, history
 │   │   └── scout-member-003.json      # Grows over time = learning
@@ -157,6 +218,10 @@ cortege-hackathon/
 │   ├── bank-fraud.json                # Fake bank security call
 │   └── tech-support.json              # Tech support scam
 │
+├── scripts/                            # Utility scripts
+│   ├── migrate-to-sqlite.js           # Migrate JSON files to SQLite
+│   └── validate-hash-chain.js         # Verify audit trail integrity
+│
 ├── server/                             # Backend (Node.js/Express) - the framework
 │   ├── index.js                        # Server entry point
 │   ├── agents/                         # Agent runtime
@@ -179,15 +244,23 @@ cortege-hackathon/
 │   │   └── manual.js                  # POST /api/events
 │   ├── orchestrator/                   # Core orchestration
 │   │   ├── orchestrator.js            # Main coordinator
-│   │   ├── event-bus.js               # Typed EventEmitter + JSONL persistence
+│   │   ├── event-bus.js               # Typed EventEmitter + SQLite persistence
 │   │   └── scheduler.js               # node-cron for timed tasks
-│   └── tests/                          # Test suite (110 tests)
+│   ├── storage/                        # SQLite storage layer
+│   │   ├── schema.sql                 # Database schema with triggers
+│   │   ├── db.js                      # Database connection + queries
+│   │   ├── hash-chain.js              # SHA-256 hash chain computation
+│   │   └── storage-adapter.js         # Multi-mode storage (sqlite/json/dual)
+│   └── tests/                          # Test suite (131 tests)
 │       ├── integration.test.js        # End-to-end flows
 │       ├── demo-validation.test.js    # Demo scenario validation
 │       ├── template-parser.test.js    # Agent template parsing
 │       ├── event-bus.test.js          # Event bus + persistence
 │       ├── memory-store.test.js       # Learning + depth calculation
-│       └── escalation-handler.test.js # Threat routing
+│       ├── escalation-handler.test.js # Threat routing
+│       ├── db.test.js                 # SQLite database operations
+│       ├── hash-chain.test.js         # Hash chain computation
+│       └── sqlite-triggers.test.js    # Append-only trigger validation
 │
 ├── src/                                # Frontend (React + Vite)
 │   ├── main.jsx                        # React entry point
