@@ -182,7 +182,7 @@ Date: 2026-03-18 16:40
 Source: chat
 
 Request (verbatim):
-this folder name /Volumes/T9/code/cortege-hackathon/docs/specs/production-deployment and references to it should be called working demo with twillio. I want this workin in local host and to have the UI only show what is working with real use cases.
+this folder name docs/specs/production-deployment and references to it should be called working demo with twillio. I want this workin in local host and to have the UI only show what is working with real use cases.
 
 Notes:
 - Context: User asked about Twilio integration with T-Mobile numbers and where it's documented
