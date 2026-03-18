@@ -362,3 +362,30 @@ Acceptance / test:
 - docs/API.md created with all endpoints documented
 - Each endpoint includes: method, path, description, query params (if any), request body (if any), response format, example
 - Error codes documented (400, 404, 500)
+
+## D-20260318-1800
+Date: 2026-03-18 18:00
+Inputs: [CR-20260318-1800](requests.md#cr-20260318-1800)
+PRD: [Storage](PRD.md#storage), [Auditability](PRD.md#auditability)
+
+Decision:
+Create implementation spec for SQLite storage with tamper-evident audit trail. Migrate from mutable JSON files to SQLite with append-only event log, hash chain for tamper evidence, and atomic memory snapshots. Maintain backward compatibility during migration.
+
+Rationale:
+- Current JSON files (data/memories/*.json, data/events/*.jsonl) are mutable — no tamper evidence
+- D-20260315-1155 and D-20260315-1202 documented the need but implementation was deferred
+- SQLite provides: ACID transactions, append-only enforcement via triggers, query capabilities, better reliability
+- Hash chain (each event hashes previous event) provides cryptographic tamper evidence
+- Memory snapshots as JSON blobs in SQLite preserve current memory-store.js API
+- Migration path: dual-write mode → verify → cutover → deprecate JSON files
+
+Alternatives considered:
+- Keep JSON files (rejected — no auditability, no tamper evidence, fragile for production)
+- Full rewrite of memory-store.js (rejected — too risky, prefer incremental migration)
+- PostgreSQL (rejected — overkill for single-household deployment, SQLite sufficient)
+
+Acceptance / test:
+- Spec created at docs/specs/20260318-sqlite-auditability/spec.md
+- Tasks created at docs/specs/20260318-sqlite-auditability/tasks.md
+- All requirements traced to CR-20260318-1800 and D-20260318-1800
+- Migration plan includes rollback strategy

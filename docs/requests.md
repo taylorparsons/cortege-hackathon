@@ -205,3 +205,16 @@ Notes:
 - Need: Create comprehensive API documentation file (docs/API.md) with examples
 - Available endpoints: household, companions, events, scenarios, agents, manual events, Twilio webhooks
 - Documentation should include request/response examples and query parameters
+
+## CR-20260318-1800
+Date: 2026-03-18 18:00
+Source: chat
+
+Request (verbatim):
+create a new spec for docs/superpowers/specs "For production, consider SQLite" ❌ (not implemented, future work)"For auditability, use SQLite with hash chain" ❌ (not implemented, future work)
+
+Notes:
+- Context: Verification revealed that 20260315-storage-auditability spec only documented decisions, did not implement SQLite or auditability features
+- Current state: System uses mutable JSON files (data/memories/*.json, data/events/*.jsonl)
+- Need: Implement production-ready SQLite storage with tamper-evident audit trail
+- Referenced decisions: D-20260315-1155 (SQLite for production), D-20260315-1202 (auditability with hash chain)

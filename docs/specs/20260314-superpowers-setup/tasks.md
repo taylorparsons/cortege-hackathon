@@ -1,4 +1,4 @@
-# Tasks: 20260314-superpowers-setup
+ x# Tasks: 20260314-superpowers-setup
 
 Spec: docs/specs/20260314-superpowers-setup/spec.md
 

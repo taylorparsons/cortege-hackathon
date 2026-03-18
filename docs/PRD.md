@@ -115,3 +115,16 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Success criteria: All requirements verified, demo scenario runs successfully, hackathon participants can create new agents via markdown files
 - **Status**: All 10 phases complete, 110/110 tests passing, demo running successfully
 
+
+
+## SQLite Storage with Auditability (Sources: [CR-20260318-1800](requests.md#cr-20260318-1800); [D-20260318-1800](decisions.md#d-20260318-1800))
+- Spec created: [`specs/20260318-sqlite-auditability/spec.md`](specs/20260318-sqlite-auditability/spec.md)
+- Tasks created: [`specs/20260318-sqlite-auditability/tasks.md`](specs/20260318-sqlite-auditability/tasks.md)
+- Goal: Implement production-ready SQLite storage with tamper-evident audit trail
+- Migrate from mutable JSON files to SQLite with append-only event log, hash chain for tamper evidence, and atomic memory snapshots
+- 19 functional requirements covering: event log schema, hash chain, query capabilities, memory snapshots, migration strategy, event replay
+- 10 non-functional requirements covering: performance, reliability, security, observability
+- 8 edge cases documented
+- 8 implementation phases, estimated 7.5 days (1.5 weeks)
+- Migration strategy: dual-write mode → verify → cutover → deprecate JSON files
+- Backward compatibility maintained during migration
