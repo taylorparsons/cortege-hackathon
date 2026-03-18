@@ -311,3 +311,29 @@ Acceptance / test:
 - Body byte counts: ANCHOR 9152B, SENTINEL 9132B, SCOUT 8403B — all estimate >2048 tokens
 - Re-run live test with CLAUDE_DEBUG=1 should show cache=WRITE on first call, cache=HIT on subsequent calls
 - 111 tests pass (110 + 1 skipped)
+
+## D-20260318-1640
+Date: 2026-03-18 16:40
+Inputs: CR-20260318-1640
+PRD: [Working Demo with Twilio](PRD.md#working-demo-with-twilio)
+
+Decision:
+Create a working localhost demo with real Twilio integration showing actual use cases. Focus on call forwarding as the integration method, wire Twilio webhook to event bus, and update UI to show only working features with real scenarios.
+
+Rationale:
+- Current Twilio webhook is stubbed but ready (`POST /ingest/twilio/voice`)
+- Call forwarding is fastest path to working demo: user keeps T-Mobile number, forwards to Twilio proxy, Twilio analyzes + forwards to user
+- Localhost testing with ngrok or similar allows rapid iteration without production deployment complexity
+- UI should focus on demonstrating real working features, not placeholder/mock data
+- Real use cases (grandparent scam, bank fraud, etc.) show actual value proposition
+
+Alternatives considered:
+- Full production deployment (rejected — too complex for initial demo, localhost sufficient)
+- Keep using event simulator only (rejected — doesn't demonstrate real Twilio integration value)
+- Mock Twilio responses (rejected — want to show actual end-to-end flow with real calls)
+
+Acceptance / test:
+- Working demo guide created at `docs/PRODUCTION_DEPLOYMENT.md` (updated for localhost)
+- Implementation spec created for Twilio webhook wiring
+- Guide covers: Twilio account setup for localhost, ngrok setup, call forwarding instructions, UI updates to show real features only
+- Demo successfully processes real phone call on localhost

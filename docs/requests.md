@@ -177,3 +177,17 @@ Notes:
 - Touches: response-schema.js, claude-client.js, agent-instance.js, all 3 agent templates, tests
 - Cost target: 64% reduction per event with cache hits
 
+## CR-20260318-1640
+Date: 2026-03-18 16:40
+Source: chat
+
+Request (verbatim):
+this folder name /Volumes/T9/code/cortege-hackathon/docs/specs/production-deployment and references to it should be called working demo with twillio. I want this workin in local host and to have the UI only show what is working with real use cases.
+
+Notes:
+- Context: User asked about Twilio integration with T-Mobile numbers and where it's documented
+- Current state: System is running in demo mode with event simulator, Twilio webhook is stubbed
+- Need: Working localhost demo with real Twilio integration (not full production deployment)
+- Goal: Rename spec folder, wire Twilio webhook for localhost testing, update UI to show only working features with real use cases
+- Focus on call forwarding as integration method for rapid testing
+

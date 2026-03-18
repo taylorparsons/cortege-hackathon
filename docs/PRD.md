@@ -78,10 +78,24 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Template expansion: Worked Examples section pushes body past Haiku's 2048-token cache minimum (Sources: [D-20260318-1200](decisions.md#d-20260318-1200))
 - Target: ~64% cost reduction per event with cache hits
 
+## Working Demo with Twilio (Sources: [CR-20260318-1640](requests.md#cr-20260318-1640); [D-20260318-1640](decisions.md#d-20260318-1640))
+- Working demo guide created: [`PRODUCTION_DEPLOYMENT.md`](PRODUCTION_DEPLOYMENT.md)
+- Spec created: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+- Tasks created: [`specs/working-demo-with-twilio/tasks.md`](specs/working-demo-with-twilio/tasks.md)
+- Goal: Working localhost demo with real Twilio integration showing actual use cases
+- Four integration options documented: call forwarding (recommended), number porting, mobile app (future), carrier partnerships (long-term)
+- Call forwarding setup instructions for T-Mobile, Verizon, AT&T
+- Twilio account setup and webhook configuration for localhost testing
+- UI focused on real working features only
+- 19 functional requirements, 10 non-functional requirements, 8 edge cases
+- 7 implementation phases, estimated 5 days
+
 ## Next / Backlog
-- Execute implementation tasks from [agent orchestration spec](../.kiro/specs/agent-orchestration-implementation/tasks.md)
-- Decide final demo use case (ANCHOR/grandparent scam is designed but team may choose different scenario)
-- Plug in Twilio voice webhook when account is configured
+- Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
+- Wire Twilio webhook to event bus (Phase 3)
+- Implement Twilio signature validation (Phase 3)
+- Test with live Twilio account and real phone calls on localhost (Phase 6)
+- Update UI to show only working features with real use cases
 
 ## Agent Orchestration Implementation (Sources: [CR-20260317-1400](requests.md#cr-20260317-1400))
 - Implementation spec created: [`.kiro/specs/agent-orchestration-implementation/requirements.md`](../.kiro/specs/agent-orchestration-implementation/requirements.md)
@@ -92,4 +106,5 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - 10 implementation phases with 100+ tasks
 - Estimated effort: 10-17 days (2-3.5 weeks)
 - Success criteria: All requirements verified, demo scenario runs successfully, hackathon participants can create new agents via markdown files
+- **Status**: All 10 phases complete, 110/110 tests passing, demo running successfully
 

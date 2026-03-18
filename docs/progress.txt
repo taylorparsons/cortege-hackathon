@@ -151,43 +151,42 @@ NOTES
 
 ---
 
-Session: 2026-03-18 10:00
-Agent: Claude Code
-Model: claude-opus-4-6
-Skills: athena, superpowers:executing-plans, superpowers:systematic-debugging, verification-before-completion
-Feature: 20260318-cost-optimization
-Input: CR-20260318-1000
-Decisions: D-20260318-1000, D-20260318-1100, D-20260318-1130, D-20260318-1200
-Spec: docs/specs/20260318-cost-optimization/spec.md
-Tasks: docs/specs/20260318-cost-optimization/tasks.md
-Goal: Reduce per-event cost ~64% via output token reduction + prompt caching.
+Session: 2026-03-18 16:40
+Agent: Kiro
+Model: Claude Sonnet 4.5
+Skills: athena
+Feature: production-deployment
+Input: CR-20260318-1640
+Decisions: D-20260318-1640
+Spec: docs/specs/production-deployment/spec.md
+Tasks: docs/specs/production-deployment/tasks.md
+Goal: Document production deployment flow from demo mode to live Twilio integration.
 
 DONE
-- [2026-03-18 10:10] T-001: Update response-schema.js (slim schema). (Skills: athena)
-- [2026-03-18 10:12] T-002: Server-side backfill in agent-instance.js. (Skills: athena)
-- [2026-03-18 10:14] T-003: Prompt caching in claude-client.js. (Skills: athena)
-- [2026-03-18 10:16] T-004: Update agent templates (anchor, sentinel, scout, _template). (Skills: athena)
-- [2026-03-18 10:18] T-005: Update tests for new schema. (Skills: athena)
-- [2026-03-18 10:20] T-006: Run full test suite — 109 tests, 108 pass, 0 fail, 1 skipped. (Skills: athena, verification-before-completion)
-- [2026-03-18 11:00] T-007: Add CLAUDE_DEBUG env var with cache/token logging. (Skills: athena)
-- [2026-03-18 11:10] T-008: Fix live API test bug (ws.fn → ws) + timeout increase. (Skills: athena, superpowers:systematic-debugging)
-- [2026-03-18 11:30] T-009: Add Array.isArray guards for actions/signals coercion. (Skills: athena, superpowers:systematic-debugging)
-- [2026-03-18 11:40] T-010: Add regression tests for string coercion guards. (Skills: athena, verification-before-completion)
-- [2026-03-18 12:00] T-011: Expand agent templates with Worked Examples to exceed 2048-token cache threshold. (Skills: athena)
-- [2026-03-18 12:10] T-012: Run full test suite — 111 tests, 110 pass, 0 fail, 1 skipped. (Skills: verification-before-completion)
+- [2026-03-18 16:40] T-001: Capture customer request in docs/requests.md. (Skills: athena)
+- [2026-03-18 16:45] T-002: Create decision entry in docs/decisions.md. (Skills: athena)
+- [2026-03-18 16:50] T-003: Create production deployment spec (spec.md, tasks.md). (Skills: athena)
+- [2026-03-18 17:00] T-004: Create comprehensive production deployment guide (PRODUCTION_DEPLOYMENT.md). (Skills: athena)
+- [2026-03-18 17:05] T-005: Update docs/PRD.md with production deployment section. (Skills: athena)
 
 IN PROGRESS
 
 NEXT
-- Verify prompt caching activates (cache=WRITE then cache=HIT) with expanded templates via live API test
+- Execute Phase 1 tasks (Production Deployment Documentation)
+- Execute Phase 2 tasks (Integration Options Documentation)
+- Execute Phase 3 tasks (Twilio Webhook Implementation)
+- Execute Phase 4 tasks (Security & Compliance)
+- Execute Phase 5 tasks (Demo to Production Transition)
+- Execute Phase 6 tasks (Testing & Validation)
+- Execute Phase 7 tasks (Documentation Polish)
 
 NOTES
-- Commands run: `npm test` -> 111 tests, 110 pass, 0 fail, 1 skipped (API key required)
-- Commands run: `CLAUDE_DEBUG=1 node --test --test-timeout=120000 server/tests/demo-validation.test.js` -> 15 pass, 0 fail; cache=NONE on all 5 calls (pre-expansion)
-- Live API test confirmed: SDK returns cache fields, system type is array — but template body was ~1,960 tokens (88 short of Haiku 2048 minimum)
-- Bug found in live test: `orchestrator.start(ws.fn)` should be `orchestrator.start(ws)` — ws is already the function
-- Bug found in production: Claude returned actions as free-text string, causing `for (const action of "string")` to iterate characters → hundreds of "Unknown action type undefined" log lines
-- Template expansion: added Worked Examples section — ANCHOR 2288 tokens, SENTINEL 2283 tokens, SCOUT 2100 tokens (all above 2048 threshold)
-- Commit e6127c4: T-001 through T-010 (slim schema, caching, guards, regression tests)
-- Commit 3e1747a: T-011 (template expansion for cache threshold)
-- Files modified: response-schema.js, claude-client.js, agent-instance.js, escalation-handler.js, anchor/agent.md, sentinel/agent.md, scout/agent.md, _template/agent.md, demo-validation.test.js, escalation-handler.test.js, integration.test.js
+- Production deployment guide created at docs/PRODUCTION_DEPLOYMENT.md
+- Spec includes 19 FR, 10 NFR, 8 edge cases
+- Four integration options documented: call forwarding (recommended), number porting, mobile app (future), carrier partnerships (long-term)
+- Call forwarding is fastest path to production (15-30 min setup)
+- Twilio webhook stub already exists at server/ingestion/twilio-webhook.js
+- Need to wire webhook to event bus and implement signature validation
+- Estimated effort: 5 days for full implementation
+- Demo mode → production transition documented (disable accelerated learning, archive demo data)
+- Security best practices documented (HTTPS, signature validation, API key management, rate limiting)
