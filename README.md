@@ -1,0 +1,400 @@
+# CORTEGE v2 - AI Security Companion System
+
+CORTEGE is a companion-model AI security product where each household member is paired with a dedicated AI agent that silently protects them from scams, fraud, and security threats. Protection deepens over time through behavioral learning.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm
+- Anthropic API key ([get one here](https://console.anthropic.com/))
+
+### Setup & Run
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/taylorparsons/cortege-hackathon.git
+   cd cortege-hackathon
+   ```
+
+2. **Start the application**
+   ```bash
+   ./run-local.sh
+   ```
+   
+   The script will:
+   - Check Node.js/npm installation
+   - Install dependencies automatically (if needed)
+   - Create `.env` from `.env.example` (if needed)
+   - Prompt you to add your `ANTHROPIC_API_KEY`
+   - Open two terminal windows:
+     - Backend server (port 3001)
+     - Frontend dev server (port 5173)
+
+3. **Stop the application**
+   ```bash
+   ./stop-local.sh
+   ```
+
+### Access Points
+
+- **Frontend UI**: http://localhost:5173
+- **Backend API**: http://localhost:3001
+- **API Documentation**: http://localhost:3001/api/docs
+- **WebSocket**: ws://localhost:3001
+
+## 📚 Documentation
+
+- **[API Documentation](docs/API.md)** - Complete REST and WebSocket API reference
+- **[Production Deployment](docs/PRODUCTION_DEPLOYMENT.md)** - Twilio integration and production setup
+- **[PRD](docs/PRD.md)** - Product requirements and roadmap
+- **[Traceability](docs/TRACEABILITY.md)** - How to follow the audit trail
+
+## 🏗️ Architecture
+
+### System Components
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     React Frontend (Vite)                   │
+│                    http://localhost:5173                    │
+└────────────────────┬────────────────────────────────────────┘
+                     │ REST + WebSocket
+┌────────────────────▼────────────────────────────────────────┐
+│              Express.js Backend Server                      │
+│                http://localhost:3001                        │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              Orchestrator                            │  │
+│  │  ┌────────────┐  ┌──────────────┐  ┌─────────────┐  │  │
+│  │  │ Event Bus  │  │ Agent Pool   │  │  Scheduler  │  │  │
+│  │  └────────────┘  └──────────────┘  └─────────────┘  │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │         Agent Instances (per household member)       │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐          │  │
+│  │  │  ANCHOR  │  │ SENTINEL │  │  SCOUT   │          │  │
+│  │  │ (elderly)│  │ (adult)  │  │ (teen)   │          │  │
+│  │  └──────────┘  └──────────┘  └──────────┘          │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────┬────────────────────────────────────────┘
+                     │ Claude API
+┌────────────────────▼────────────────────────────────────────┐
+│                  Anthropic Claude                           │
+│              (Haiku 4.5 for assessments)                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Agent Learning Stages
+
+Agents evolve through four maturity stages:
+
+1. **Baseline** (0.00-0.10) - Learning normal patterns
+2. **Pattern Recognition** (0.10-0.30) - Identifying recurring behaviors
+3. **Predictive** (0.30-0.60) - Anticipating threats
+4. **Cortege Mode** (0.60-1.00) - Proactive protection
+
+### Event Ingestion
+
+- **Event Simulator** - Demo scenarios (default)
+- **Manual API** - POST /api/events for testing
+- **Twilio Webhook** - Real phone call integration (see [Production Deployment](docs/PRODUCTION_DEPLOYMENT.md))
+
+## 🛠️ Development
+
+### Project Structure
+
+```
+cortege-hackathon/
+├── .kiro/                              # Kiro IDE configuration and specs
+│   └── specs/                          # Implementation specifications
+│       ├── agent-orchestration-implementation/  # Main implementation spec
+│       │   ├── requirements.md         # 48 FR + 15 NFR requirements
+│       │   └── tasks.md                # 10 phases, 100+ granular tasks
+│       └── agent-orchestration-mvp/    # MVP specification
+│           ├── requirements.md         # MVP requirements subset
+│           └── tasks.md                # MVP task breakdown
+│
+├── agents/                             # Agent templates (markdown) - swappable layer
+│   ├── _template/                      # Template for creating new agents
+│   │   └── agent.md                    # Starter template with examples
+│   ├── anchor/                         # Elderly protection agent
+│   │   └── agent.md                    # YAML frontmatter + markdown prompt
+│   ├── sentinel/                       # Adult protection agent
+│   │   └── agent.md                    # Primary household coordinator
+│   └── scout/                          # Teen protection agent
+│       └── agent.md                    # Age-appropriate threat detection
+│
+├── data/                               # Runtime data storage (gitignored)
+│   ├── events/                         # Event logs (append-only JSONL)
+│   │   └── YYYY-MM-DD.jsonl           # One file per day, one event per line
+│   ├── memories/                       # Agent memory stores (JSON)
+│   │   ├── anchor-member-001.json     # Per-agent-instance learning
+│   │   ├── sentinel-member-002.json   # Trusted contacts, patterns, history
+│   │   └── scout-member-003.json      # Grows over time = learning
+│   └── household.json                  # Household member profiles + pairings
+│
+├── docs/                               # Documentation
+│   ├── API.md                          # Complete REST + WebSocket API reference
+│   ├── PRD.md                          # Product requirements and roadmap
+│   ├── PRODUCTION_DEPLOYMENT.md        # Twilio integration + production setup
+│   ├── TRACEABILITY.md                 # Audit trail navigation guide
+│   ├── requests.md                     # Customer request log (CR-*)
+│   ├── decisions.md                    # Design decision log (D-*)
+│   ├── progress.txt                    # Execution log (session notes)
+│   ├── specs/                          # Feature specifications
+│   │   ├── working-demo-with-twilio/   # Twilio integration spec
+│   │   │   ├── spec.md                 # Requirements + acceptance criteria
+│   │   │   └── tasks.md                # Implementation tasks
+│   │   └── 20260315-storage-auditability/  # Storage design spec
+│   │       └── spec.md
+│   └── superpowers/                    # Design specifications (architecture)
+│       └── specs/
+│           ├── 2026-03-14-agent-orchestration-design.md    # Complete system design
+│           └── 2026-03-14-agent-orchestration-diagrams.md  # Mermaid diagrams
+│
+├── scenarios/                          # Demo scenario definitions (JSON)
+│   ├── _template.json                  # Template for creating scenarios
+│   ├── grandparent-scam.json          # Emergency scam targeting elderly
+│   ├── bank-fraud.json                # Fake bank security call
+│   └── tech-support.json              # Tech support scam
+│
+├── server/                             # Backend (Node.js/Express) - the framework
+│   ├── index.js                        # Server entry point
+│   ├── agents/                         # Agent runtime
+│   │   ├── agent-factory.js           # Scans agents/ dir, parses templates
+│   │   ├── agent-instance.js          # Per-member agent instance
+│   │   ├── template-parser.js         # YAML frontmatter + markdown parser
+│   │   ├── memory-store.js            # JSON memory persistence + depth calc
+│   │   └── household.js               # Household config loader
+│   ├── api/                            # REST + WebSocket
+│   │   ├── routes.js                  # Express REST endpoints
+│   │   └── websocket.js               # Real-time event push
+│   ├── claude/                         # Claude API client
+│   │   ├── claude-client.js           # @anthropic-ai/sdk wrapper
+│   │   └── response-schema.js         # submit_assessment tool definition
+│   ├── escalation/                     # Threat escalation
+│   │   └── escalation-handler.js      # L0-L4 routing + household relay
+│   ├── ingestion/                      # Event ingestion
+│   │   ├── twilio-webhook.js          # POST /ingest/twilio/voice
+│   │   ├── simulator.js               # Scenario playback engine
+│   │   └── manual.js                  # POST /api/events
+│   ├── orchestrator/                   # Core orchestration
+│   │   ├── orchestrator.js            # Main coordinator
+│   │   ├── event-bus.js               # Typed EventEmitter + JSONL persistence
+│   │   └── scheduler.js               # node-cron for timed tasks
+│   └── tests/                          # Test suite (110 tests)
+│       ├── integration.test.js        # End-to-end flows
+│       ├── demo-validation.test.js    # Demo scenario validation
+│       ├── template-parser.test.js    # Agent template parsing
+│       ├── event-bus.test.js          # Event bus + persistence
+│       ├── memory-store.test.js       # Learning + depth calculation
+│       └── escalation-handler.test.js # Threat routing
+│
+├── src/                                # Frontend (React + Vite)
+│   ├── main.jsx                        # React entry point
+│   ├── Cortege.jsx                     # Main dashboard component
+│   └── components/                     # UI components
+│       ├── EventFeed.jsx              # Real-time event stream
+│       ├── AgentStatus.jsx            # Companion status cards
+│       ├── MemoryViewer.jsx           # Agent memory inspector
+│       ├── ScenarioRunner.jsx         # Demo scenario controls
+│       └── EventInjector.jsx          # Manual event submission
+│
+├── .env                                # Environment config (gitignored)
+├── .env.example                        # Environment template
+├── package.json                        # Node.js dependencies
+├── vite.config.js                      # Vite build config
+├── run-local.sh                        # Start script (opens 2 terminals)
+└── stop-local.sh                       # Stop script (kills ports 3001 + 5173)
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run unit tests only
+npm run test:unit
+
+# Run integration tests only
+npm run test:integration
+```
+
+### Creating New Agents
+
+Agents are defined as markdown files with YAML frontmatter:
+
+1. Create `agents/my-agent/agent.md`
+2. Define configuration in YAML frontmatter
+3. Write system prompt in markdown body
+4. Restart the orchestrator
+
+See existing agents in `agents/` for examples.
+
+### Running Scenarios
+
+```bash
+# Via API
+curl -X POST http://localhost:3001/api/scenarios/grandparent-scam/run
+
+# Available scenarios
+ls scenarios/*.json
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Required
+ANTHROPIC_API_KEY=your_api_key_here
+
+# Optional
+CLAUDE_MODEL=claude-haiku-4-5-20251001  # Default model
+PORT=3001                                # Backend port
+
+# Demo/Learning Acceleration
+LEARNING_TIME_MULTIPLIER=1440            # 1 min = 1 day (default)
+LEARNING_EVENT_WEIGHT=10                 # Event depth multiplier
+LEARNING_FAST_MODE=true                  # Lower stage thresholds
+
+# Twilio (for production)
+TWILIO_ACCOUNT_SID=your_sid
+TWILIO_AUTH_TOKEN=your_token
+
+# Debug
+CLAUDE_DEBUG=1                           # Enable API debug logging
+```
+
+## 📊 API Endpoints
+
+### Household & Companions
+
+- `GET /api/household` - Get household members
+- `GET /api/companions` - Get all agent instances
+- `GET /api/companions/:id` - Get specific agent
+- `GET /api/companions/:id/memory` - Get agent memory
+- `GET /api/companions/:id/activity` - Get agent activity log
+
+### Events & Scenarios
+
+- `GET /api/events` - Get recent events
+- `POST /api/events` - Submit manual event
+- `POST /api/scenarios/:name/run` - Run demo scenario
+
+### Agents
+
+- `GET /api/agents` - List loaded agents
+- `POST /api/agents/reload` - Hot-reload agent templates
+
+### Documentation
+
+- `GET /api/docs` - API documentation (HTML)
+
+See [API.md](docs/API.md) for complete reference with examples.
+
+## 🔌 WebSocket Events
+
+Connect to `ws://localhost:3001` to receive real-time updates:
+
+```javascript
+const ws = new WebSocket('ws://localhost:3001');
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  
+  switch (message.type) {
+    case 'event':           // New event ingested
+    case 'assessment':      // Agent assessment completed
+    case 'memory_update':   // Agent memory updated
+    case 'escalation':      // Threat escalated
+    case 'error':           // Error occurred
+  }
+};
+```
+
+## 🧪 Demo Scenarios
+
+Pre-built scenarios in `scenarios/`:
+
+- **grandparent-scam.json** - Emergency scam targeting elderly
+- **bank-fraud.json** - Fake bank security call
+- **tech-support.json** - Tech support scam
+
+Run via API or add your own JSON scenario files.
+
+## 🚨 Threat Levels
+
+Agents assess threats on a 5-level scale:
+
+- **L0** - Benign (normal activity)
+- **L1** - Suspicious (monitor)
+- **L2** - Likely threat (warn)
+- **L3** - High confidence threat (block)
+- **L4** - Critical threat (block + escalate)
+
+## 📝 Scripts
+
+### run-local.sh
+
+Starts both backend and frontend in separate terminal windows for easy log monitoring.
+
+**Features:**
+- Checks Node.js/npm installation
+- Installs dependencies if needed
+- Validates .env configuration
+- Creates data directory
+- Opens two terminal windows (backend + frontend)
+
+**Usage:**
+```bash
+./run-local.sh
+```
+
+### stop-local.sh
+
+Kills processes on ports 3001 (backend) and 5173 (frontend).
+
+**Features:**
+- Finds PIDs using each port
+- Gracefully terminates processes
+- Confirms successful shutdown
+
+**Usage:**
+```bash
+./stop-local.sh
+```
+
+## 🤝 Contributing
+
+This is a hackathon project. For production use:
+
+1. Add authentication (API keys, JWT)
+2. Implement rate limiting
+3. Add CORS configuration
+4. Set up proper logging
+5. Configure production database
+6. Add monitoring/alerting
+7. Implement backup/recovery
+
+See [PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) for details.
+
+## 📄 License
+
+[Add your license here]
+
+## 🙏 Acknowledgments
+
+- Built with [Anthropic Claude](https://www.anthropic.com/)
+- Event-driven architecture inspired by actor model patterns
+- Agent learning system based on behavioral analysis research
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/taylorparsons/cortege-hackathon/issues)
+- **Documentation**: See `docs/` directory
+- **API Reference**: http://localhost:3001/api/docs (when running)
+
+---
+
+**Built for hackathon - March 2026**

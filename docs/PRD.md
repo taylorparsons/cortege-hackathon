@@ -90,6 +90,13 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - 19 functional requirements, 10 non-functional requirements, 8 edge cases
 - 7 implementation phases, estimated 5 days
 
+## API Documentation (Sources: [CR-20260318-1700](requests.md#cr-20260318-1700); [D-20260318-1700](decisions.md#d-20260318-1700))
+- Comprehensive API documentation created: [`API.md`](API.md)
+- Documents all REST endpoints with request/response examples
+- Includes WebSocket message formats
+- Documents error codes and future considerations (auth, rate limiting, CORS)
+- Covers: household, companions, events, scenarios, agents, manual injection, Twilio webhooks
+
 ## Next / Backlog
 - Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
 - Wire Twilio webhook to event bus (Phase 3)

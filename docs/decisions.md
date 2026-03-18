@@ -337,3 +337,28 @@ Acceptance / test:
 - Implementation spec created for Twilio webhook wiring
 - Guide covers: Twilio account setup for localhost, ngrok setup, call forwarding instructions, UI updates to show real features only
 - Demo successfully processes real phone call on localhost
+
+## D-20260318-1700
+Date: 2026-03-18 17:00
+Inputs: CR-20260318-1700
+PRD: [API Documentation](PRD.md#api-documentation)
+
+Decision:
+Create comprehensive API documentation at docs/API.md covering all REST endpoints with request/response examples, query parameters, and error codes. Use markdown format for easy reading and maintenance.
+
+Rationale:
+- No built-in Swagger/OpenAPI documentation exists
+- routes.js has good inline comments but not accessible to API consumers
+- Markdown documentation is easy to maintain alongside code
+- Examples help developers understand request/response formats
+- Query parameters and error codes reduce support burden
+
+Alternatives considered:
+- Swagger/OpenAPI spec (rejected — adds complexity, requires tooling, overkill for hackathon)
+- JSDoc comments only (rejected — not accessible to external developers)
+- Inline README in server/api/ (rejected — docs/ is the established location for documentation)
+
+Acceptance / test:
+- docs/API.md created with all endpoints documented
+- Each endpoint includes: method, path, description, query params (if any), request body (if any), response format, example
+- Error codes documented (400, 404, 500)

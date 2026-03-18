@@ -10,6 +10,10 @@
 import { Router } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const EVENTS_DIR = path.resolve('data/events');
 
@@ -262,6 +266,121 @@ export function createApiRouter(orchestrator) {
       res.json({ reloaded: true, timestamp: new Date().toISOString() });
     } catch (err) {
       console.error('[api] POST /api/agents/reload error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /api/docs
+  // Returns API documentation as HTML-rendered markdown.
+  // -------------------------------------------------------------------------
+  router.get('/api/docs', (req, res) => {
+    try {
+      const docsPath = path.resolve(__dirname, '../../docs/API.md');
+      
+      if (!fs.existsSync(docsPath)) {
+        return res.status(404).json({ error: 'API documentation not found' });
+      }
+
+      const markdown = fs.readFileSync(docsPath, 'utf8');
+      
+      // Simple HTML wrapper with basic markdown-like styling
+      const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CORTEGE API Documentation</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+    h2 { color: #34495e; margin-top: 30px; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; }
+    h3 { color: #7f8c8d; margin-top: 20px; }
+    code {
+      background: #f8f9fa;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 0.9em;
+      color: #e74c3c;
+    }
+    pre {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 0.85em;
+    }
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+    a { color: #3498db; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #3498db;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    .nav {
+      background: #34495e;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .nav a {
+      color: #3498db;
+      margin-right: 15px;
+    }
+    hr {
+      border: none;
+      border-top: 2px solid #ecf0f1;
+      margin: 30px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <pre>${markdown.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+  </div>
+</body>
+</html>
+      `;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (err) {
+      console.error('[api] GET /api/docs error:', err);
       res.status(500).json({ error: 'Internal server error' });
     }
   });

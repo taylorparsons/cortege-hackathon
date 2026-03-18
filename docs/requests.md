@@ -191,3 +191,17 @@ Notes:
 - Goal: Rename spec folder, wire Twilio webhook for localhost testing, update UI to show only working features with real use cases
 - Focus on call forwarding as integration method for rapid testing
 
+
+## CR-20260318-1700
+Date: 2026-03-18 17:00
+Source: chat
+
+Request (verbatim):
+yes use the athan skill to make this change for the API
+
+Notes:
+- Context: User asked if there's built-in API documentation (Swagger/OpenAPI)
+- Current state: No built-in docs, but routes.js has good inline comments
+- Need: Create comprehensive API documentation file (docs/API.md) with examples
+- Available endpoints: household, companions, events, scenarios, agents, manual events, Twilio webhooks
+- Documentation should include request/response examples and query parameters

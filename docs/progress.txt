@@ -190,3 +190,33 @@ NOTES
 - Estimated effort: 5 days for full implementation
 - Demo mode → production transition documented (disable accelerated learning, archive demo data)
 - Security best practices documented (HTTPS, signature validation, API key management, rate limiting)
+
+---
+
+Session: 2026-03-18 17:00
+Agent: Kiro
+Model: Claude Sonnet 4.5
+Skills: athena
+Feature: api-documentation
+Input: CR-20260318-1700
+Decisions: D-20260318-1700
+Goal: Create comprehensive API documentation for CORTEGE REST and WebSocket endpoints.
+
+DONE
+- [2026-03-18 17:00] T-001: Capture customer request in docs/requests.md. (Skills: athena)
+- [2026-03-18 17:05] T-002: Create decision entry in docs/decisions.md. (Skills: athena)
+- [2026-03-18 17:10] T-003: Create comprehensive API documentation at docs/API.md. (Skills: athena)
+- [2026-03-18 17:15] T-004: Update docs/PRD.md with API documentation section. (Skills: athena)
+
+IN PROGRESS
+
+NEXT
+
+NOTES
+- API documentation created at docs/API.md
+- Documented all REST endpoints: household, companions, events, scenarios, agents, manual injection, Twilio webhooks
+- Included WebSocket message formats and connection examples
+- Documented error codes (400, 404, 500, 501)
+- Added future considerations: authentication, rate limiting, CORS, versioning
+- All endpoints include request/response examples with curl commands
+- Sources traced to CR-20260318-1700 and D-20260318-1700
