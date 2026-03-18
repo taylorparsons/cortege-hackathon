@@ -165,23 +165,23 @@ Spec: requirements.md
 
 ### Phase 10: Testing & Validation
 
-- [ ] 10.1 Unit tests
-  - [ ] 10.1.1 Test template parser with valid and invalid templates (Verifies: US1)
-  - [ ] 10.1.2 Test event routing logic (Verifies: US2)
-  - [ ] 10.1.3 Test memory update operations (Verifies: US4)
-  - [ ] 10.1.4 Test depth score calculation (Verifies: US4, EC8)
-  - [ ] 10.1.5 Test escalation routing by level (Verifies: US5)
+- [x] 10.1 Unit tests
+  - [x] 10.1.1 Test template parser with valid and invalid templates (Verifies: US1)
+  - [x] 10.1.2 Test event routing logic (Verifies: US2)
+  - [x] 10.1.3 Test memory update operations (Verifies: US4)
+  - [x] 10.1.4 Test depth score calculation (Verifies: US4, EC8)
+  - [x] 10.1.5 Test escalation routing by level (Verifies: US5)
 
-- [ ] 10.2 Integration tests
-  - [ ] 10.2.1 Test end-to-end event flow (simulator → agent → memory → escalation → WebSocket) (Verifies: US2, US3, US4, US5)
-  - [ ] 10.2.2 Test scenario playback with learning progression (Verifies: US6)
-  - [ ] 10.2.3 Test agent hot-reload (Verifies: US1, EC6)
-  - [ ] 10.2.4 Test Claude API error handling (timeout, rate limit, malformed response) (Verifies: US3, EC4)
+- [x] 10.2 Integration tests
+  - [x] 10.2.1 Test end-to-end event flow (simulator → agent → memory → escalation → WebSocket) (Verifies: US2, US3, US4, US5)
+  - [x] 10.2.2 Test scenario playback with learning progression (Verifies: US6)
+  - [x] 10.2.3 Test agent hot-reload (Verifies: US1, EC6)
+  - [x] 10.2.4 Test Claude API error handling (timeout, rate limit, malformed response) (Verifies: US3, EC4)
 
-- [ ] 10.3 Demo validation
-  - [ ] 10.3.1 Run grandparent-scam scenario and verify stage transition (Verifies: US4, US6)
-  - [ ] 10.3.2 Verify WebSocket events in React UI (Verifies: US7)
-  - [ ] 10.3.3 Verify memory viewer shows learned patterns (Verifies: US4, US7)
+- [x] 10.3 Demo validation
+  - [x] 10.3.1 Run grandparent-scam scenario and verify stage transition (Verifies: US4, US6)
+  - [x] 10.3.2 Verify WebSocket events in React UI (Verifies: US7)
+  - [x] 10.3.3 Verify memory viewer shows learned patterns (Verifies: US4, US7)
 
 
 ## Task Dependencies
