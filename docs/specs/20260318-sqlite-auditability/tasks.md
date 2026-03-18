@@ -4,6 +4,50 @@ Spec: docs/specs/20260318-sqlite-auditability/spec.md
 
 ## NEXT
 
+### Phase 6: Event Replay
+
+- [ ] 6.1 Implement event replay
+  - [ ] 6.1.1 Create replayEvents() function in server/storage/replay.js (Implements: FR-018, FR-019)
+  - [ ] 6.1.2 Accept filters: { instance_id, start_time, end_time } (Implements: FR-019)
+  - [ ] 6.1.3 Query events from SQLite with filters (Implements: FR-019)
+  - [ ] 6.1.4 Initialize fresh memory state (Implements: FR-018)
+  - [ ] 6.1.5 Apply each event's memory_updates to memory state (Implements: FR-018)
+  - [ ] 6.1.6 Return reconstructed memory state (Implements: FR-018)
+  - [ ] 6.1.7 Log warning if events are missing in sequence (Implements: EC5)
+
+- [ ] 6.2 Test event replay
+  - [ ] 6.2.1 Integration test: replay 10 events reconstructs correct memory state (Implements: FR-018)
+  - [ ] 6.2.2 Integration test: replay with timestamp filter stops at correct point (Implements: FR-019)
+  - [ ] 6.2.3 Integration test: replay with missing event logs warning and continues (Implements: EC5)
+
+### Phase 7: Performance Benchmarks
+
+- [ ] 7.1 Benchmark event writes
+  - [ ] 7.1.1 Create scripts/benchmark-writes.js (Implements: NFR-001)
+  - [ ] 7.1.2 Write 1000 events and measure p50, p95, p99 latency (Implements: NFR-001)
+  - [ ] 7.1.3 Verify p95 < 50ms (Implements: NFR-001)
+
+- [ ] 7.2 Benchmark hash chain validation
+  - [ ] 7.2.1 Create scripts/benchmark-validation.js (Implements: NFR-002)
+  - [ ] 7.2.2 Validate hash chain for 10,000 events (Implements: NFR-002)
+  - [ ] 7.2.3 Verify validation completes in <1s (Implements: NFR-002)
+
+- [ ] 7.3 Benchmark queries
+  - [ ] 7.3.1 Create scripts/benchmark-queries.js (Implements: NFR-003)
+  - [ ] 7.3.2 Query events by member_id, threat_level, timestamp range (Implements: NFR-003)
+  - [ ] 7.3.3 Verify indexes are used (EXPLAIN QUERY PLAN) (Implements: NFR-003)
+
+### Phase 8: Documentation and Deployment
+
+- [ ] 8.2 Create deployment checklist
+  - [ ] 8.2.1 Document migration steps: backup → dual-write → verify → cutover → deprecate JSON (Implements: FR-017)
+  - [ ] 8.2.2 Document rollback procedure (Implements: FR-015, FR-016)
+  - [ ] 8.2.3 Document hash chain validation schedule (daily cron job) (Implements: FR-004)
+
+## IN PROGRESS
+
+## DONE
+
 ### Phase 1: SQLite Schema and Core Infrastructure
 
 - [ ] 1.1 Install dependencies
