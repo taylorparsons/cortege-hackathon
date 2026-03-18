@@ -161,6 +161,10 @@ describe('MemoryStore load/save', () => {
   });
 
   test('saves and reloads memory correctly', () => {
+    // Force JSON mode for this test
+    const originalMode = process.env.STORAGE_MODE;
+    process.env.STORAGE_MODE = 'json';
+    
     const dir = makeTempDir();
     const store = makeStore(dir);
 
@@ -171,6 +175,13 @@ describe('MemoryStore load/save', () => {
     store2.load();
     assert.equal(store2.getMemory().events_processed, 42);
     fs.rmSync(dir, { recursive: true });
+    
+    // Restore original mode
+    if (originalMode) {
+      process.env.STORAGE_MODE = originalMode;
+    } else {
+      delete process.env.STORAGE_MODE;
+    }
   });
 
   test('handles corrupted memory file gracefully (EC2)', () => {
@@ -187,6 +198,10 @@ describe('MemoryStore load/save', () => {
   });
 
   test('atomic save uses temp file then rename', () => {
+    // Force JSON mode for this test
+    const originalMode = process.env.STORAGE_MODE;
+    process.env.STORAGE_MODE = 'json';
+    
     const dir = makeTempDir();
     const store = makeStore(dir);
     store.save();
@@ -199,6 +214,13 @@ describe('MemoryStore load/save', () => {
     const mainPath = path.join(dir, 'anchor-mom.json');
     assert.equal(fs.existsSync(mainPath), true);
     fs.rmSync(dir, { recursive: true });
+    
+    // Restore original mode
+    if (originalMode) {
+      process.env.STORAGE_MODE = originalMode;
+    } else {
+      delete process.env.STORAGE_MODE;
+    }
   });
 });
 

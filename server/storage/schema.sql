@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS events (
   event_id TEXT UNIQUE NOT NULL,
   type TEXT NOT NULL,
   source TEXT NOT NULL,
-  target_member TEXT NOT NULL,
+  target_member TEXT,  -- NULL for broadcast events
   payload TEXT NOT NULL,  -- JSON
   timestamp TEXT NOT NULL,  -- ISO8601
   hash TEXT NOT NULL,  -- SHA-256 of (event_id || timestamp || payload || prev_hash)
