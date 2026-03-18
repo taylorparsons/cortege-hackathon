@@ -126,13 +126,13 @@ EVENT SOURCES (Twilio, Simulator, Manual)
 
 ### Core Components
 
-1. **Event Bus** — Typed EventEmitter with append-only JSONL persistence. Each event is written as one JSON line to `data/events/YYYY-MM-DD.jsonl` (one file per day). Supports replay by reading files in chronological order. Events are JSON objects with `type`, `source`, `target_member`, `payload`, `timestamp`.
+1. **Event Bus** — Typed EventEmitter with SQLite storage via Storage Adapter. Events are persisted to `data/cortege.db` with SHA-256 hash chain for tamper evidence. Supports three modes: `sqlite` (production), `json` (legacy), `dual-write` (migration). Events are append-only (enforced by SQLite triggers) with fields: `event_id`, `type`, `source`, `target_member`, `payload`, `timestamp`, `hash`, `prev_hash`.
 
 2. **Orchestrator** — Loads agent templates on startup. Routes events based on agent subscriptions. Manages scheduled tasks (timed checks). Exposes REST/WebSocket API to React UI. Handles escalation routing between agents.
 
 3. **Agent Factory** — Scans `agents/` directory. Parses each `agent.md` — frontmatter becomes config, markdown body becomes Claude system prompt. Creates agent instances paired to household members. File watcher for hot-reload.
 
-4. **Memory Store** — Per-agent-instance JSON file. Stores learned patterns: trusted contacts, behavioral baselines, temporal patterns, past threat assessments. Injected into Claude prompt on each call so the agent "remembers." Grows over time = learning.
+4. **Memory Store** — Per-agent-instance memory managed by Storage Adapter. In SQLite mode, memory snapshots are stored as JSON blobs in `memory_snapshots` table, linked to events via `event_id`. Stores learned patterns: trusted contacts, behavioral baselines, temporal patterns, past threat assessments. Injected into Claude prompt on each call so the agent "remembers." Grows over time = learning. Atomic event+memory writes ensure consistency.
 
 5. **Claude Integration** — Each agent call = one Claude API request. System prompt = template markdown + accumulated memory. User message = event payload. Response = structured JSON via tool_use: threat_level, assessment, actions, memory_updates.
 
@@ -143,11 +143,13 @@ EVENT SOURCES (Twilio, Simulator, Manual)
    - `memory_snapshot` — every 12 simulated hours. Backs up agent memory to a timestamped copy for rollback.
    - Custom schedules can be defined per-agent in the template frontmatter via a `schedule` field (e.g., `schedule: { daily_review: "0 0 * * *" }`). For the PoC, schedules use simulated time governed by `LEARNING_TIME_MULTIPLIER`.
 
+8. **Storage Adapter** — Abstraction layer supporting multiple storage backends. Modes: `sqlite` (default, production-ready with tamper evidence), `json` (legacy file-based), `dual-write` (writes to both for migration). SQLite features: append-only event log, SHA-256 hash chain, atomic transactions, WAL mode for crash recovery, query indexes for performance, file permissions 0600 for security.
+
 ## 3. Learning System
 
 ### Memory Store Structure
 
-Per-agent-instance JSON file at `data/memories/<agent>-<member>.json`:
+Per-agent-instance memory stored via Storage Adapter. In SQLite mode: `memory_snapshots` table with JSON blobs. In JSON mode: `data/memories/<agent>-<member>.json`:
 
 ```json
 {
@@ -540,7 +542,13 @@ cortege-hackathon/
 │   │   ├── agent-factory.js
 │   │   ├── agent-instance.js
 │   │   ├── template-parser.js
-│   │   └── memory-store.js
+│   │   ├── memory-store.js
+│   │   └── household.js
+│   ├── storage/                    ← SQLite storage layer (NEW)
+│   │   ├── schema.sql
+│   │   ├── db.js
+│   │   ├── hash-chain.js
+│   │   └── storage-adapter.js
 │   ├── claude/
 │   │   ├── claude-client.js
 │   │   └── response-schema.js
@@ -562,23 +570,100 @@ cortege-hackathon/
 │       ├── MemoryViewer.jsx
 │       ├── ScenarioRunner.jsx
 │       └── EventInjector.jsx
+├── scripts/                        ← Utility scripts (NEW)
+│   ├── migrate-to-sqlite.js
+│   └── validate-hash-chain.js
 ├── data/                           ← Runtime data (gitignored)
-│   ├── memories/
-│   ├── events/
+│   ├── cortege.db                  ← SQLite database (production)
+│   ├── memories/                   ← Legacy JSON files (json mode)
+│   ├── events/                     ← Legacy JSONL files (json mode)
 │   └── household.json
 ├── docs/
 ├── package.json
 ├── vite.config.js
-└── .env                            ← ANTHROPIC_API_KEY, TWILIO_* (gitignored)
+└── .env                            ← ANTHROPIC_API_KEY, STORAGE_MODE, SQLITE_DB_PATH (gitignored)
 ```
 
 ### Key Dependencies
 
-**Backend:** `@anthropic-ai/sdk`, `express`, `ws`, `gray-matter`, `node-cron`, `twilio` (when ready)
+**Backend:** `@anthropic-ai/sdk`, `express`, `ws`, `gray-matter`, `node-cron`, `better-sqlite3`, `twilio` (when ready)
 
 **Frontend:** Existing React + Vite. WebSocket via native browser API. No new deps.
 
-## 6. Household Configuration
+## 6. Storage and Auditability
+
+### Storage Adapter
+
+The system uses a Storage Adapter pattern to support multiple storage backends:
+
+**Storage Modes** (configured via `STORAGE_MODE` env var):
+- **`sqlite`** (default, production) — SQLite database with tamper-evident audit trail
+- **`json`** (legacy, development) — JSON files for events and memory
+- **`dual-write`** (migration) — Writes to both SQLite and JSON simultaneously
+
+### SQLite Storage (Production)
+
+**Database:** `data/cortege.db` (configurable via `SQLITE_DB_PATH`)
+
+**Schema:**
+- `events` table — Append-only event log with hash chain
+- `memory_snapshots` table — Agent memory snapshots linked to events
+- Indexes on `target_member`, `timestamp`, `type` for query performance
+
+**Tamper Evidence:**
+- Each event has a SHA-256 hash: `hash = SHA-256(event_id || timestamp || payload || prev_hash)`
+- Events are cryptographically chained — each event's `prev_hash` references the previous event's `hash`
+- First event has `prev_hash = NULL`
+- Validation script (`scripts/validate-hash-chain.js`) verifies integrity
+
+**Append-Only Enforcement:**
+- SQLite triggers prevent `UPDATE` and `DELETE` operations on events table
+- Attempts to modify or delete events raise `SQLITE_CONSTRAINT` errors
+- Only `INSERT` operations are allowed
+
+**Atomic Transactions:**
+- Event + memory snapshot writes are atomic (both succeed or both rollback)
+- Ensures consistency between event log and memory state
+- Uses SQLite transactions with automatic rollback on error
+
+**Crash Recovery:**
+- WAL (Write-Ahead Logging) mode enabled
+- Database file permissions set to 0600 (owner read/write only)
+
+**Query Capabilities:**
+- Filter events by: `member_id`, `threat_level_min`, `start_time`, `end_time`, `signals`
+- JSON extraction for payload fields (e.g., `JSON_EXTRACT(payload, "$.threat_level")`)
+
+### Migration from JSON
+
+**Migration Script:** `scripts/migrate-to-sqlite.js`
+
+Process:
+1. Backup existing SQLite database (if exists)
+2. Read all events from `data/events/*.jsonl`
+3. Sort events chronologically
+4. Write to SQLite with reconstructed hash chain
+5. Import memory snapshots from `data/memories/*.json`
+6. Validate hash chain integrity
+7. Report progress and errors
+
+**Zero-Downtime Migration:**
+1. Set `STORAGE_MODE=dual-write` — writes to both SQLite and JSON
+2. Run migration script to import historical data
+3. Verify SQLite data integrity
+4. Set `STORAGE_MODE=sqlite` — cutover to SQLite only
+5. Archive JSON files
+
+### Validation
+
+**Daily Integrity Check:** `scripts/validate-hash-chain.js`
+
+- Validates entire event log hash chain
+- Detects tampering or corruption
+- Exit code 0 for valid chain, 1 for tampered chain
+- Recommended: Run via cron job in production
+
+## 7. Household Configuration
 
 Household members and companion pairings are defined in `data/household.json`. The Agent Factory reads this on startup to instantiate agent instances.
 
@@ -625,7 +710,7 @@ Household members and companion pairings are defined in `data/household.json`. T
 | `is_primary` | The primary household member receives escalation relays from other companions |
 | `primary_contact` | Which member to notify for L3+ escalations (defaults to `is_primary` member) |
 
-## 7. Accelerated Learning for Demo
+## 8. Accelerated Learning for Demo
 
 The depth curve spans a year in production. For the hackathon demo, learning is accelerated:
 
@@ -636,7 +721,7 @@ The depth curve spans a year in production. For the hackathon demo, learning is 
 
 This means a 5-event demo sequence can show a visible stage transition from Baseline to Pattern Recognition.
 
-## 8. Claude Model Configuration
+## 9. Claude Model Configuration
 
 Model selection is configurable via environment variable:
 
@@ -645,7 +730,7 @@ Model selection is configurable via environment variable:
 - **Demo:** Switch to `claude-sonnet-4-6` for higher quality assessments
 - **Override per agent:** Agent template frontmatter can include `model: claude-sonnet-4-6` to override the default for specific agent types that need deeper reasoning
 
-## 9. Template Validation
+## 10. Template Validation
 
 On startup and hot-reload, the Agent Factory validates each `agent.md`:
 
@@ -654,7 +739,7 @@ On startup and hot-reload, the Agent Factory validates each `agent.md`:
 - **Markdown body must be non-empty:** An agent with no prompt content is rejected
 - **Failure mode:** Invalid templates log a clear error with the file path and validation failure reason, then are skipped. The server continues to start with valid agents. This is a warning, not a crash.
 
-## 10. Error Handling
+## 11. Error Handling
 
 **Claude API failures:**
 - Timeout (>30s): Log the event as unprocessed, emit `agent:error` WebSocket event, retry once after 2s

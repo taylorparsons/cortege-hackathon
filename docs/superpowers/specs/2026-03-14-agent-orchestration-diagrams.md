@@ -14,7 +14,7 @@ graph TB
     end
 
     subgraph Bus["Event Bus"]
-        EB["Typed EventEmitter\n+ JSONL Persistence"]
+        EB["Typed EventEmitter\n+ SQLite Storage"]
     end
 
     subgraph Orch["Orchestrator"]
@@ -48,8 +48,9 @@ graph TB
     end
 
     subgraph Memory["Memory Store"]
-        MS["Per-Instance JSON\ndata/memories/"]
+        MS["SQLite + Storage Adapter\ndata/cortege.db"]
         DS["Depth Score\n0.0 - 1.0"]
+        HC["Hash Chain\nSHA-256 tamper evidence"]
     end
 
     subgraph Escalation["Escalation Handler"]
@@ -120,7 +121,7 @@ sequenceDiagram
     participant UI as React UI
 
     S->>EB: CoreEvent (type, payload, target_member)
-    EB->>EB: Persist to JSONL
+    EB->>EB: Persist to SQLite with hash chain
     EB->>O: Emit typed event
     O->>WS: event:received
 
@@ -338,11 +339,11 @@ graph TB
 ```mermaid
 graph TB
     subgraph Runtime["Runtime Data Flow"]
-        EV["CoreEvent"] -->|append| JSONL["data/events/\nYYYY-MM-DD.jsonl"]
+        EV["CoreEvent"] -->|append| SQLITE["data/cortege.db\nSQLite with hash chain"]
         EV --> AGENT["Agent Instance"]
-        AGENT -->|read| MEM_R["data/memories/\nanchor-mom.json"]
+        AGENT -->|read via adapter| MEM_R["Storage Adapter\nsqlite/json/dual-write"]
         AGENT -->|Claude API| CLAUDE["Claude Response"]
-        CLAUDE -->|memory_updates| MEM_W["data/memories/\nanchor-mom.json"]
+        CLAUDE -->|memory_updates| MEM_W["Storage Adapter\natomic transactions"]
         CLAUDE -->|actions| ESC["Escalation Handler"]
         ESC -->|WebSocket| UICOMP["React UI"]
     end
@@ -351,6 +352,13 @@ graph TB
         AGT["agents/anchor/agent.md"]
         SCN["scenarios/grandparent-scam.json"]
         HH["data/household.json"]
+    end
+
+    subgraph SQLiteSchema["SQLite Schema"]
+        EVENTS["events table\nappend-only with triggers"]
+        SNAPSHOTS["memory_snapshots table\nlinked to events"]
+        HASH["hash chain\nSHA-256 tamper evidence"]
+        INDEXES["indexes\nmember, timestamp, type"]
     end
 
     subgraph MemStructure["Memory Store Schema"]
@@ -377,6 +385,12 @@ graph TB
     HH -->|member pairing| AGENT
     SCN -->|replay events| EV
 
+    SQLITE --> EVENTS
+    SQLITE --> SNAPSHOTS
+    EVENTS --> HASH
+    EVENTS --> INDEXES
+
+    MEM_W --> SQLiteSchema
     MEM_W --> MemStructure
     MemOps -->|applied by orchestrator| MEM_W
 ```
