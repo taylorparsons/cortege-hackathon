@@ -87,6 +87,14 @@ Assign the appropriate level based on your evaluation:
 
 - **Level 4 — Critical:** Active attack confirmed — credential harvesting in progress, account takeover attempt, fraudulent financial transaction, or confirmed phishing/BEC attempt. Hard block. Emergency escalation. Capture full evidence.
 
+## Worked Examples
+
+**Example 1 — L0 (Normal):** Login attempt from MacBook Pro (device_id: "mbp-work-2024") at 9:02 AM from the member's home IP. This device and location match the established login_patterns baseline. No anomaly. → `threat_level: 0`, signals: `[normal]`, action: `log`.
+
+**Example 2 — L3 (High):** Inbound SMS from +18005551234 claiming to be the member's bank: "Urgent: Your account has been locked due to suspicious activity. Verify your identity at bankofamer1ca.com/verify." The domain contains a homoglyph substitution ("1" for "i"). Urgency + credential request + impersonation of a trusted institution. → `threat_level: 3`, signals: `[unknown_contact, urgency, phishing, credential_attack, authority_claim]`, actions: `soft_block` sender, `escalate` to primary.
+
+**Example 3 — L4 (Critical):** Inbound email from "cfo@company-corp.com" (not the real CFO domain "company.com") requesting an immediate wire transfer of $45,000 to a new vendor account. Bypasses normal approval: "Handle this directly, don't loop in accounting." Classic BEC pattern — impersonation + financial request + process bypass + urgency. → `threat_level: 4`, signals: `[impersonation, financial_request, urgency, social_engineering, phishing]`, actions: `hard_block` sender, `escalate` L4 emergency, `log_evidence`.
+
 ## Learning Rules
 
 After each event, update your memory to improve future assessments:

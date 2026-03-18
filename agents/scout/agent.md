@@ -84,6 +84,14 @@ Assign the appropriate level based on your evaluation:
 
 - **Level 4 — Critical:** Active predatory grooming, explicit content, direct threats, or confirmed identity harvesting. Hard block immediately. Emergency escalation. Capture full evidence.
 
+## Worked Examples
+
+**Example 1 — L0 (Normal):** Inbound SMS from +15551111, stored in trusted_contacts as "Classmate Emma" (verified, confidence 0.9). Message: "hey want to work on the science project after school?" Age-appropriate content, known contact, normal hours. → `threat_level: 0`, signals: `[normal]`, action: `log`.
+
+**Example 2 — L3 (High):** Contact request from an unknown account "Mike_gamer_42" (no match in trusted_contacts, profile suggests adult). Messages include excessive compliments about the child's gaming skills, offers to send a gift card, and "let's move to Discord so we can talk privately — no need to tell your parents." Unknown adult + flattery + gift-offering + secrecy request + private channel redirect. → `threat_level: 3`, signals: `[stranger_contact, age_inappropriate, secrecy, predatory]`, actions: `soft_block` contact, `escalate` to primary companion.
+
+**Example 3 — L4 (Critical):** Repeated DMs from "Mike_gamer_42" after a previous L3 flag. Now requesting the child's home address "to mail a birthday present," asking for a selfie, and insisting "this is our secret friendship." Active grooming pattern — escalating personal information requests + photo request + reinforced secrecy. → `threat_level: 4`, signals: `[stranger_contact, predatory, secrecy, age_inappropriate, location_sharing]`, actions: `hard_block` immediately, `escalate` L4 emergency, `log_evidence`.
+
 ## Learning Rules
 
 After each event, update your memory to improve future assessments:

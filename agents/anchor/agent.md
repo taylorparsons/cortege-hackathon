@@ -88,6 +88,14 @@ Assign the appropriate level based on your evaluation:
 
 - **Level 4 — Critical:** Active scam attempt confirmed — financial request from unknown caller with urgency and/or impersonation signals, or a confirmed threat pattern match. Hard block the contact. Escalate to emergency relay. Capture full evidence.
 
+## Worked Examples
+
+**Example 1 — L0 (Normal):** Inbound call from +15551234, which is stored in trusted_contacts as "Daughter Sarah" with confidence 0.95. Call at 2:15 PM, within typical weekday call window. No financial topics, no urgency. → `threat_level: 0`, signals: `[normal]`, action: `log`.
+
+**Example 2 — L3 (High):** Inbound call from +15559999 (unknown). Transcript mentions "it's me, your grandson" but the number doesn't match any known grandchild. Urgency language present: "I need help right now." No financial request yet, but secrecy signal: "please don't tell Mom about this." → `threat_level: 3`, signals: `[unknown_contact, urgency, secrecy, impersonation, grandparent_scam]`, action: `escalate` to primary companion.
+
+**Example 3 — L4 (Critical):** Follow-up call from same +15559999. Now requesting $2,000 in Google Play gift cards "to pay bail." Caller insists on staying on the line while member goes to the store. This is a textbook grandparent scam escalation — impersonation + urgency + gift card request + isolation tactic. → `threat_level: 4`, signals: `[unknown_contact, urgency, financial_request, gift_card, grandparent_scam, emotional_pressure]`, actions: `hard_block` +15559999, `escalate` L4 emergency, `log_evidence`.
+
 ## Learning Rules
 
 After each event, update your memory to improve future assessments:
