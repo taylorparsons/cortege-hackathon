@@ -529,3 +529,4 @@ NOTES
 - Commands run: `npm test` → 135 pass, 0 fail, 3 skipped
 - Commands run: `npm run build` → ✓ built in 488ms, 37 modules transformed
 - Commands run: `curl -i http://localhost:5173/api/household` → 200 OK through the Vite origin
+- Commit: afc57dbe0ebcca7b53d8f076570ba8719be834eb (T-002 localhost frontend API connectivity fix)
