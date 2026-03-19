@@ -28,6 +28,7 @@ export class AgentInstance {
     this.memoryStore = null;
     this.processingQueue = [];
     this._processing = false;
+    this._lastAction = null; // { text, timestamp, threatLevel }
   }
 
   // ---------------------------------------------------------------------------
@@ -59,6 +60,15 @@ export class AgentInstance {
       stage: mem?.stage ?? 'baseline',
       depthScore: mem?.depth_score ?? 0,
       eventsProcessed: mem?.events_processed ?? 0,
+      // Extended fields for frontend
+      agentRole: this.config?.role ?? null,
+      profileType: this.config?.profile_type ?? null,
+      designation: this.config?.designation ?? null,
+      lastAction: this._lastAction,
+      trustedContactCount: Object.keys(mem?.trusted_contacts ?? {}).length,
+      blockedContactCount: Object.keys(mem?.blocked_contacts ?? {}).length,
+      threatHistoryCount: (mem?.threat_history ?? []).length,
+      createdAt: mem?.created ?? null,
     };
   }
 
@@ -174,6 +184,13 @@ export class AgentInstance {
     agentResponse.event_id = event.id;
     agentResponse.agent = this.agentName;
     agentResponse.instance = this.id;
+
+    // Track last action for status display
+    this._lastAction = {
+      text: agentResponse.assessment ?? 'Event processed',
+      timestamp: new Date().toISOString(),
+      threatLevel: agentResponse.threat_level ?? 0,
+    };
 
     // Guard: Claude occasionally returns actions/signals as strings instead of arrays
     if (!Array.isArray(agentResponse.actions)) {

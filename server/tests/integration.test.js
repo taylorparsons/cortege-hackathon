@@ -17,6 +17,7 @@ import { EscalationHandler } from '../escalation/escalation-handler.js';
 import { EventSimulator } from '../ingestion/simulator.js';
 import { loadTemplates, createInstances } from '../agents/agent-factory.js';
 import { parseAgentResponse, validateAgentResponse } from '../claude/response-schema.js';
+import { AgentInstance } from '../agents/agent-instance.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -389,5 +390,119 @@ describe('String coercion guards', () => {
     assert.ok(Array.isArray(parsed.signals));
     assert.equal(parsed.actions.length, 0);
     assert.equal(parsed.signals.length, 0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 10.2.6 — AgentInstance.getStatus() extended fields
+// ---------------------------------------------------------------------------
+
+describe('AgentInstance.getStatus() extended fields', () => {
+  test('returns agentRole, profileType, designation, and memberName', () => {
+    const instance = new AgentInstance({
+      id: 'anchor-mom',
+      agentName: 'anchor',
+      memberId: 'member_002',
+      memberName: 'Mom',
+      config: { role: 'Senior Protection Agent', profile_type: 'senior', designation: 'β' },
+      systemPrompt: 'You are a companion agent.',
+    });
+
+    const status = instance.getStatus();
+
+    // Original fields
+    assert.equal(status.id, 'anchor-mom');
+    assert.equal(status.agentName, 'anchor');
+    assert.equal(status.memberId, 'member_002');
+    assert.equal(status.memberName, 'Mom');
+    assert.equal(status.stage, 'baseline');
+    assert.equal(status.depthScore, 0);
+    assert.equal(status.eventsProcessed, 0);
+
+    // Extended fields
+    assert.equal(status.agentRole, 'Senior Protection Agent');
+    assert.equal(status.profileType, 'senior');
+    assert.equal(status.designation, 'β');
+    assert.equal(status.lastAction, null);
+    assert.equal(status.trustedContactCount, 0);
+    assert.equal(status.blockedContactCount, 0);
+    assert.equal(status.threatHistoryCount, 0);
+    assert.equal(status.createdAt, null);
+  });
+
+  test('returns defaults when config is missing', () => {
+    const instance = new AgentInstance({
+      id: 'test-agent',
+      agentName: 'test',
+      memberId: 'member_999',
+      memberName: 'Nobody',
+      config: null,
+      systemPrompt: '',
+    });
+
+    const status = instance.getStatus();
+
+    assert.equal(status.agentRole, null);
+    assert.equal(status.profileType, null);
+    assert.equal(status.designation, null);
+    assert.equal(status.lastAction, null);
+  });
+
+  test('returns contact/threat counts from memory', () => {
+    const dir = makeTempDir();
+    const instance = new AgentInstance({
+      id: 'anchor-mom',
+      agentName: 'anchor',
+      memberId: 'member_002',
+      memberName: 'Mom',
+      config: { role: 'Senior Protection Agent', profile_type: 'senior', designation: 'β' },
+      systemPrompt: '',
+    });
+
+    instance.initMemory(dir);
+
+    // Add trusted contacts and a blocked contact via memory store
+    instance.memoryStore.applyUpdates({
+      add_trusted_contact: { id: 'c1', name: 'Alice', relationship: 'daughter', confidence: 0.9 },
+    });
+    instance.memoryStore.applyUpdates({
+      add_trusted_contact: { id: 'c2', name: 'Bob', relationship: 'son', confidence: 0.85 },
+    });
+    instance.memoryStore.applyUpdates({
+      block_contact: { id: 'b1', name: 'Scammer', reason: 'fraud' },
+    });
+
+    const status = instance.getStatus();
+
+    assert.equal(status.trustedContactCount, 2);
+    assert.equal(status.blockedContactCount, 1);
+    assert.ok(status.createdAt !== null, 'Expected createdAt to be set after initMemory');
+
+    fs.rmSync(dir, { recursive: true });
+  });
+
+  test('_lastAction is populated after setting it', () => {
+    const instance = new AgentInstance({
+      id: 'anchor-mom',
+      agentName: 'anchor',
+      memberId: 'member_002',
+      memberName: 'Mom',
+      config: { role: 'Senior Protection Agent', profile_type: 'senior', designation: 'β' },
+      systemPrompt: '',
+    });
+
+    assert.equal(instance.getStatus().lastAction, null);
+
+    // Simulate what _processOne does
+    instance._lastAction = {
+      text: 'Normal call from known contact.',
+      timestamp: '2026-03-19T10:00:00.000Z',
+      threatLevel: 0,
+    };
+
+    const status = instance.getStatus();
+    assert.equal(status.lastAction.text, 'Normal call from known contact.');
+    assert.equal(status.lastAction.timestamp, '2026-03-19T10:00:00.000Z');
+    assert.equal(status.lastAction.threatLevel, 0);
   });
 });
