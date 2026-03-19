@@ -23,3 +23,4 @@ Start here:
 | Superpowers Setup | [`specs/20260314-superpowers-setup/spec.md`](specs/20260314-superpowers-setup/spec.md) | Superpowers plugin skills spec |
 | Agent Orchestration | [`superpowers/specs/2026-03-14-agent-orchestration-design.md`](superpowers/specs/2026-03-14-agent-orchestration-design.md) | Agent system design spec |
 | Agent Diagrams | [`superpowers/specs/2026-03-14-agent-orchestration-diagrams.md`](superpowers/specs/2026-03-14-agent-orchestration-diagrams.md) | Mermaid system diagrams |
+| Frontend API Integration | [`specs/20260319-frontend-api-integration/spec.md`](specs/20260319-frontend-api-integration/spec.md) | Replace mock data with live API data |

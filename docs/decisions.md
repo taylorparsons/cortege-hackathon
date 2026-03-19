@@ -389,3 +389,33 @@ Acceptance / test:
 - Tasks created at docs/specs/20260318-sqlite-auditability/tasks.md
 - All requirements traced to CR-20260318-1800 and D-20260318-1800
 - Migration plan includes rollback strategy
+
+## D-20260319-1000
+Date: 2026-03-19 10:00
+Inputs: CR-20260319-1000
+PRD: [Frontend API Integration](PRD.md#frontend-api-integration)
+
+Decision:
+Replace all hardcoded mock data in Cortege.jsx with live API data. Extend `getStatus()` on the backend to include richer companion data (recent activity summary, event counts, last action). Frontend fetches from `/api/companions` for grid view and `/api/companions/:id/activity` + `/api/companions/:id/memory` for detail panel. WebSocket updates feed into the main Household view, not just Live Feed. Display properties (colors, icons, roles) derived from agent type metadata, not fake stats.
+
+Rationale:
+- The backend API already exists and returns real data — the frontend simply doesn't use it for the main view
+- Extending `getStatus()` is cleaner than making 5+ separate API calls per companion from the frontend
+- WebSocket already pushes events and status updates — routing these to the main view unifies the data flow
+- Showing real (even sparse) data that grows over time aligns with the "trust over time" product philosophy
+- Mock scenarios (grandparent-scam, normal-day) produce real API data — that's OK, it's system output not fake constants
+- UI should handle empty/sparse state gracefully as a feature (day 1 is intentionally sparse → day 365 is rich)
+
+Alternatives considered:
+- Keep mock data as "example" data alongside real data (rejected — user explicitly wants nothing 100% fake)
+- Create mock API responses on the backend (rejected — defeats the purpose; the real API already works)
+- Only show what getStatus() currently returns (rejected — too sparse for useful UX; extending it is low-effort)
+- Fetch all data client-side from multiple endpoints (rejected — too many HTTP calls; better to enrich getStatus())
+
+Acceptance / test:
+- Zero hardcoded mock data constants remain in Cortege.jsx (HOUSEHOLD, COMPANIONS, DEPTH_STAGES constants removed)
+- All companion card data comes from GET /api/companions
+- Detail panel activity comes from GET /api/companions/:id/activity
+- WebSocket updates reflect in real-time on the Household tab
+- Loading and empty states shown gracefully when backend is starting up or has no events yet
+- Running a demo scenario populates the UI with real data

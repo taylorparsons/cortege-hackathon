@@ -218,3 +218,18 @@ Notes:
 - Current state: System uses mutable JSON files (data/memories/*.json, data/events/*.jsonl)
 - Need: Implement production-ready SQLite storage with tamper-evident audit trail
 - Referenced decisions: D-20260315-1155 (SQLite for production), D-20260315-1202 (auditability with hash chain)
+
+## CR-20260319-1000
+Date: 2026-03-19 10:00
+Source: chat
+
+Request (verbatim):
+update the web app so that it only uses data from the API, mocked data use cases are ok, but nothing on the web app is 100% fake. I want it to be more of a trusted background app that builds trust over time
+
+Notes:
+- Current state: Main "Household" tab uses 100% hardcoded mock data (HOUSEHOLD, COMPANIONS constants in Cortege.jsx)
+- Backend API exists and returns real data: GET /api/household, GET /api/companions, GET /api/companions/:id/activity, GET /api/companions/:id/memory
+- WebSocket integration exists but only updates the "Live Feed" tab, not the main Household view
+- Mock data includes rich fields (recentActivity, graph stats, silentActionsToday) that the API doesn't yet provide
+- User wants: real data from the API, UI builds trust over time, nothing fake on display
+- Demo scenarios running through the API = OK (that's real system data, not hardcoded)
