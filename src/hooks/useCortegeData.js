@@ -46,6 +46,7 @@ export function useCortegeData() {
         const compData = await compRes.json();
         setCompanions(Array.isArray(compData) ? compData : []);
       }
+      hasFetched.current = true;
     } catch (err) {
       setError('Cannot reach backend');
       console.warn('[useCortegeData] Fetch error:', err.message);
@@ -66,8 +67,8 @@ export function useCortegeData() {
         clearTimeout(reconnectTimer.current);
         reconnectTimer.current = null;
       }
-      // Re-fetch on reconnect to sync state
-      fetchData();
+      // Re-fetch on reconnect to sync state (skip if initial fetch already succeeded)
+      if (hasFetched.current) fetchData();
     };
 
     socket.onmessage = (e) => {
@@ -84,7 +85,7 @@ export function useCortegeData() {
       } else if (event === 'stage:transition') {
         setCompanions(prev => prev.map(c =>
           c.id === data?.instanceId
-            ? { ...c, stage: data.newStage ?? data.toStage ?? c.stage, depthScore: data.depthScore ?? c.depthScore }
+            ? { ...c, stage: data.toStage ?? c.stage, depthScore: data.depthScore ?? c.depthScore }
             : c
         ));
       } else if (event === 'agent:processing') {

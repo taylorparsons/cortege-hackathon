@@ -392,16 +392,16 @@ function CompanionCard({ c, selected, onClick }) {
 
         <div className="cc-stats">
           <div className="cc-stat">
-            <div className="cc-stat-val" style={{ color: c.color }}>{c.silentActionsToday}</div>
-            <div className="cc-stat-lbl">Today</div>
+            <div className="cc-stat-val" style={{ color: c.color }}>{c.eventsProcessed ?? 0}</div>
+            <div className="cc-stat-lbl">Processed</div>
           </div>
           <div className="cc-stat">
-            <div className="cc-stat-val" style={{ color: c.color }}>{c.silentActionsMonth}</div>
-            <div className="cc-stat-lbl">This Month</div>
+            <div className="cc-stat-val" style={{ color: c.color }}>{c.trustedContacts ?? 0}</div>
+            <div className="cc-stat-lbl">Trusted</div>
           </div>
           <div className="cc-stat">
-            <div className="cc-stat-val" style={{ color: "#4ECDC4" }}>0</div>
-            <div className="cc-stat-lbl">Reached</div>
+            <div className="cc-stat-val" style={{ color: "#DC503C" }}>{c.blockedContacts ?? 0}</div>
+            <div className="cc-stat-lbl">Blocked</div>
           </div>
         </div>
       </div>
@@ -838,8 +838,9 @@ export default function Cortege() {
                               days,
                               lastAction: c.lastAction?.timestamp ? timeAgo(c.lastAction.timestamp) : 'No activity yet',
                               lastActionText: c.lastAction?.text ?? 'Waiting for events...',
-                              silentActionsToday: c.eventsProcessed ?? 0,
-                              silentActionsMonth: c.eventsProcessed ?? 0,
+                              eventsProcessed: c.eventsProcessed ?? 0,
+                              trustedContacts: c.trustedContactCount ?? 0,
+                              blockedContacts: c.blockedContactCount ?? 0,
                               threatLevel: c.lastAction?.threatLevel ?? 0,
                               graph: {
                                 trusted: c.trustedContactCount ?? 0,
@@ -943,6 +944,7 @@ export default function Cortege() {
                       ...c,
                       instanceId: c.id,
                       name: c.agentName?.toUpperCase(),
+                      stage: formatStageName(c.stage),
                     }))}
                     processingStates={processingStates}
                   />
