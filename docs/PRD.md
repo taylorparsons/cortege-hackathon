@@ -108,6 +108,15 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [`specs/20260319-frontend-api-integration/spec.md`](specs/20260319-frontend-api-integration/spec.md) (Status: Done)
 - Tasks: [`specs/20260319-frontend-api-integration/tasks.md`](specs/20260319-frontend-api-integration/tasks.md)
 
+## Frontend Dev Connectivity — SHIPPED (Sources: [CR-20260319-1654](requests.md#cr-20260319-1654); [D-20260319-1654](decisions.md#d-20260319-1654))
+- Follow-up fix to make the shipped frontend API integration work in localhost development through the Vite origin
+- Replace hardcoded absolute frontend transport URLs with same-origin-relative paths
+- Add Vite proxy support for `/api`, `/ws`, and `/ingest`
+- Add a valid `npm run server` command so local startup instructions match the actual backend entrypoint
+- Evidence: `src/lib/backend-url.js`, `src/hooks/useCortegeData.js`, `vite.config.js`, `package.json`, `run-local.sh`
+- Spec: [`specs/20260319-frontend-dev-connectivity/spec.md`](specs/20260319-frontend-dev-connectivity/spec.md) (Status: Done)
+- Tasks: [`specs/20260319-frontend-dev-connectivity/tasks.md`](specs/20260319-frontend-dev-connectivity/tasks.md)
+
 ## Next / Backlog
 - Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
 - Wire Twilio webhook to event bus (Phase 3)

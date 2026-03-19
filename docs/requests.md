@@ -233,3 +233,15 @@ Notes:
 - Mock data includes rich fields (recentActivity, graph stats, silentActionsToday) that the API doesn't yet provide
 - User wants: real data from the API, UI builds trust over time, nothing fake on display
 - Demo scenarios running through the API = OK (that's real system data, not hardcoded)
+
+## CR-20260319-1654
+Date: 2026-03-19 16:54
+Source: chat
+
+Request (verbatim):
+Implement the plan.
+
+Notes:
+- Context from same session: user asked to "use $athena to make the right fix" after confirming the UI still showed "Cannot reach backend" when started via `./run-local.sh`
+- Verified root cause: frontend was calling absolute `http://localhost:3001` / `ws://localhost:3001/ws` from Vite dev origin `http://localhost:5173` with no Vite proxy and no backend CORS
+- User goal remains: have the UI use real APIs locally rather than demo-only data

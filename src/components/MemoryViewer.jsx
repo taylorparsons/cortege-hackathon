@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-
-const BASE = "http://localhost:3001";
+import { apiUrl } from "../lib/backend-url.js";
 
 /**
  * MemoryViewer — Shows agent memory for a companion.
@@ -16,7 +15,7 @@ export function MemoryViewer({ companionId, companionName }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${BASE}/api/companions/${companionId}/memory`);
+      const res = await fetch(apiUrl(`/api/companions/${companionId}/memory`));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       setMemory(data);

@@ -85,7 +85,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "🔧 Opening backend server in new Terminal window..."
     osascript <<EOF
 tell application "Terminal"
-    do script "cd '$CURRENT_DIR' && echo '🔧 CORTEGE Backend Server' && echo '=========================' && echo '' && node server/index.js"
+    do script "cd '$CURRENT_DIR' && echo '🔧 CORTEGE Backend Server' && echo '=========================' && echo '' && npm run server"
     activate
 end tell
 EOF
@@ -110,7 +110,7 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux - try common terminal emulators
     if command -v gnome-terminal &> /dev/null; then
         echo "🔧 Opening backend server in new terminal..."
-        gnome-terminal -- bash -c "cd '$CURRENT_DIR' && echo '🔧 CORTEGE Backend Server' && echo '=========================' && echo '' && node server/index.js; exec bash"
+        gnome-terminal -- bash -c "cd '$CURRENT_DIR' && echo '🔧 CORTEGE Backend Server' && echo '=========================' && echo '' && npm run server; exec bash"
         
         sleep 2
         
@@ -119,7 +119,7 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         
     elif command -v xterm &> /dev/null; then
         echo "🔧 Opening backend server in new terminal..."
-        xterm -e "cd '$CURRENT_DIR' && echo '🔧 CORTEGE Backend Server' && echo '=========================' && echo '' && node server/index.js" &
+        xterm -e "cd '$CURRENT_DIR' && echo '🔧 CORTEGE Backend Server' && echo '=========================' && echo '' && npm run server" &
         
         sleep 2
         
@@ -129,7 +129,7 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     else
         echo "⚠️  Could not detect terminal emulator. Starting in background..."
         echo "   Check logs manually or run servers individually."
-        node server/index.js > backend.log 2>&1 &
+        npm run server > backend.log 2>&1 &
         npm run dev > frontend.log 2>&1 &
         echo "   Backend logs: tail -f backend.log"
         echo "   Frontend logs: tail -f frontend.log"
@@ -143,7 +143,7 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     
 else
     echo "⚠️  Unsupported OS. Starting in background mode..."
-    node server/index.js > backend.log 2>&1 &
+    npm run server > backend.log 2>&1 &
     BACKEND_PID=$!
     npm run dev > frontend.log 2>&1 &
     FRONTEND_PID=$!

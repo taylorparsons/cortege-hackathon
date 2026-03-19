@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-
-const API_BASE = 'http://localhost:3001';
-const WS_URL = 'ws://localhost:3001/ws';
+import { apiUrl, wsUrl } from '../lib/backend-url.js';
 
 /**
  * Custom hook that manages all CORTEGE data:
@@ -33,8 +31,8 @@ export function useCortegeData() {
     setError(null);
     try {
       const [hhRes, compRes] = await Promise.all([
-        fetch(`${API_BASE}/api/household`),
-        fetch(`${API_BASE}/api/companions`),
+        fetch(apiUrl('/api/household')),
+        fetch(apiUrl('/api/companions')),
       ]);
 
       if (hhRes.ok) {
@@ -58,7 +56,7 @@ export function useCortegeData() {
   const connectWs = useCallback(() => {
     if (wsRef.current && wsRef.current.readyState < 2) return;
 
-    const socket = new WebSocket(WS_URL);
+    const socket = new WebSocket(wsUrl('/ws'));
     wsRef.current = socket;
 
     socket.onopen = () => {

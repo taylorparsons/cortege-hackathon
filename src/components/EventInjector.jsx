@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-const BASE = "http://localhost:3001";
+import { apiUrl } from "../lib/backend-url.js";
 
 const EVENT_TYPES = [
   "inbound_call",
@@ -93,7 +92,7 @@ export function EventInjector() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/events`, {
+      const res = await fetch(apiUrl('/api/events'), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(event),

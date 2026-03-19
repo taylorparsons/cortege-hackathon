@@ -495,3 +495,37 @@ NOTES
 - Commands run: node server/index.js → API verified (household, companions endpoints return correct data)
 - Commits: 8ced302, 54d612f, cafbbb8, dc0ac23, 2075507, 0510f03
 - Feature status: SHIPPED — spec marked Done, PRD updated
+
+---
+
+Session: 2026-03-19 16:54
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena
+Feature: 20260319-frontend-dev-connectivity
+Input: CR-20260319-1654
+Decisions: D-20260319-1654
+Spec: docs/specs/20260319-frontend-dev-connectivity/spec.md
+Tasks: docs/specs/20260319-frontend-dev-connectivity/tasks.md
+Goal: Make the localhost UI reach the live backend through the Vite origin so `./run-local.sh` works end to end.
+
+DONE
+- [2026-03-19 16:54] T-001: Capture follow-up dev-connectivity scope in ATHENA docs and mark it as a follow-up to the shipped frontend API integration work. (Skills: athena)
+- [2026-03-19 16:56] T-002: Add Vite proxy and shared frontend transport helper. (Skills: athena)
+- [2026-03-19 16:56] T-003: Update all active frontend callers to use relative transport paths. (Skills: athena)
+- [2026-03-19 16:56] T-004: Add `npm run server` and align `run-local.sh` with the same backend command. (Skills: athena)
+- [2026-03-19 16:58] T-005: Verification complete — tests pass, build passes, and `http://localhost:5173/api/household` returns 200 through the Vite origin. (Skills: athena)
+- [2026-03-19 16:59] T-006: Reconcile PRD/spec/tasks/progress to shipped state. (Skills: athena)
+
+IN PROGRESS
+
+NEXT
+
+NOTES
+- Root cause verified before implementation: browser-origin mismatch (`localhost:5173` UI calling hardcoded `localhost:3001` API/WS) with no Vite proxy or backend CORS
+- Existing backend is reachable directly: `curl http://localhost:3001/api/household` returned 200 before code changes
+- Shared frontend transport helper added at `src/lib/backend-url.js`
+- Vite proxy added for `/api`, `/ingest`, and `/ws`
+- Commands run: `npm test` → 135 pass, 0 fail, 3 skipped
+- Commands run: `npm run build` → ✓ built in 488ms, 37 modules transformed
+- Commands run: `curl -i http://localhost:5173/api/household` → 200 OK through the Vite origin

@@ -259,6 +259,25 @@ Alternatives considered:
 - Always-on logging (rejected — too noisy for production/demo)
 - Separate debug script (rejected — need to observe real API calls in context)
 
+## D-20260319-1654
+Date: 2026-03-19 16:54
+Inputs: [CR-20260319-1654](requests.md#cr-20260319-1654)
+PRD: [Frontend Dev Connectivity](PRD.md#frontend-dev-connectivity-sources-cr-20260319-1654-d-20260319-1654)
+Spec: [`specs/20260319-frontend-dev-connectivity/spec.md`](specs/20260319-frontend-dev-connectivity/spec.md)
+
+Decision:
+Use same-origin-relative frontend API and WebSocket paths plus a Vite dev proxy to `http://localhost:3001`. Do not make backend CORS the primary fix. Also add a `npm run server` script so the UI and scripts point to a valid backend command.
+
+Rationale:
+- The backend is already reachable directly on `localhost:3001`; the browser failure is caused by the Vite dev origin (`localhost:5173`) calling hardcoded cross-origin URLs with no proxy/CORS support.
+- Relative frontend paths plus Vite proxy are the smallest fix that makes `./run-local.sh` work as the user expects.
+- This keeps the frontend transport contract aligned with the current page origin and avoids scattering absolute dev-only URLs through the UI.
+- Adding `npm run server` makes the UI recovery message truthful and keeps local startup commands consistent.
+
+Alternatives considered:
+- Enable Express CORS only (rejected — fixes the symptom in dev but keeps hardcoded absolute origins in the frontend)
+- Keep absolute URLs and document manual browser workarounds (rejected — user goal is to have the UI use the real APIs locally by default)
+
 Acceptance / test:
 - `CLAUDE_DEBUG=1` shows per-call cache status, token counts, and one-time SDK diagnostics
 - No output when CLAUDE_DEBUG is unset

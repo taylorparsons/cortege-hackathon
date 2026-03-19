@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-
-const BASE = "http://localhost:3001";
+import { apiUrl } from "../lib/backend-url.js";
 
 const KNOWN_SCENARIOS = [
   { name: "grandparent-scam", label: "Grandparent Scam", desc: "5-event AI voice clone + wire transfer attempt targeting Mom" },
@@ -16,7 +15,7 @@ export function ScenarioRunner() {
   const [backendOk, setBackendOk] = useState(null);
 
   useEffect(() => {
-    fetch(`${BASE}/api/agents`)
+    fetch(apiUrl('/api/agents'))
       .then(r => r.json())
       .then(data => { setAgents(data); setBackendOk(true); })
       .catch(() => setBackendOk(false));
@@ -25,7 +24,7 @@ export function ScenarioRunner() {
   async function runScenario(name) {
     setResults(prev => ({ ...prev, [name]: { loading: true, data: null, error: null } }));
     try {
-      const res = await fetch(`${BASE}/api/scenarios/${name}/run`, { method: "POST" });
+      const res = await fetch(apiUrl(`/api/scenarios/${name}/run`), { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       setResults(prev => ({ ...prev, [name]: { loading: false, data, error: null } }));

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const API_BASE = 'http://localhost:3001';
+import { apiUrl } from '../lib/backend-url.js';
 
 /**
  * Fetches activity for a selected companion.
@@ -20,7 +19,7 @@ export function useCompanionDetail(companionId) {
     let cancelled = false;
     setLoading(true);
 
-    fetch(`${API_BASE}/api/companions/${companionId}/activity?limit=20`)
+    fetch(apiUrl(`/api/companions/${companionId}/activity?limit=20`))
       .then(r => r.ok ? r.json() : [])
       .catch(() => [])
       .then(actData => {
