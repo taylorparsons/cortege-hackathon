@@ -1,120 +1,14 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { EventFeed } from "./components/EventFeed.jsx";
 import { AgentStatus } from "./components/AgentStatus.jsx";
 import { ScenarioRunner } from "./components/ScenarioRunner.jsx";
 import { EventInjector } from "./components/EventInjector.jsx";
 import { MemoryViewer } from "./components/MemoryViewer.jsx";
-
-const WS_URL = "ws://localhost:3001/ws";
+import { useCortegeData } from './hooks/useCortegeData.js';
+import { useCompanionDetail } from './hooks/useCompanionDetail.js';
+import { getAgentDisplay, getStageIndex, formatStageName, DEPTH_STAGES } from './lib/companion-display.js';
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap');`;
-
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const HOUSEHOLD = {
-  name: "The Parsons",
-  address: "Seattle, WA",
-  since: "March 2024",
-};
-
-const COMPANIONS = [
-  {
-    id: "scout",
-    greek: "α",
-    name: "SCOUT",
-    role: "Youth Protection",
-    paired: "Alex",
-    age: "14 yrs",
-    type: "child",
-    color: "#4ECDC4",
-    glow: "rgba(78,205,196,0.18)",
-    ring: "rgba(78,205,196,0.35)",
-    days: 47,
-    stage: "Pattern Recognition",
-    stageIdx: 1,
-    lastAction: "4 min ago",
-    lastActionText: "Flagged new account 'j_smith_real99' attempting contact — held at perimeter",
-    silentActionsToday: 12,
-    silentActionsMonth: 184,
-    threatLevel: 0,
-    recentActivity: [
-      { time: "4 min ago",   icon: "🛡", text: "Held: Unverified account 'j_smith_real99' — 2-day-old profile attempting Instagram DM", level: 2 },
-      { time: "1 hr ago",    icon: "🔇", text: "Blocked: 3 coordinated accounts sharing identical post pattern (synthetic swarm signal)", level: 3 },
-      { time: "3 hrs ago",   icon: "🔍", text: "Scanned: New TikTok follower — account age OK, social graph shallow — soft monitoring", level: 1 },
-      { time: "Yesterday",   icon: "🛡", text: "Steered: Redirected away from flagged Discord server linked to predatory contact network", level: 2 },
-      { time: "2 days ago",  icon: "🗑", text: "Removed: Alex's school and birthday from FastPeopleSearch listing", level: 1 },
-      { time: "3 days ago",  icon: "🔇", text: "Blocked: Adult account posing as 9th grader — voice pattern mismatch on voice note", level: 3 },
-    ],
-    graph: { trusted: 23, monitored: 4, blocked: 11 },
-    depth: { day30: true, day90: false, day365: false },
-  },
-  {
-    id: "anchor",
-    greek: "β",
-    name: "ANCHOR",
-    role: "Senior Protection",
-    paired: "Mom",
-    age: "71 yrs",
-    type: "senior",
-    color: "#E8A838",
-    glow: "rgba(232,168,56,0.15)",
-    ring: "rgba(232,168,56,0.3)",
-    days: 312,
-    stage: "Cortege Mode",
-    stageIdx: 3,
-    lastAction: "2 hrs ago",
-    lastActionText: "Intercepted AI voice clone call — caller impersonating 'Alex' requesting $2,400 wire transfer",
-    silentActionsToday: 3,
-    silentActionsMonth: 67,
-    threatLevel: 0,
-    recentActivity: [
-      { time: "2 hrs ago",   icon: "🎭", text: "Intercepted: AI voice clone — 97% deepfake confidence. Caller impersonating Alex, requesting $2,400 wire transfer. Call never reached Mom.", level: 4 },
-      { time: "Yesterday",   icon: "🔇", text: "Blocked: IRS impersonation robocall (+1 800-555-0199) — 847 community reports", level: 2 },
-      { time: "3 days ago",  icon: "🛡", text: "Held: Medicare 'update required' SMS — flagged credential harvesting link", level: 3 },
-      { time: "1 week ago",  icon: "🗑", text: "Removed: Mom's address and phone from Spokeo, MyLife, WhitePages (re-listing cycle)", level: 1 },
-      { time: "1 week ago",  icon: "🔍", text: "Verified: Call from Alex's real number — voice print match 99.2% — passed through", level: 0 },
-      { time: "2 weeks ago", icon: "🔇", text: "Blocked: 'Grandma scam' call — urgency language + secrecy request + unknown number", level: 3 },
-    ],
-    graph: { trusted: 8, monitored: 1, blocked: 47 },
-    depth: { day30: true, day90: true, day365: true },
-  },
-  {
-    id: "sentinel",
-    greek: "γ",
-    name: "SENTINEL",
-    role: "Professional Protection",
-    paired: "Taylor",
-    age: "38 yrs",
-    type: "adult",
-    color: "#7B9EC9",
-    glow: "rgba(123,158,201,0.15)",
-    ring: "rgba(123,158,201,0.3)",
-    days: 312,
-    stage: "Cortege Mode",
-    stageIdx: 3,
-    lastAction: "14 min ago",
-    lastActionText: "Quarantined spear-phishing email — domain chase-alertcenter.com registered 3 days ago",
-    silentActionsToday: 8,
-    silentActionsMonth: 143,
-    threatLevel: 0,
-    recentActivity: [
-      { time: "14 min ago",  icon: "✉️", text: "Quarantined: Spear-phishing — chase-alertcenter.com (3 days old), SPF FAIL, credential harvest link", level: 3 },
-      { time: "1 hr ago",    icon: "🔗", text: "Correlated: SMS + email + data re-listing within 90-min window — coordinated attack pattern. Elevated monitoring.", level: 3 },
-      { time: "3 hrs ago",   icon: "🗑", text: "Removed: Taylor's home address re-listed on FastPeopleSearch — automated opt-out sent", level: 1 },
-      { time: "Yesterday",   icon: "🔇", text: "Blocked: BEC attempt — email impersonating CFO requesting urgent wire transfer approval", level: 4 },
-      { time: "2 days ago",  icon: "🛡", text: "Flagged: New LinkedIn connection request — account created 6 days ago, no mutual connections, message requesting call", level: 2 },
-      { time: "3 days ago",  icon: "🌐", text: "Steered: Blocked navigation to lookalike banking site (chase-secure-login.net)", level: 2 },
-    ],
-    graph: { trusted: 142, monitored: 7, blocked: 89 },
-    depth: { day30: true, day90: true, day365: true },
-  },
-];
-
-const DEPTH_STAGES = [
-  { label: "Baseline", days: "Day 1", color: "#7B9EC9", desc: "Universal threat signatures active" },
-  { label: "Pattern Recognition", days: "Day 30", color: "#4ECDC4", desc: "Behavioral model building" },
-  { label: "Predictive", days: "Day 90", color: "#9B7FD4", desc: "Anticipating threats before they form" },
-  { label: "Cortege Mode", days: "Day 365", color: "#E8A838", desc: "Full companion — deepest protection" },
-];
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const css = `
@@ -785,108 +679,63 @@ const CONTROL_MODALS = {
   },
 };
 
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+/** Formats an ISO timestamp as relative time */
+function timeAgo(isoString) {
+  if (!isoString) return 'Never';
+  const seconds = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
+  if (seconds < 172800) return 'Yesterday';
+  return `${Math.floor(seconds / 86400)} days ago`;
+}
+
+/** Maps event type to an emoji icon */
+function eventTypeIcon(type) {
+  const icons = {
+    inbound_call: '📞',
+    inbound_sms: '💬',
+    inbound_email: '✉️',
+    financial_transaction: '💳',
+    contact_request: '👤',
+    login_attempt: '🔐',
+  };
+  return icons[type] ?? '📋';
+}
+
 // ─── APP ──────────────────────────────────────────────────────────────────────
 export default function Cortege() {
   const [tab, setTab] = useState("household");
-  const [selected, setSelected] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const [modal, setModal] = useState(null);
   const [time, setTime] = useState(new Date().toLocaleTimeString());
 
-  // ── WebSocket state ──────────────────────────────────────────────────────
-  const [wsConnected, setWsConnected] = useState(false);
-  const [liveEvents, setLiveEvents] = useState([]);
-  const [toast, setToast] = useState(null);
-  const [processingStates, setProcessingStates] = useState(new Map());
-  const [liveCompanions, setLiveCompanions] = useState([]);
-  const wsRef = useRef(null);
-  const reconnectTimer = useRef(null);
+  // API data
+  const {
+    household,
+    companions,
+    liveEvents,
+    wsConnected,
+    loading,
+    error,
+    toast,
+    processingStates,
+  } = useCortegeData();
 
-  const showToast = useCallback((msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 4000);
-  }, []);
+  // Detail panel data
+  const { activity, loading: detailLoading } = useCompanionDetail(selectedId);
 
-  const connectWs = useCallback(() => {
-    if (wsRef.current && wsRef.current.readyState < 2) return; // already open/connecting
-
-    const socket = new WebSocket(WS_URL);
-    wsRef.current = socket;
-
-    socket.onopen = () => {
-      setWsConnected(true);
-      if (reconnectTimer.current) {
-        clearTimeout(reconnectTimer.current);
-        reconnectTimer.current = null;
-      }
-    };
-
-    socket.onmessage = (e) => {
-      let msg;
-      try { msg = JSON.parse(e.data); } catch { return; }
-      const { event, data } = msg;
-
-      if (event === "event:received") {
-        setLiveEvents(prev => [data, ...prev].slice(0, 50));
-      } else if (event === "escalation:fired") {
-        const level = data?.level ?? data?.escalation_level ?? "";
-        const member = data?.member_id ?? data?.target_member ?? "";
-        showToast(`🚨 Escalation L${level} — ${member}`);
-      } else if (event === "stage:transition") {
-        setLiveCompanions(prev => prev.map(c =>
-          c.instanceId === data?.instanceId
-            ? { ...c, stage: data.newStage ?? data.stage ?? c.stage }
-            : c
-        ));
-      } else if (event === "agent:processing") {
-        setProcessingStates(prev => {
-          const next = new Map(prev);
-          next.set(data?.instanceId, true);
-          return next;
-        });
-      } else if (event === "agent:response" || event === "agent:error") {
-        setProcessingStates(prev => {
-          const next = new Map(prev);
-          next.set(data?.instanceId, false);
-          return next;
-        });
-      } else if (event === "companion:status") {
-        setLiveCompanions(prev => {
-          const idx = prev.findIndex(c => c.instanceId === data?.instanceId);
-          if (idx === -1) return [...prev, data];
-          const next = [...prev];
-          next[idx] = { ...next[idx], ...data };
-          return next;
-        });
-      }
-    };
-
-    socket.onclose = () => {
-      setWsConnected(false);
-      reconnectTimer.current = setTimeout(connectWs, 3000);
-    };
-
-    socket.onerror = () => {
-      setWsConnected(false);
-      socket.close();
-    };
-  }, [showToast]);
-
-  useEffect(() => {
-    connectWs();
-    return () => {
-      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      if (wsRef.current) wsRef.current.close();
-    };
-  }, [connectWs]);
-  // ────────────────────────────────────────────────────────────────────────
+  // Find selected companion from API data
+  const selected = selectedId ? companions.find(c => c.id === selectedId) : null;
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  const totalSilentToday = COMPANIONS.reduce((s, c) => s + c.silentActionsToday, 0);
-  const totalSilentMonth = COMPANIONS.reduce((s, c) => s + c.silentActionsMonth, 0);
+  const totalEventsProcessed = companions.reduce((s, c) => s + (c.eventsProcessed ?? 0), 0);
 
   return (
     <>
@@ -906,7 +755,7 @@ export default function Cortege() {
               { id: "philosophy", label: "The Model" },
               { id: "livefeed", label: "Live Feed" },
             ].map(t => (
-              <button key={t.id} className={`nav-tab ${tab === t.id ? "active" : ""}`} onClick={() => { setTab(t.id); setSelected(null); }}>
+              <button key={t.id} className={`nav-tab ${tab === t.id ? "active" : ""}`} onClick={() => { setTab(t.id); setSelectedId(null); }}>
                 {t.label}
               </button>
             ))}
@@ -922,67 +771,141 @@ export default function Cortege() {
 
           {tab === "household" && (
             <>
-              {/* Household bar */}
-              <div className="household-bar">
-                <div className="hh-left">
-                  <div className="hh-crest">🏠</div>
-                  <div>
-                    <div className="hh-name">{HOUSEHOLD.name}</div>
-                    <div className="hh-sub">{HOUSEHOLD.address} · Cortege since {HOUSEHOLD.since}</div>
-                  </div>
+              {loading ? (
+                <div style={{ textAlign: "center", padding: "64px 0", color: "var(--muted)", fontSize: 13 }}>
+                  Connecting to CORTEGE backend...
                 </div>
-                <div className="hh-stats">
-                  <div className="hh-stat">
-                    <div className="hh-stat-val">{totalSilentToday}</div>
-                    <div className="hh-stat-lbl">Silent actions today</div>
-                  </div>
-                  <div className="hh-stat">
-                    <div className="hh-stat-val">{totalSilentMonth}</div>
-                    <div className="hh-stat-lbl">This month</div>
-                  </div>
-                  <div className="hh-stat">
-                    <div className="hh-stat-val" style={{ color: "#4ECDC4" }}>0</div>
-                    <div className="hh-stat-lbl">Reached family</div>
-                  </div>
+              ) : error ? (
+                <div style={{ textAlign: "center", padding: "64px 0", color: "var(--muted)", fontSize: 13 }}>
+                  {error} — start the backend with <code style={{ color: "var(--amber)" }}>npm run server</code>
                 </div>
-              </div>
-
-              <div className="section-eyebrow">Companion Agents — 3 active</div>
-
-              {/* Companion grid */}
-              <div className="companion-grid">
-                {COMPANIONS.map(c => (
-                  <CompanionCard
-                    key={c.id} c={c}
-                    selected={selected?.id === c.id}
-                    onClick={() => setSelected(selected?.id === c.id ? null : c)}
-                  />
-                ))}
-              </div>
-
-              {/* Detail panel */}
-              {selected && (
+              ) : (
                 <>
-                  <DetailPanel
-                    c={selected}
-                    onControl={(btn) => setModal(CONTROL_MODALS[btn.key])}
-                  />
-                  <div style={{
-                    background: "var(--bg2)", border: "1px solid var(--border)",
-                    borderRadius: 20, padding: "24px 32px", marginBottom: 36,
-                  }}>
-                    <MemoryViewer
-                      companionId={selected.id}
-                      companionName={selected.name}
-                    />
+                  <div className="household-bar">
+                    <div className="hh-left">
+                      <div className="hh-crest">🏠</div>
+                      <div>
+                        <div className="hh-name">{household?.name ?? 'Household'}</div>
+                        <div className="hh-sub">
+                          {household?.location ?? ''}{household?.location ? ' · ' : ''}
+                          Cortege since {household?.created ? new Date(household.created).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="hh-stats">
+                      <div className="hh-stat">
+                        <div className="hh-stat-val">{companions.length}</div>
+                        <div className="hh-stat-lbl">Companions</div>
+                      </div>
+                      <div className="hh-stat">
+                        <div className="hh-stat-val">{totalEventsProcessed}</div>
+                        <div className="hh-stat-lbl">Events processed</div>
+                      </div>
+                      <div className="hh-stat">
+                        <div className="hh-stat-val" style={{ color: "#4ECDC4" }}>0</div>
+                        <div className="hh-stat-lbl">Reached family</div>
+                      </div>
+                    </div>
                   </div>
-                </>
-              )}
 
-              {!selected && (
-                <div style={{ textAlign: "center", padding: "32px 0", color: "var(--muted2)", fontSize: 12, letterSpacing: 1 }}>
-                  Select a companion above to view their silent activity log
-                </div>
+                  <div className="section-eyebrow">
+                    Companion Agents — {companions.length} active
+                  </div>
+
+                  {companions.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "48px 0", color: "var(--muted)", fontSize: 13 }}>
+                      No companions loaded yet. Run a scenario from the Live Feed tab.
+                    </div>
+                  ) : (
+                    <div className="companion-grid">
+                      {companions.map(c => {
+                        const display = getAgentDisplay(c.agentName);
+                        const days = c.createdAt ? Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 86400000) : 0;
+                        return (
+                          <CompanionCard
+                            key={c.id}
+                            c={{
+                              ...c,
+                              name: c.agentName?.toUpperCase() ?? c.id,
+                              role: c.agentRole ?? c.agentName,
+                              greek: c.designation ?? '',
+                              paired: c.memberName ?? '',
+                              color: display.color,
+                              glow: display.glow,
+                              ring: display.ring,
+                              stage: formatStageName(c.stage),
+                              stageIdx: getStageIndex(c.stage),
+                              days,
+                              lastAction: c.lastAction?.timestamp ? timeAgo(c.lastAction.timestamp) : 'No activity yet',
+                              lastActionText: c.lastAction?.text ?? 'Waiting for events...',
+                              silentActionsToday: c.eventsProcessed ?? 0,
+                              silentActionsMonth: c.eventsProcessed ?? 0,
+                              threatLevel: c.lastAction?.threatLevel ?? 0,
+                              graph: {
+                                trusted: c.trustedContactCount ?? 0,
+                                monitored: 0,
+                                blocked: c.blockedContactCount ?? 0,
+                              },
+                              depth: {
+                                day30: getStageIndex(c.stage) >= 1,
+                                day90: getStageIndex(c.stage) >= 2,
+                                day365: getStageIndex(c.stage) >= 3,
+                              },
+                            }}
+                            selected={selectedId === c.id}
+                            onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {selected && (
+                    <>
+                      <DetailPanel
+                        c={{
+                          ...selected,
+                          name: selected.agentName?.toUpperCase() ?? selected.id,
+                          role: selected.agentRole ?? selected.agentName,
+                          greek: selected.designation ?? '',
+                          paired: selected.memberName ?? '',
+                          age: '',
+                          days: selected.createdAt ? Math.floor((Date.now() - new Date(selected.createdAt).getTime()) / 86400000) : 0,
+                          ...getAgentDisplay(selected.agentName),
+                          stage: formatStageName(selected.stage),
+                          stageIdx: getStageIndex(selected.stage),
+                          recentActivity: detailLoading ? [] : activity.map(evt => ({
+                            time: timeAgo(evt.timestamp),
+                            icon: eventTypeIcon(evt.type),
+                            text: evt.payload?.assessment ?? evt.payload?.description ?? `${evt.type} event`,
+                            level: evt.payload?.threat_level ?? 0,
+                          })),
+                          graph: {
+                            trusted: selected.trustedContactCount ?? 0,
+                            monitored: 0,
+                            blocked: selected.blockedContactCount ?? 0,
+                          },
+                        }}
+                        onControl={(btn) => setModal(CONTROL_MODALS[btn.key])}
+                      />
+                      <div style={{
+                        background: "var(--bg2)", border: "1px solid var(--border)",
+                        borderRadius: 20, padding: "24px 32px", marginBottom: 36,
+                      }}>
+                        <MemoryViewer
+                          companionId={selectedId}
+                          companionName={selected.agentName?.toUpperCase()}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {!selected && (
+                    <div style={{ textAlign: "center", padding: "32px 0", color: "var(--muted2)", fontSize: 12, letterSpacing: 1 }}>
+                      Select a companion above to view their activity log
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -1008,7 +931,6 @@ export default function Cortege() {
               <div className="section-eyebrow">Real-Time Backend</div>
               <div className="section-title">Live Feed</div>
 
-              {/* Top row: EventFeed + AgentStatus */}
               <div className="live-feed-grid">
                 <div className="live-panel">
                   <div className="live-panel-title">Event Stream</div>
@@ -1016,11 +938,17 @@ export default function Cortege() {
                 </div>
                 <div className="live-panel">
                   <div className="live-panel-title">Agent Status</div>
-                  <AgentStatus companions={liveCompanions} processingStates={processingStates} />
+                  <AgentStatus
+                    companions={companions.map(c => ({
+                      ...c,
+                      instanceId: c.id,
+                      name: c.agentName?.toUpperCase(),
+                    }))}
+                    processingStates={processingStates}
+                  />
                 </div>
               </div>
 
-              {/* Bottom row: ScenarioRunner + EventInjector */}
               <div className="live-feed-grid">
                 <div className="live-panel">
                   <div className="live-panel-title">Scenario Runner</div>
