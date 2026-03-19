@@ -97,6 +97,17 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Documents error codes and future considerations (auth, rate limiting, CORS)
 - Covers: household, companions, events, scenarios, agents, manual injection, Twilio webhooks
 
+## Frontend API Integration — SHIPPED (Sources: [CR-20260319-1000](requests.md#cr-20260319-1000); [D-20260319-1000](decisions.md#d-20260319-1000))
+- All hardcoded mock data removed from frontend — replaced with live API data
+- Backend `getStatus()` extended with 8 new fields (agentRole, profileType, designation, lastAction, trustedContactCount, blockedContactCount, threatHistoryCount, createdAt)
+- WebSocket updates wired to main Household tab (companion:status, agent:response, stage:transition)
+- Display properties derived from agent type metadata via `src/lib/companion-display.js`
+- Loading/empty/offline states handled gracefully — sparse data on day 1 is a feature, not a bug
+- Custom hooks: `useCortegeData` (REST + WS), `useCompanionDetail` (detail panel)
+- Evidence: `src/Cortege.jsx`, `src/hooks/useCortegeData.js`, `src/hooks/useCompanionDetail.js`, `src/lib/companion-display.js`, `server/agents/agent-instance.js`, `server/api/routes.js`
+- Spec: [`specs/20260319-frontend-api-integration/spec.md`](specs/20260319-frontend-api-integration/spec.md) (Status: Done)
+- Tasks: [`specs/20260319-frontend-api-integration/tasks.md`](specs/20260319-frontend-api-integration/tasks.md)
+
 ## Next / Backlog
 - Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
 - Wire Twilio webhook to event bus (Phase 3)

@@ -447,3 +447,51 @@ NOTES
 - Commands run: git add .kiro/skills/ docs/, git commit, git push origin design
 - Commit: fd79d41 "Install superpowers skill set in .kiro/skills"
 - 52 files changed, 8620 insertions
+
+---
+
+Session: 2026-03-19 10:00
+Agent: Claude Code
+Model: claude-opus-4-6
+Skills: athena, writing-plans, subagent-driven-development
+Feature: 20260319-frontend-api-integration
+Input: CR-20260319-1000
+Decisions: D-20260319-1000
+Spec: docs/specs/20260319-frontend-api-integration/spec.md
+Tasks: docs/specs/20260319-frontend-api-integration/tasks.md
+Goal: Replace all hardcoded mock data in frontend with live API data.
+
+DONE
+- [2026-03-19 10:00] Captured customer request CR-20260319-1000 in docs/requests.md. (Skills: athena)
+- [2026-03-19 10:05] Created decision D-20260319-1000 in docs/decisions.md. (Skills: athena)
+- [2026-03-19 10:10] Created feature spec and tasks in docs/specs/20260319-frontend-api-integration/. (Skills: athena)
+- [2026-03-19 10:15] Updated PRD.md with Frontend API Integration section. (Skills: athena)
+- [2026-03-19 10:20] Updated TRACEABILITY.md with new spec reference. (Skills: athena)
+- [2026-03-19 10:30] Created implementation plan at docs/superpowers/plans/2026-03-19-frontend-api-integration.md. (Skills: athena, writing-plans)
+- [2026-03-19 10:40] Plan reviewed by code-reviewer subagent — 6 critical issues found. (Skills: athena, writing-plans)
+- [2026-03-19 10:45] Fixed all 6 critical issues in plan. (Skills: athena, writing-plans)
+- [2026-03-19 16:30] T-001: Extended getStatus() with 8 new fields. Commit: 54d612f. (Skills: athena, subagent-driven-development)
+- [2026-03-19 16:45] T-001.5: Fixed /api/household to return full household object. Commit: 8ced302. (Skills: athena, subagent-driven-development)
+- [2026-03-19 17:00] T-002: Created companion-display.js (agent type → color/glow/ring). Commit: cafbbb8. (Skills: athena, subagent-driven-development)
+- [2026-03-19 17:15] T-003/T-004: Created useCortegeData and useCompanionDetail hooks. Commit: dc0ac23. (Skills: athena, subagent-driven-development)
+- [2026-03-19 17:45] T-005: Rewrote Cortege.jsx — removed 258 lines mock data, added 186 lines API data. Commit: 2075507. (Skills: athena, subagent-driven-development)
+- [2026-03-19 18:00] Spec compliance review — fixed AgentStatus stage formatting, double fetch, unused memory fetch. (Skills: subagent-driven-development)
+- [2026-03-19 18:15] Code quality review — fixed misleading stat labels (Today/Month → Processed/Trusted/Blocked), dead code. Commit: 0510f03. (Skills: subagent-driven-development)
+- [2026-03-19 18:30] Verification: build passes (36 modules, 250KB/76KB gzip), tests pass (135/0/3), API endpoints verified. (Skills: verification-before-completion)
+- [2026-03-19 18:45] Cleanup: no mock data references remain in active code. (Skills: athena)
+- [2026-03-19 19:00] ATHENA docs updated: tasks.md, spec status, PRD, progress.txt. (Skills: athena)
+
+IN PROGRESS
+
+NEXT
+
+NOTES
+- Execution method: subagent-driven-development (fresh subagent per task + two-stage review)
+- Plan: docs/superpowers/plans/2026-03-19-frontend-api-integration.md (10 tasks)
+- Spec compliance review findings: AgentStatus stage colors broken (raw keys vs formatted), double API fetch on mount, unused memory fetch from useCompanionDetail
+- Code quality review findings: misleading stat labels (both showed same eventsProcessed), hardcoded API_BASE across files (deferred), showToast setTimeout without cleanup (deferred for hackathon)
+- Commands run: npx vite build → ✓ 36 modules, 250KB/76KB gzip
+- Commands run: npm test → 135 pass, 0 fail, 3 skipped
+- Commands run: node server/index.js → API verified (household, companions endpoints return correct data)
+- Commits: 8ced302, 54d612f, cafbbb8, dc0ac23, 2075507, 0510f03
+- Feature status: SHIPPED — spec marked Done, PRD updated
