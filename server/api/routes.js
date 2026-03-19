@@ -94,11 +94,17 @@ export function createApiRouter(orchestrator) {
 
   // -------------------------------------------------------------------------
   // GET /api/household
-  // Returns the household members array.
+  // Returns the full household object (name, location, created, members).
   // -------------------------------------------------------------------------
   router.get('/api/household', (req, res) => {
     try {
-      res.json(orchestrator.household ?? []);
+      const householdPath = path.resolve('data/household.json');
+      if (fs.existsSync(householdPath)) {
+        const data = JSON.parse(fs.readFileSync(householdPath, 'utf8'));
+        res.json(data);
+      } else {
+        res.json({ name: 'Household', members: orchestrator.household ?? [] });
+      }
     } catch (err) {
       console.error('[api] GET /api/household error:', err);
       res.status(500).json({ error: 'Internal server error' });
