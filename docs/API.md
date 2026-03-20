@@ -8,6 +8,7 @@ Base URL: `http://localhost:3001`
 - [Events](#events)
 - [Scenarios](#scenarios)
 - [Agents](#agents)
+- [Household Management](#household-management)
 - [Manual Event Injection](#manual-event-injection)
 - [Twilio Webhooks](#twilio-webhooks)
 - [WebSocket](#websocket)
@@ -695,6 +696,155 @@ ENABLE_JSON_FALLBACK=false
 ### Migration from JSON to SQLite
 
 See [Production Deployment Guide](./PRODUCTION_DEPLOYMENT.md#sqlite-migration-guide) for step-by-step migration instructions.
+
+---
+
+## Household Management
+
+### POST /api/households
+
+Creates a new household.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| name | string | Yes | Household name |
+| location | string | No | Location (defaults to "Unknown") |
+
+**Response:** `201 Created`
+```json
+{
+  "household_id": "hh_abc12345",
+  "name": "Smith Family",
+  "location": "Austin, TX",
+  "created": "2026-03-19T10:00:00.000Z",
+  "members": []
+}
+```
+
+**Example:**
+```bash
+curl -X POST http://localhost:3001/api/households \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Smith Family","location":"Austin, TX"}'
+```
+
+---
+
+### GET /api/households
+
+Lists all households (summary view).
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "household_id": "hh_abc12345",
+    "name": "Smith Family",
+    "location": "Austin, TX",
+    "member_count": 3
+  }
+]
+```
+
+---
+
+### GET /api/households/:id
+
+Gets a specific household with full details including members.
+
+**Response:** `200 OK`
+```json
+{
+  "household_id": "hh_abc12345",
+  "name": "Smith Family",
+  "location": "Austin, TX",
+  "created": "2026-03-19T10:00:00.000Z",
+  "members": [
+    {
+      "id": "member_001",
+      "name": "John Smith",
+      "age": 45,
+      "profile_type": "adult",
+      "companion": "sentinel",
+      "is_primary": true
+    }
+  ]
+}
+```
+
+---
+
+### PUT /api/households/:id
+
+Updates household metadata (name, location).
+
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| name | string | No | New household name |
+| location | string | No | New location |
+
+---
+
+### DELETE /api/households/:id
+
+Deletes a household and all its data.
+
+**Response:** `200 OK`
+```json
+{
+  "deleted": true,
+  "household_id": "hh_abc12345"
+}
+```
+
+---
+
+### POST /api/households/:id/members
+
+Adds a member to a household.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| name | string | Yes | Member name |
+| age | number | No | Member age |
+| profile_type | string | Yes | "adult", "senior", or "child" |
+| companion | string | Yes | "sentinel", "anchor", or "scout" |
+| is_primary | boolean | No | Primary household contact |
+
+**Response:** `201 Created`
+```json
+{
+  "id": "member_abc123",
+  "name": "Alice Smith",
+  "age": 35,
+  "profile_type": "adult",
+  "companion": "sentinel",
+  "is_primary": false
+}
+```
+
+---
+
+### PUT /api/households/:id/members/:memberId
+
+Updates a household member's details.
+
+---
+
+### DELETE /api/households/:id/members/:memberId
+
+Removes a member from a household.
+
+**Response:** `200 OK`
+```json
+{
+  "deleted": true,
+  "member_id": "member_abc123"
+}
+```
 
 ---
 

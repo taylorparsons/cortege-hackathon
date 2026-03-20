@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { apiUrl, wsUrl } from '../lib/backend-url.js';
+import { useHouseholdContext } from '../context/HouseholdContext.jsx';
 
 /**
  * Custom hook that manages all CORTEGE data:
  * - Fetches household + companions from REST API on mount
  * - Connects WebSocket and merges real-time updates
  * - Re-fetches on WebSocket reconnect
+ * - Re-fetches when household selection changes
  */
 export function useCortegeData() {
+  const { currentHouseholdId } = useHouseholdContext();
   const [household, setHousehold] = useState(null);
   const [companions, setCompanions] = useState([]);
   const [liveEvents, setLiveEvents] = useState([]);
@@ -30,8 +33,13 @@ export function useCortegeData() {
     setLoading(true);
     setError(null);
     try {
+      // Use household-specific endpoint when a household is selected
+      const hhEndpoint = currentHouseholdId
+        ? `/api/households/${currentHouseholdId}`
+        : '/api/household';
+
       const [hhRes, compRes] = await Promise.all([
-        fetch(apiUrl('/api/household')),
+        fetch(apiUrl(hhEndpoint)),
         fetch(apiUrl('/api/companions')),
       ]);
 
@@ -51,7 +59,7 @@ export function useCortegeData() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentHouseholdId]);
 
   const connectWs = useCallback(() => {
     if (wsRef.current && wsRef.current.readyState < 2) return;
@@ -150,6 +158,13 @@ export function useCortegeData() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-fetch when household selection changes
+  useEffect(() => {
+    if (hasFetched.current) {
+      fetchData();
+    }
+  }, [currentHouseholdId, fetchData]);
 
   return {
     household,

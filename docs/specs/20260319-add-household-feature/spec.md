@@ -1,7 +1,7 @@
 # Add Household Feature Specification
 
 **Feature ID:** 20260319-add-household-feature  
-**Status:** In Progress  
+**Status:** Done  
 **Created:** 2026-03-19  
 **Sources:** [CR-20260319-1730](../../requests.md#cr-20260319-1730); [D-20260319-1730](../../decisions.md#d-20260319-1730)
 

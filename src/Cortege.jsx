@@ -7,6 +7,8 @@ import { MemoryViewer } from "./components/MemoryViewer.jsx";
 import { useCortegeData } from './hooks/useCortegeData.js';
 import { useCompanionDetail } from './hooks/useCompanionDetail.js';
 import { getAgentDisplay, getStageIndex, formatStageName, DEPTH_STAGES } from './lib/companion-display.js';
+import { HouseholdSelector } from './components/HouseholdSelector.jsx';
+import { useHouseholdContext } from './context/HouseholdContext.jsx';
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap');`;
 
@@ -711,6 +713,10 @@ export default function Cortege() {
   const [selectedId, setSelectedId] = useState(null);
   const [modal, setModal] = useState(null);
   const [time, setTime] = useState(new Date().toLocaleTimeString());
+  const [showHouseholdSelector, setShowHouseholdSelector] = useState(false);
+
+  // Household context
+  const { currentHouseholdId, setCurrentHouseholdId } = useHouseholdContext();
 
   // API data
   const {
@@ -761,6 +767,16 @@ export default function Cortege() {
             ))}
           </div>
           <div className="nav-status">
+            <button
+              onClick={() => setShowHouseholdSelector(!showHouseholdSelector)}
+              style={{
+                padding: '5px 12px', borderRadius: 8, border: '1px solid var(--border2)',
+                background: 'var(--bg3)', color: 'var(--muted)', cursor: 'pointer',
+                fontFamily: 'var(--sans)', fontSize: 11, letterSpacing: 0.5, marginRight: 12,
+              }}
+            >
+              Switch Household
+            </button>
             <div className={wsConnected ? "pulse-dot" : "pulse-dot-amber"} />
             <span>{wsConnected ? "All companions active" : "Backend offline"}</span>
             <span style={{ marginLeft: 8, color: "var(--muted2)" }}>{time}</span>
@@ -965,6 +981,24 @@ export default function Cortege() {
           )}
         </div>
       </div>
+
+      {showHouseholdSelector && (
+        <div className="modal-overlay" onClick={() => setShowHouseholdSelector(false)}>
+          <div style={{
+            background: 'var(--bg2)', border: '1px solid var(--border2)',
+            borderRadius: 20, padding: 28, maxWidth: 420, width: '100%',
+            maxHeight: '80vh', overflowY: 'auto',
+          }} onClick={e => e.stopPropagation()}>
+            <HouseholdSelector
+              currentHouseholdId={currentHouseholdId}
+              onSelect={(id) => {
+                setCurrentHouseholdId(id);
+                setShowHouseholdSelector(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(null)}>

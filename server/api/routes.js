@@ -96,15 +96,41 @@ export function createApiRouter(orchestrator) {
   // GET /api/household
   // Returns the full household object (name, location, created, members).
   // -------------------------------------------------------------------------
-  router.get('/api/household', (req, res) => {
+  router.get('/api/household', async (req, res) => {
     try {
+      // Check if household store is enabled
+      if (orchestrator.householdStore) {
+        // Try to get default household from env or first available
+        const defaultId = process.env.DEFAULT_HOUSEHOLD_ID;
+
+        if (defaultId) {
+          try {
+            const household = await orchestrator.householdStore.getHousehold(defaultId);
+            return res.json(household);
+          } catch {
+            // Default ID not found, fall through
+          }
+        }
+
+        // Fall back to first household
+        const households = await orchestrator.householdStore.listHouseholds();
+        if (households.length > 0) {
+          const household = await orchestrator.householdStore.getHousehold(
+            households[0].household_id
+          );
+          return res.json(household);
+        }
+      }
+
+      // Legacy fallback: read from data/household.json
       const householdPath = path.resolve('data/household.json');
       if (fs.existsSync(householdPath)) {
         const data = JSON.parse(fs.readFileSync(householdPath, 'utf8'));
-        res.json(data);
-      } else {
-        res.json({ name: 'Household', members: orchestrator.household ?? [] });
+        return res.json(data);
       }
+
+      // No household found
+      res.json({ name: 'Household', members: orchestrator.household ?? [] });
     } catch (err) {
       console.error('[api] GET /api/household error:', err);
       res.status(500).json({ error: 'Internal server error' });

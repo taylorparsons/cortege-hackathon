@@ -128,6 +128,17 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [`specs/20260319-design-branch-push/spec.md`](specs/20260319-design-branch-push/spec.md)
 - Tasks: [`specs/20260319-design-branch-push/tasks.md`](specs/20260319-design-branch-push/tasks.md)
 
+## Multi-Household Management — SHIPPED (Sources: [CR-20260319-1730](requests.md#cr-20260319-1730); [D-20260319-1730](decisions.md#d-20260319-1730))
+- HouseholdStore for managing multiple households as JSON files in data/households/
+- REST API: CRUD for households (POST/GET/PUT/DELETE /api/households) and members (/api/households/:id/members)
+- Backward-compatible GET /api/household endpoint (household store → legacy household.json → default)
+- Frontend: HouseholdSelector component, HouseholdContext with localStorage, useCortegeData household switching
+- Migration script: scripts/migrate-household.js (converts legacy household.json, creates backup)
+- 20 new tests (8 store + 8 API + 4 integration), all passing
+- Evidence: server/storage/household-store.js, server/api/routes.js, src/components/HouseholdSelector.jsx, src/context/HouseholdContext.jsx, src/hooks/useHouseholds.js, scripts/migrate-household.js
+- Spec: [specs/20260319-add-household-feature/spec.md](specs/20260319-add-household-feature/spec.md) (Status: Done)
+- Tasks: [specs/20260319-add-household-feature/tasks.md](specs/20260319-add-household-feature/tasks.md)
+
 ## Next / Backlog
 - Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
 - Wire Twilio webhook to event bus (Phase 3)

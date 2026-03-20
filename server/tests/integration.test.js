@@ -515,29 +515,33 @@ describe('AgentInstance.getStatus() extended fields', () => {
 describe('Orchestrator with Household Store', () => {
   test('orchestrator initializes with household store when enabled', async () => {
     const { Orchestrator } = await import('../orchestrator/orchestrator.js');
-    
+
     const orchestrator = new Orchestrator({
       enableHouseholdStore: true
     });
-    
+
     const ws = makeWs();
     await orchestrator.start(ws);
-    
+
     assert.ok(orchestrator.householdStore !== null, 'Expected householdStore to be initialized');
     assert.equal(typeof orchestrator.householdStore.createHousehold, 'function');
     assert.equal(typeof orchestrator.householdStore.listHouseholds, 'function');
+
+    orchestrator.stop();
   });
 
   test('orchestrator does not initialize household store when disabled', async () => {
     const { Orchestrator } = await import('../orchestrator/orchestrator.js');
-    
+
     const orchestrator = new Orchestrator({
       enableHouseholdStore: false
     });
-    
+
     const ws = makeWs();
     await orchestrator.start(ws);
-    
+
     assert.equal(orchestrator.householdStore, null, 'Expected householdStore to be null');
+
+    orchestrator.stop();
   });
 });

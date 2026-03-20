@@ -27,3 +27,4 @@ Start here:
 | Frontend Dev Connectivity | [`specs/20260319-frontend-dev-connectivity/spec.md`](specs/20260319-frontend-dev-connectivity/spec.md) | Make localhost UI reach the live backend through the Vite origin |
 | Gitignore Backup File | [`specs/20260319-gitignore-backup-file/spec.md`](specs/20260319-gitignore-backup-file/spec.md) | Ignore the requested local SQLite backup artifact |
 | Design Branch Push | [`specs/20260319-design-branch-push/spec.md`](specs/20260319-design-branch-push/spec.md) | Add detailed shipped summary and push the current design branch |
+| Add Household Feature | [`specs/20260319-add-household-feature/spec.md`](specs/20260319-add-household-feature/spec.md) | Multi-household management with CRUD API, selector UI, migration |
