@@ -390,3 +390,29 @@ commit these changes with comment based on the athena docs and superpowers
 Notes:
 - User wants the completed privacy/location feature work committed now
 - Commit message should be grounded in the ATHENA traceability docs and the superpowers execution context
+
+## CR-20260320-1315
+Date: 2026-03-20 13:15
+Source: chat
+Decision: [D-20260320-1315](decisions.md#d-20260320-1315)
+Spec: [`specs/20260320-readme-alignment/spec.md`](specs/20260320-readme-alignment/spec.md)
+
+Request (verbatim):
+yes fit it
+
+Notes:
+- Continuation of the README review request in the same session
+- User wants the top-level onboarding docs fixed so `README.md` reflects the shipped location/privacy implementation
+
+## CR-20260320-1345
+Date: 2026-03-20 13:45
+Source: chat
+Decision: [D-20260320-1345](decisions.md#d-20260320-1345)
+Spec: [`specs/20260320-main-branch-push/spec.md`](specs/20260320-main-branch-push/spec.md)
+
+Request (verbatim):
+push to remote on the main branch
+
+Notes:
+- User explicitly requested publication to `origin/main`
+- Current branch contains an uncommitted README/docs alignment follow-up on top of the verified privacy/location feature branch

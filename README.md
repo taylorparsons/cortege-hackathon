@@ -104,7 +104,7 @@ CORTEGE supports multiple households, each with independent members and companio
 
 ### Switching Households
 
-Click **"Switch Household"** in the nav bar to open the household selector. Create new households, switch between them, or delete unused ones. Your selection persists across page reloads via localStorage.
+Click **"Switch Household"** in the nav bar to open the household selector. From there you can create households, switch between them, delete unused ones, manage saved locations, edit a location name/address, and reassign a household to another saved location. Referenced locations cannot be deleted until every blocking household is reassigned. Your selected household persists across page reloads via localStorage.
 
 ### Creating Households via API
 
@@ -162,6 +162,17 @@ The legacy `GET /api/household` endpoint continues to work — it falls back thr
 ```bash
 DEFAULT_HOUSEHOLD_ID=<uuid>  # Optional: default household for legacy endpoint
 ```
+
+### Privacy Model
+
+The current household data model is privacy-first:
+
+- Household and location records use `location_id` references instead of embedding a freeform household `location`
+- Member full name, phone, and `date_of_birth` are encrypted at rest
+- Saved location name and structured address are encrypted at rest
+- Logs and external LLM calls use redacted or aliased values instead of raw PII
+
+For production deployments, set a strong `PII_MASTER_KEY`. In development, the server falls back to a dev-only key if it is unset.
 
 ## 🛠️ Development
 
@@ -258,6 +269,8 @@ cortege-hackathon/
 │   │   └── scout-member-003.json      # Grows over time = learning
 │   ├── households/                     # Multi-household JSON files
 │   │   └── <uuid>.json               # One file per household (members, config)
+│   ├── locations/                      # Saved named locations (JSON mode)
+│   │   └── <uuid>.json               # One file per saved location
 │   └── household.json                  # Legacy single-household file (backward compat)
 │
 ├── docs/                               # Documentation
@@ -312,6 +325,8 @@ cortege-hackathon/
 │   ├── api/                            # REST + WebSocket
 │   │   ├── routes.js                  # Express REST endpoints
 │   │   └── websocket.js               # Real-time event push
+│   ├── privacy/                        # PII protection helpers
+│   │   └── pii.js                     # Encryption, tokenization, redaction, LLM sanitization
 │   ├── claude/                         # Claude API client
 │   │   ├── claude-client.js           # @anthropic-ai/sdk wrapper
 │   │   └── response-schema.js         # submit_assessment tool definition
@@ -330,8 +345,9 @@ cortege-hackathon/
 │   │   ├── db.js                      # Database connection + queries
 │   │   ├── hash-chain.js              # SHA-256 hash chain computation
 │   │   ├── household-store.js         # Multi-household JSON file store
+│   │   ├── location-store.js          # Saved-location JSON file store
 │   │   └── storage-adapter.js         # Multi-mode storage (sqlite/json/dual)
-│   └── tests/                          # Test suite (151 tests)
+│   └── tests/                          # Node.js test suite
 │       ├── integration.test.js        # End-to-end flows
 │       ├── demo-validation.test.js    # Demo scenario validation
 │       ├── template-parser.test.js    # Agent template parsing
@@ -341,6 +357,8 @@ cortege-hackathon/
 │       ├── db.test.js                 # SQLite database operations
 │       ├── hash-chain.test.js         # Hash chain computation
 │       ├── sqlite-triggers.test.js    # Append-only trigger validation
+│       ├── privacy.test.js            # PII encryption, tokenization, redaction
+│       ├── location-store.test.js     # Saved-location storage coverage
 │       ├── household-store.test.js    # Household store CRUD (8 tests)
 │       ├── household-api.test.js      # Household API endpoints (8 tests)
 │       └── household-integration.test.js # Household end-to-end (4 tests)
@@ -352,6 +370,7 @@ cortege-hackathon/
 │   │   ├── EventFeed.jsx              # Real-time event stream
 │   │   ├── AgentStatus.jsx            # Companion status cards
 │   │   ├── HouseholdSelector.jsx      # Household switching modal
+│   │   ├── LocationManager.jsx        # Saved-location list/edit/delete UI
 │   │   ├── MemoryViewer.jsx           # Agent memory inspector
 │   │   ├── ScenarioRunner.jsx         # Demo scenario controls
 │   │   └── EventInjector.jsx          # Manual event submission
@@ -418,6 +437,7 @@ ANTHROPIC_API_KEY=your_api_key_here
 # Optional
 CLAUDE_MODEL=claude-haiku-4-5-20251001  # Default model
 PORT=3001                                # Backend port
+PII_MASTER_KEY=                          # Required in production for encrypted household/member/location PII
 
 # Demo/Learning Acceleration
 LEARNING_TIME_MULTIPLIER=1440            # 1 min = 1 day (default)
@@ -448,6 +468,14 @@ CLAUDE_DEBUG=1                           # Enable API debug logging
 - `PUT /api/households/:id/members/:mid` - Update member
 - `DELETE /api/households/:id/members/:mid` - Remove member
 - `GET /api/household` - Legacy endpoint (backward-compatible fallback)
+
+### Location Management
+
+- `GET /api/locations` - List saved locations
+- `POST /api/locations` - Create a saved location with a name and structured address
+- `GET /api/locations/:id` - Get saved location details
+- `PUT /api/locations/:id` - Update saved location name/address
+- `DELETE /api/locations/:id` - Delete a saved location if no household still references it (`409 Conflict` when blocked)
 
 ### Companions
 
@@ -561,7 +589,7 @@ See [PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) for details.
 
 ## 📄 License
 
-[Add your license here]
+No license is specified yet.
 
 ## 🙏 Acknowledgments
 

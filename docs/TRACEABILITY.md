@@ -29,3 +29,5 @@ Start here:
 | Design Branch Push | [`specs/20260319-design-branch-push/spec.md`](specs/20260319-design-branch-push/spec.md) | Add detailed shipped summary and push the current design branch |
 | Add Household Feature | [`specs/20260319-add-household-feature/spec.md`](specs/20260319-add-household-feature/spec.md) | Multi-household management with CRUD API, selector UI, migration |
 | PII Encryption + Location Model | [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md) | Encrypt household/member/location PII, add `location_id`, and sanitize logs + LLM calls |
+| README Alignment | [`specs/20260320-readme-alignment/spec.md`](specs/20260320-readme-alignment/spec.md) | Align top-level onboarding docs with the shipped privacy and location model |
+| Main Branch Push | [`specs/20260320-main-branch-push/spec.md`](specs/20260320-main-branch-push/spec.md) | Commit pending docs alignment, merge into `main`, and push `origin/main` |

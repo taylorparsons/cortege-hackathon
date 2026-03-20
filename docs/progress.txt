@@ -772,3 +772,60 @@ NOTES
 - Playwright and Cypress both cover the new guarded location-delete plus household-reassignment workflow.
 - Feature status: SHIPPED — spec marked Done, no remaining execution tasks in ATHENA for this feature.
 - Completion step requested at 2026-03-20 12:48: create a traceable feature commit based on the ATHENA docs and superpowers execution trail.
+
+---
+
+Session: 2026-03-20 13:15
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, project-documentation-system, verification-before-completion
+Feature: 20260320-readme-alignment
+Input: CR-20260320-1315
+Decisions: D-20260320-1315
+Spec: docs/specs/20260320-readme-alignment/spec.md
+Tasks: docs/specs/20260320-readme-alignment/tasks.md
+Goal: Align the top-level onboarding docs with the shipped privacy and location model.
+
+DONE
+- [2026-03-20 13:20] T-001: Capture the README alignment request in ATHENA docs and create a small feature spec/task list. (Skills: athena)
+- [2026-03-20 13:30] T-002: Update `README.md` and `.env.example` so onboarding docs match the shipped privacy and location model, then verify the referenced files and endpoints exist. (Skills: athena, project-documentation-system, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Scope intentionally limited to documentation and env-template alignment; no runtime behavior changes.
+- README updated to cover: encrypted PII at rest, `PII_MASTER_KEY`, saved location CRUD, reassignment-before-delete, and current privacy/location file layout.
+- `.env.example` updated to include `PII_MASTER_KEY` with production/dev guidance.
+- Verification to run before completion: inspect README references, confirm files exist, and ensure the documented `/api/docs` and `/api/locations` routes are present.
+
+---
+
+Session: 2026-03-20 13:45
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, finishing-a-development-branch, verification-before-completion
+Feature: 20260320-main-branch-push
+Input: CR-20260320-1345
+Decisions: D-20260320-1345
+Spec: docs/specs/20260320-main-branch-push/spec.md
+Tasks: docs/specs/20260320-main-branch-push/tasks.md
+Goal: Commit the pending README/docs alignment work, merge the verified feature branch into `main`, and push `origin/main`.
+
+DONE
+
+IN PROGRESS
+- T-001: Capture the publication request in ATHENA docs and prepare the merge/push sequence. (Skills: athena, finishing-a-development-branch)
+
+NEXT
+- Commit the pending README/docs alignment changes on `feature/pii-encryption-location-model`
+- Merge `feature/pii-encryption-location-model` into local `main`
+- Re-run `npm test` on merged `main`
+- Push local `main` to `origin`
+
+NOTES
+- Fresh verification before publication: `npm test` → PASS (`162` passing, `3` skipped) on `feature/pii-encryption-location-model`
+- Merge base with `main`: `eb9b869ab73787fced0e74a3566e27ba6006f78a`

@@ -588,3 +588,40 @@ Rationale:
 Acceptance / test:
 - The working tree is committed on `feature/pii-encryption-location-model`
 - The commit message clearly reflects the shipped privacy/location feature
+
+## D-20260320-1315
+Date: 2026-03-20 13:15
+Inputs: [CR-20260320-1315](requests.md#cr-20260320-1315)
+PRD: [Documentation Alignment](PRD.md#documentation-alignment--shipped-sources-cr-20260320-1315-d-20260320-1315)
+Spec: [`specs/20260320-readme-alignment/spec.md`](specs/20260320-readme-alignment/spec.md)
+
+Decision:
+Treat this as a narrow documentation-alignment task. Update `README.md` and `.env.example` so the top-level setup, API overview, privacy notes, and project structure match the shipped location/privacy implementation without changing product behavior.
+
+Rationale:
+- The review found documentation drift, not a runtime defect
+- `README.md` is the primary onboarding surface, but its env and API sections depend on `.env.example` for accuracy
+- Keeping the scope to README + env template fixes the user-facing gaps without reopening the broader privacy/location feature
+
+Acceptance / test:
+- `README.md` documents the location CRUD model, privacy behavior, and current repo structure accurately
+- `.env.example` includes the privacy key setting referenced by the README
+
+## D-20260320-1345
+Date: 2026-03-20 13:45
+Inputs: [CR-20260320-1345](requests.md#cr-20260320-1345)
+PRD: [Main Branch Publication](PRD.md#main-branch-publication--shipped-sources-cr-20260320-1345-d-20260320-1345)
+Spec: [`specs/20260320-main-branch-push/spec.md`](specs/20260320-main-branch-push/spec.md)
+
+Decision:
+Publish by first committing the pending README-alignment changes on the active feature branch, then merging that branch into local `main`, verifying the merged result, and pushing `main` to `origin`.
+
+Rationale:
+- The working tree is not clean, so switching directly to `main` without committing would risk losing the README-alignment audit trail
+- The feature branch already contains the verified privacy/location implementation, making it the correct integration source
+- A local merge into `main` preserves a clean branch history before the explicit remote push the user requested
+
+Acceptance / test:
+- The pending README/docs updates are committed with traceability
+- Local `main` contains the feature branch changes
+- `origin/main` is updated to the merged commit
