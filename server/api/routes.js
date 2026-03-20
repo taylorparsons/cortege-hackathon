@@ -11,11 +11,64 @@ import { Router } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  isValidDateOfBirth,
+  isValidE164,
+  normalizePhone,
+} from '../privacy/pii.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const EVENTS_DIR = path.resolve('data/events');
+
+function formatLegacyAddressSummary(address) {
+  if (!address) return null;
+  return [address.city, address.region, address.country].filter(Boolean).join(', ') || address.line1 || null;
+}
+
+function normalizeLegacyHouseholdResponse(data) {
+  if (!data || typeof data !== 'object') return data;
+  const address = data.address ?? (data.location ? {
+    line1: data.location,
+    line2: null,
+    city: 'Unknown',
+    region: 'Unknown',
+    postal_code: 'Unknown',
+    country: 'Unknown',
+  } : null);
+  return {
+    ...data,
+    location_id: data.location_id ?? null,
+    location_name: data.location ?? null,
+    address_summary: formatLegacyAddressSummary(address),
+    location_details: address ? { name: data.location ?? 'Legacy Location', address } : null,
+  };
+}
+
+async function expandHousehold(orchestrator, household) {
+  if (!household) return household;
+
+  let locationDetails = null;
+  if (household.location_id && orchestrator.locationStore) {
+    try {
+      locationDetails = await orchestrator.locationStore.getLocation(household.location_id);
+    } catch {
+      locationDetails = null;
+    }
+  }
+
+  return {
+    ...household,
+    location_name: locationDetails?.name ?? household.location ?? null,
+    address_summary: locationDetails?.address_summary ?? formatLegacyAddressSummary(household.address),
+    location_details: locationDetails ?? (household.address ? {
+      name: household.location ?? 'Legacy Location',
+      address: household.address,
+      address_summary: formatLegacyAddressSummary(household.address),
+    } : null),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -106,7 +159,7 @@ export function createApiRouter(orchestrator) {
         if (defaultId) {
           try {
             const household = await orchestrator.householdStore.getHousehold(defaultId);
-            return res.json(household);
+            return res.json(await expandHousehold(orchestrator, household));
           } catch {
             // Default ID not found, fall through
           }
@@ -118,7 +171,7 @@ export function createApiRouter(orchestrator) {
           const household = await orchestrator.householdStore.getHousehold(
             households[0].household_id
           );
-          return res.json(household);
+          return res.json(await expandHousehold(orchestrator, household));
         }
       }
 
@@ -126,7 +179,7 @@ export function createApiRouter(orchestrator) {
       const householdPath = path.resolve('data/household.json');
       if (fs.existsSync(householdPath)) {
         const data = JSON.parse(fs.readFileSync(householdPath, 'utf8'));
-        return res.json(data);
+        return res.json(normalizeLegacyHouseholdResponse(data));
       }
 
       // No household found
@@ -138,28 +191,162 @@ export function createApiRouter(orchestrator) {
   });
 
   // -------------------------------------------------------------------------
+  // GET /api/locations
+  // Lists all locations
+  // -------------------------------------------------------------------------
+  router.get('/api/locations', async (req, res) => {
+    try {
+      if (!orchestrator.locationStore) {
+        return res.status(501).json({ error: 'Location store not enabled' });
+      }
+
+      const locations = await orchestrator.locationStore.listLocations();
+      res.json(locations);
+    } catch (err) {
+      console.error('[api] GET /api/locations error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // POST /api/locations
+  // Creates a new named location
+  // -------------------------------------------------------------------------
+  router.post('/api/locations', async (req, res) => {
+    try {
+      if (!orchestrator.locationStore) {
+        return res.status(501).json({ error: 'Location store not enabled' });
+      }
+
+      const { name, address } = req.body;
+      if (!name || !address?.line1 || !address?.city || !address?.region || !address?.postal_code || !address?.country) {
+        return res.status(400).json({ error: 'name and full address are required' });
+      }
+
+      const location = await orchestrator.locationStore.createLocation({ name, address });
+      res.status(201).json(location);
+    } catch (err) {
+      console.error('[api] POST /api/locations error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /api/locations/:id
+  // Gets a specific location
+  // -------------------------------------------------------------------------
+  router.get('/api/locations/:id', async (req, res) => {
+    try {
+      if (!orchestrator.locationStore) {
+        return res.status(501).json({ error: 'Location store not enabled' });
+      }
+
+      const location = await orchestrator.locationStore.getLocation(req.params.id);
+      res.json(location);
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error(`[api] GET /api/locations/${req.params.id} error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // PUT /api/locations/:id
+  // Updates a named location
+  // -------------------------------------------------------------------------
+  router.put('/api/locations/:id', async (req, res) => {
+    try {
+      if (!orchestrator.locationStore) {
+        return res.status(501).json({ error: 'Location store not enabled' });
+      }
+
+      const { name, address } = req.body;
+      const location = await orchestrator.locationStore.updateLocation(req.params.id, { name, address });
+      res.json(location);
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error(`[api] PUT /api/locations/${req.params.id} error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // DELETE /api/locations/:id
+  // Deletes a location when no households still reference it
+  // -------------------------------------------------------------------------
+  router.delete('/api/locations/:id', async (req, res) => {
+    try {
+      if (!orchestrator.locationStore) {
+        return res.status(501).json({ error: 'Location store not enabled' });
+      }
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+
+      const blockingHouseholds = await orchestrator.householdStore.findHouseholdsByLocationId(
+        req.params.id
+      );
+
+      if (blockingHouseholds.length > 0) {
+        return res.status(409).json({
+          error: 'Location is still referenced by households',
+          location_id: req.params.id,
+          households: blockingHouseholds.map((household) => ({
+            household_id: household.household_id,
+            name: household.name,
+          })),
+        });
+      }
+
+      const result = await orchestrator.locationStore.deleteLocation(req.params.id);
+      res.json(result);
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error(`[api] DELETE /api/locations/${req.params.id} error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
   // POST /api/households
   // Creates a new household
   // -------------------------------------------------------------------------
   router.post('/api/households', async (req, res) => {
     try {
-      const { name, location, address } = req.body;
+      const { name, location_id } = req.body;
 
       if (!name) {
         return res.status(400).json({ error: 'Household name is required' });
+      }
+      if (!location_id) {
+        return res.status(400).json({ error: 'location_id is required' });
       }
 
       if (!orchestrator.householdStore) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
+      if (!orchestrator.locationStore) {
+        return res.status(501).json({ error: 'Location store not enabled' });
+      }
+
+      try {
+        await orchestrator.locationStore.getLocation(location_id);
+      } catch (err) {
+        return res.status(400).json({ error: err.message });
+      }
 
       const household = await orchestrator.householdStore.createHousehold({
         name,
-        location: location ?? 'Unknown',
-        address
+        location_id
       });
       
-      res.status(201).json(household);
+      res.status(201).json(await expandHousehold(orchestrator, household));
     } catch (err) {
       console.error('[api] POST /api/households error:', err);
       res.status(500).json({ error: 'Internal server error' });
@@ -177,7 +364,10 @@ export function createApiRouter(orchestrator) {
       }
       
       const households = await orchestrator.householdStore.listHouseholds();
-      res.json(households);
+      const expanded = await Promise.all(
+        households.map(async (household) => expandHousehold(orchestrator, household))
+      );
+      res.json(expanded);
     } catch (err) {
       console.error('[api] GET /api/households error:', err);
       res.status(500).json({ error: 'Internal server error' });
@@ -195,7 +385,7 @@ export function createApiRouter(orchestrator) {
       }
       
       const household = await orchestrator.householdStore.getHousehold(req.params.id);
-      res.json(household);
+      res.json(await expandHousehold(orchestrator, household));
     } catch (err) {
       if (err.message.includes('not found')) {
         return res.status(404).json({ error: err.message });
@@ -207,7 +397,7 @@ export function createApiRouter(orchestrator) {
 
   // -------------------------------------------------------------------------
   // PUT /api/households/:id
-  // Updates household metadata (name, location)
+  // Updates household metadata (name, location_id)
   // -------------------------------------------------------------------------
   router.put('/api/households/:id', async (req, res) => {
     try {
@@ -215,18 +405,27 @@ export function createApiRouter(orchestrator) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
       
-      const { name, location, address } = req.body;
+      const { name, location_id } = req.body;
       const updates = {};
       if (name) updates.name = name;
-      if (location) updates.location = location;
-      if (address !== undefined) updates.address = address;
+      if (location_id !== undefined) {
+        if (!orchestrator.locationStore) {
+          return res.status(501).json({ error: 'Location store not enabled' });
+        }
+        try {
+          await orchestrator.locationStore.getLocation(location_id);
+        } catch (err) {
+          return res.status(400).json({ error: err.message });
+        }
+        updates.location_id = location_id;
+      }
       
       const household = await orchestrator.householdStore.updateHousehold(
         req.params.id,
         updates
       );
       
-      res.json(household);
+      res.json(await expandHousehold(orchestrator, household));
     } catch (err) {
       if (err.message.includes('not found')) {
         return res.status(404).json({ error: err.message });
@@ -249,6 +448,9 @@ export function createApiRouter(orchestrator) {
       await orchestrator.householdStore.deleteHousehold(req.params.id);
       res.json({ deleted: true, household_id: req.params.id });
     } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
       console.error(`[api] DELETE /api/households/${req.params.id} error:`, err);
       res.status(500).json({ error: 'Internal server error' });
     }
@@ -266,16 +468,22 @@ export function createApiRouter(orchestrator) {
       
       const { name, date_of_birth, phone, profile_type, companion, is_primary, primary_contact } = req.body;
 
-      if (!name || !profile_type || !companion) {
+      if (!name || !phone || !profile_type || !companion) {
         return res.status(400).json({
-          error: 'name, profile_type, and companion are required'
+          error: 'name, phone, profile_type, and companion are required'
         });
+      }
+      if (!isValidE164(phone)) {
+        return res.status(400).json({ error: 'phone must be valid E.164 (e.g. +15551234567)' });
+      }
+      if (!isValidDateOfBirth(date_of_birth)) {
+        return res.status(400).json({ error: 'date_of_birth must be YYYY-MM-DD' });
       }
 
       const member = await orchestrator.householdStore.addMember(req.params.id, {
         name,
         date_of_birth,
-        phone,
+        phone: normalizePhone(phone),
         profile_type,
         companion,
         is_primary,
@@ -302,13 +510,29 @@ export function createApiRouter(orchestrator) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
       
-      const { name, date_of_birth, phone, profile_type, companion } = req.body;
+      const {
+        name,
+        date_of_birth,
+        phone,
+        profile_type,
+        companion,
+        is_primary,
+        primary_contact,
+      } = req.body;
+      if (phone !== undefined && !isValidE164(phone)) {
+        return res.status(400).json({ error: 'phone must be valid E.164 (e.g. +15551234567)' });
+      }
+      if (!isValidDateOfBirth(date_of_birth)) {
+        return res.status(400).json({ error: 'date_of_birth must be YYYY-MM-DD' });
+      }
       const updates = {};
       if (name !== undefined) updates.name = name;
       if (date_of_birth !== undefined) updates.date_of_birth = date_of_birth;
-      if (phone !== undefined) updates.phone = phone;
+      if (phone !== undefined) updates.phone = normalizePhone(phone);
       if (profile_type !== undefined) updates.profile_type = profile_type;
       if (companion !== undefined) updates.companion = companion;
+      if (is_primary !== undefined) updates.is_primary = is_primary;
+      if (primary_contact !== undefined) updates.primary_contact = primary_contact;
       const member = await orchestrator.householdStore.updateMember(
         req.params.id,
         req.params.memberId,

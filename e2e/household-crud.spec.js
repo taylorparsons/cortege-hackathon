@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createTestHousehold, cleanupTestHouseholds } from './helpers.js';
+import { createTestHousehold, createTestLocation, cleanupTestHouseholds } from './helpers.js';
 
 test.describe('Household CRUD', () => {
   test.beforeEach(async ({ request }) => {
@@ -28,7 +28,12 @@ test.describe('Household CRUD', () => {
 
     // Fill and submit
     await page.getByTestId('input-household-name').fill(name);
-    await page.getByTestId('input-household-location').fill('Test City');
+    await page.getByTestId('input-household-location').fill(`${name} Location`);
+    await page.getByTestId('input-household-address-line1').fill('123 Test Lane');
+    await page.getByTestId('input-household-city').fill('Austin');
+    await page.getByTestId('input-household-region').fill('TX');
+    await page.getByTestId('input-household-postal-code').fill('78701');
+    await page.getByTestId('input-household-country').fill('US');
     await page.getByTestId('btn-create-household').click();
 
     // After creation, onSelect is called which selects the new household and closes the modal.
@@ -78,5 +83,27 @@ test.describe('Household CRUD', () => {
 
     // Household row should be gone
     await expect(page.getByTestId(`household-row-${hhToDelete.household_id}`)).not.toBeVisible();
+  });
+
+  test('blocks deleting a referenced location until the household is reassigned', async ({ page, request }) => {
+    const ts = Date.now();
+    const household = await createTestHousehold(request, `E2E Test Location Block ${ts}`, 'Austin');
+    const alternateLocation = await createTestLocation(request, `E2E Test Alt Location ${ts}`, 'Bend');
+
+    await page.goto('/');
+    await page.getByTestId('btn-switch-household').click();
+    await page.getByTestId(`household-row-${household.household_id}`).click();
+
+    await page.getByTestId('btn-switch-household').click();
+    page.on('dialog', (dialog) => dialog.accept());
+
+    await page.getByTestId(`btn-delete-location-${household.location_id}`).click();
+    await expect(page.getByTestId('location-manager-error')).toContainText(household.name);
+
+    await page.getByTestId('select-household-location').selectOption(alternateLocation.location_id);
+    await page.getByTestId('btn-update-household-location').click();
+
+    await page.getByTestId(`btn-delete-location-${household.location_id}`).click();
+    await expect(page.getByTestId(`location-row-${household.location_id}`)).not.toBeVisible();
   });
 });

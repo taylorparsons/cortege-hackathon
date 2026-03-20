@@ -484,3 +484,144 @@ Alternatives considered:
 Acceptance / test:
 - npx cypress run completes all 16 tests
 - Tests are self-contained: each creates and cleans up its own data via beforeEach
+
+## D-20260320-1147
+Date: 2026-03-20 11:47
+Inputs: [CR-20260320-1147](requests.md#cr-20260320-1147)
+PRD: [Privacy-First Household Data](PRD.md#privacy-first-household-data-sources-cr-20260320-1147-d-20260320-1147)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+
+Decision:
+Implement a privacy-first household data model that stores household locations as separate `location` records referenced by `location_id`, encrypts full name / phone / date of birth / location name / structured address at rest, derives deterministic phone tokens for matching, and sanitizes all logs and external LLM requests so raw PII is never emitted outside trusted server read paths.
+
+Rationale:
+- The current household/member model persists PII in clear text across household JSON, memory snapshots, and event payload flows
+- `location` is currently only display metadata, so normalizing it behind `location_id` reduces duplication and creates a clean boundary for encrypted address storage
+- Phone matching requires equality lookup for Twilio/manual event routing, so encrypted-only storage is insufficient without a deterministic token
+- LLM prompts and console logs currently receive serialized event and memory data; a centralized privacy layer is safer than scattered field masking
+
+Alternatives considered:
+- Encrypt only at the transport layer with HTTPS (rejected — does not protect data at rest, logs, or LLM boundaries)
+- Keep inline household `address` and plaintext member fields (rejected — duplicates sensitive data and leaves the current exposure model intact)
+- Use encryption without deterministic tokens (rejected — breaks phone-based lookup and future routing use cases)
+
+Acceptance / test:
+- Household/member/location persistence contains no plaintext name, phone, date_of_birth, location name, or address
+- External Claude calls are built from sanitized event + memory payloads with aliases, not raw PII
+- Representative server logs no longer print raw PII-bearing payloads or identifiers
+- Household APIs create and update households via `location_id`, with trusted read responses expanding decrypted location data
+
+## D-20260320-1203
+Date: 2026-03-20 12:03
+Inputs: [CR-20260320-1203](requests.md#cr-20260320-1203)
+PRD: [Privacy-First Household Data](PRD.md#privacy-first-household-data-sources-cr-20260320-1147-d-20260320-1147-cr-20260320-1203-d-20260320-1203)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+
+Decision:
+Extend the active privacy/location feature to include full location CRUD expectations across both the API and the UI. Location deletion will use the stricter guardrail: reject deleting a location that is still referenced by one or more households, require household reassignment first, and return blocking household details so the UI can guide the operator.
+
+Rationale:
+- The original location normalization plan already implied reusable location records, but without explicit UI CRUD coverage operators could create locations without being able to manage them cleanly
+- Delete behavior must be deterministic because deleting a referenced encrypted address record would orphan households or silently destroy location context
+- Returning blocking household details in a `409 Conflict` response gives the UI enough information to drive reassignment without exposing a vague failure state
+
+Alternatives considered:
+- Allow deleting referenced locations and cascade null household references (rejected — breaks household integrity and weakens the normalized data model)
+- Allow deleting referenced locations and require implicit fallback recreation (rejected — surprising behavior and harder to audit)
+- Leave location editing/deletion out of the UI (rejected — incomplete CRUD despite normalized API model)
+
+Acceptance / test:
+- API includes a guarded `DELETE /api/locations/:id` route
+- Deleting a referenced location returns `409 Conflict` with blocking household identifiers
+- UI lists saved locations, supports editing name/address, and surfaces reassignment guidance before delete
+
+## D-20260320-1220
+Date: 2026-03-20 12:20
+Inputs: [CR-20260320-1220](requests.md#cr-20260320-1220)
+PRD: [Privacy-First Household Data](PRD.md#privacy-first-household-data-sources-cr-20260320-1147-d-20260320-1147-cr-20260320-1203-d-20260320-1203)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+
+Decision:
+Keep the same ATHENA feature ID, but decompose execution into a dedicated superpowers plan plus smaller ATHENA tasks grouped by storage/privacy primitives, API integrity, UI flows, sanitization, and verification.
+
+Rationale:
+- The feature requirements are valid, but the original task list is too coarse for reliable execution and review
+- File-scoped tasks and an explicit plan reduce ambiguity while preserving the existing traceability chain
+- The current codebase already contains partially implemented changes, so the plan needs to target integration gaps instead of restating the original product request
+
+Acceptance / test:
+- A plan document exists at `docs/superpowers/plans/2026-03-20-pii-encryption-location-model.md`
+- The ATHENA task list is decomposed into smaller execution units with clear FR mappings
+
+## D-20260320-1228
+Date: 2026-03-20 12:28
+Inputs: [CR-20260320-1228](requests.md#cr-20260320-1228)
+PRD: [Privacy-First Household Data](PRD.md#privacy-first-household-data-sources-cr-20260320-1147-d-20260320-1147-cr-20260320-1203-d-20260320-1203)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+
+Decision:
+Execute the approved privacy/location plan from the current workspace by moving the existing dirty `main` work onto a feature branch, rather than creating a new worktree from clean HEAD.
+
+Rationale:
+- The implementation is already partially in progress in the current workspace, so switching to a feature branch preserves that work without forcing an unsafe stash/replay step
+- Continuing directly on `main` would violate the execution guardrail against starting implementation on `main`
+- A same-workspace feature branch is the safest adaptation available under the current repo state
+
+Acceptance / test:
+- The working branch is no longer `main`
+- Implementation continues against the active feature ID with the existing uncommitted changes preserved
+
+## D-20260320-1248
+Date: 2026-03-20 12:48
+Inputs: [CR-20260320-1248](requests.md#cr-20260320-1248)
+PRD: [Privacy-First Household Data](PRD.md#privacy-first-household-data-sources-cr-20260320-1147-d-20260320-1147-cr-20260320-1203-d-20260320-1203)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+
+Decision:
+Create one traceable feature commit on `feature/pii-encryption-location-model` using a concise message derived from the shipped privacy/location feature scope rather than splitting the already-verified work into synthetic smaller commits.
+
+Rationale:
+- The implementation was completed and verified as one integrated feature spanning storage, API, UI, tests, and docs
+- Retroactively splitting it into multiple commits would weaken the actual audit trail instead of improving it
+- A single commit can still be traceable because the ATHENA request/decision/spec/task/progress documents already capture the internal breakdown
+
+Acceptance / test:
+- The working tree is committed on `feature/pii-encryption-location-model`
+- The commit message clearly reflects the shipped privacy/location feature
+
+## D-20260320-1315
+Date: 2026-03-20 13:15
+Inputs: [CR-20260320-1315](requests.md#cr-20260320-1315)
+PRD: [Documentation Alignment](PRD.md#documentation-alignment--shipped-sources-cr-20260320-1315-d-20260320-1315)
+Spec: [`specs/20260320-readme-alignment/spec.md`](specs/20260320-readme-alignment/spec.md)
+
+Decision:
+Treat this as a narrow documentation-alignment task. Update `README.md` and `.env.example` so the top-level setup, API overview, privacy notes, and project structure match the shipped location/privacy implementation without changing product behavior.
+
+Rationale:
+- The review found documentation drift, not a runtime defect
+- `README.md` is the primary onboarding surface, but its env and API sections depend on `.env.example` for accuracy
+- Keeping the scope to README + env template fixes the user-facing gaps without reopening the broader privacy/location feature
+
+Acceptance / test:
+- `README.md` documents the location CRUD model, privacy behavior, and current repo structure accurately
+- `.env.example` includes the privacy key setting referenced by the README
+
+## D-20260320-1345
+Date: 2026-03-20 13:45
+Inputs: [CR-20260320-1345](requests.md#cr-20260320-1345)
+PRD: [Main Branch Publication](PRD.md#main-branch-publication--shipped-sources-cr-20260320-1345-d-20260320-1345)
+Spec: [`specs/20260320-main-branch-push/spec.md`](specs/20260320-main-branch-push/spec.md)
+
+Decision:
+Publish by first committing the pending README-alignment changes on the active feature branch, then merging that branch into local `main`, verifying the merged result, and pushing `main` to `origin`.
+
+Rationale:
+- The working tree is not clean, so switching directly to `main` without committing would risk losing the README-alignment audit trail
+- The feature branch already contains the verified privacy/location implementation, making it the correct integration source
+- A local merge into `main` preserves a clean branch history before the explicit remote push the user requested
+
+Acceptance / test:
+- The pending README/docs updates are committed with traceability
+- Local `main` contains the feature branch changes
+- `origin/main` is updated to the merged commit

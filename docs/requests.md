@@ -308,3 +308,111 @@ Notes:
 - Frontend: Vite + React on port 5173; Backend: Express on port 3001
 - All data-testid attributes already present in components
 - Detailed spec provided: exact file paths, test names, helper signatures, playwright.config.js content
+
+## CR-20260320-1147
+Date: 2026-03-20 11:47
+Source: chat
+Decision: [D-20260320-1147](decisions.md#d-20260320-1147)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+
+Request (verbatim):
+Implement the plan.
+
+Notes:
+- Context from same session:
+  - User wants household location normalized behind `location_id`
+  - User wants full name, phone, address, and date of birth treated as protected PII
+  - User wants PII encrypted at rest
+  - User wants no cleartext PII in logs
+  - User wants no raw PII sent to external LLM calls
+- Scope chosen for implementation:
+  - Add privacy primitives for encryption, tokenization, redaction, and LLM sanitization
+  - Add a location store and make household records reference `location_id`
+  - Encrypt member and location PII fields in persisted household data
+  - Update API and UI flows to use the new location model and trusted decrypted read paths
+
+## CR-20260320-1203
+Date: 2026-03-20 12:03
+Source: chat
+Decision: [D-20260320-1203](decisions.md#d-20260320-1203)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+
+Request (verbatim):
+yes fold into athena
+
+Notes:
+- Continuation of the active privacy/location feature
+- User approved adding explicit full location CRUD coverage to the plan
+- Added scope:
+  - UI for listing saved locations
+  - UI for editing a location name/address
+  - UI for deleting a location with safeguards if households still reference it
+  - API delete rule should reject deleting referenced locations until reassignment happens
+
+## CR-20260320-1220
+Date: 2026-03-20 12:20
+Source: chat
+Decision: [D-20260320-1220](decisions.md#d-20260320-1220)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+Plan: [`superpowers/plans/2026-03-20-pii-encryption-location-model.md`](superpowers/plans/2026-03-20-pii-encryption-location-model.md)
+
+Request (verbatim):
+great do it
+
+Notes:
+- User approved converting the active privacy/location feature into a superpowers-grade execution plan
+- Need: break the current ATHENA task list into smaller file-scoped tasks and save a planner document in docs/superpowers/plans/
+
+## CR-20260320-1228
+Date: 2026-03-20 12:28
+Source: chat
+Decision: [D-20260320-1228](decisions.md#d-20260320-1228)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+Plan: [`superpowers/plans/2026-03-20-pii-encryption-location-model.md`](superpowers/plans/2026-03-20-pii-encryption-location-model.md)
+
+Request (verbatim):
+yes make it happen
+
+Notes:
+- Continuation of the same privacy/location feature after the superpowers planning pass
+- User is now asking for implementation, not further planning
+
+## CR-20260320-1248
+Date: 2026-03-20 12:48
+Source: chat
+Decision: [D-20260320-1248](decisions.md#d-20260320-1248)
+Spec: [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md)
+Plan: [`superpowers/plans/2026-03-20-pii-encryption-location-model.md`](superpowers/plans/2026-03-20-pii-encryption-location-model.md)
+
+Request (verbatim):
+commit these changes with comment based on the athena docs and superpowers
+
+Notes:
+- User wants the completed privacy/location feature work committed now
+- Commit message should be grounded in the ATHENA traceability docs and the superpowers execution context
+
+## CR-20260320-1315
+Date: 2026-03-20 13:15
+Source: chat
+Decision: [D-20260320-1315](decisions.md#d-20260320-1315)
+Spec: [`specs/20260320-readme-alignment/spec.md`](specs/20260320-readme-alignment/spec.md)
+
+Request (verbatim):
+yes fit it
+
+Notes:
+- Continuation of the README review request in the same session
+- User wants the top-level onboarding docs fixed so `README.md` reflects the shipped location/privacy implementation
+
+## CR-20260320-1345
+Date: 2026-03-20 13:45
+Source: chat
+Decision: [D-20260320-1345](decisions.md#d-20260320-1345)
+Spec: [`specs/20260320-main-branch-push/spec.md`](specs/20260320-main-branch-push/spec.md)
+
+Request (verbatim):
+push to remote on the main branch
+
+Notes:
+- User explicitly requested publication to `origin/main`
+- Current branch contains an uncommitted README/docs alignment follow-up on top of the verified privacy/location feature branch

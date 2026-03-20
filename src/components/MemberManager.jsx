@@ -85,7 +85,7 @@ export function MemberManager({ householdId }) {
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      await fetch(apiUrl(`/api/households/${householdId}/members`), {
+      const response = await fetch(apiUrl(`/api/households/${householdId}/members`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -96,6 +96,9 @@ export function MemberManager({ householdId }) {
           companion: COMPANION_MAP[newProfileType],
         }),
       });
+      if (!response.ok) {
+        throw new Error(`Failed to add member (${response.status})`);
+      }
       setNewName(''); setNewPhone(''); setNewDob(''); setNewProfileType('adult');
       setShowAddForm(false);
       await fetchMembers();
@@ -107,7 +110,7 @@ export function MemberManager({ householdId }) {
 
   const handleEdit = async (memberId) => {
     try {
-      await fetch(apiUrl(`/api/households/${householdId}/members/${memberId}`), {
+      const response = await fetch(apiUrl(`/api/households/${householdId}/members/${memberId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -118,6 +121,9 @@ export function MemberManager({ householdId }) {
           companion: COMPANION_MAP[editProfileType],
         }),
       });
+      if (!response.ok) {
+        throw new Error(`Failed to update member (${response.status})`);
+      }
       setEditingId(null);
       await fetchMembers();
       bumpMemberVersion();
@@ -129,9 +135,12 @@ export function MemberManager({ householdId }) {
   const handleRemove = async (memberId, memberName) => {
     if (!confirm(`Remove ${memberName} from this household?`)) return;
     try {
-      await fetch(apiUrl(`/api/households/${householdId}/members/${memberId}`), {
+      const response = await fetch(apiUrl(`/api/households/${householdId}/members/${memberId}`), {
         method: 'DELETE',
       });
+      if (!response.ok) {
+        throw new Error(`Failed to remove member (${response.status})`);
+      }
       await fetchMembers();
       bumpMemberVersion();
     } catch (err) {
@@ -185,6 +194,7 @@ export function MemberManager({ householdId }) {
             data-testid="input-member-phone"
             type="tel" placeholder="Phone (e.g. +15551234567)" value={newPhone}
             onChange={(e) => setNewPhone(e.target.value)}
+            required
             style={inputStyle}
           />
           <input

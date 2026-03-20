@@ -6,6 +6,7 @@
  */
 
 import { Router } from 'express';
+import { aliasFromValue, normalizePhone } from '../privacy/pii.js';
 
 // Required Twilio fields for an inbound voice call
 const REQUIRED_TWILIO_FIELDS = ['CallSid', 'From', 'To'];
@@ -46,8 +47,8 @@ export function createTwilioRouter() {
     // Log the incoming payload
     console.log('[twilio-webhook] Inbound voice call received:', {
       CallSid: payload.CallSid,
-      From: payload.From,
-      To: payload.To,
+      From: payload.From ? aliasFromValue('phone', normalizePhone(payload.From)) : null,
+      To: payload.To ? aliasFromValue('phone', normalizePhone(payload.To)) : null,
       CallStatus: payload.CallStatus,
       Direction: payload.Direction,
     });

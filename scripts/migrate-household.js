@@ -8,6 +8,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { HouseholdStore } from '../server/storage/household-store.js';
+import { LocationStore } from '../server/storage/location-store.js';
+import { ensurePiiReady } from '../server/privacy/pii.js';
 
 async function migrate() {
   const legacyPath = 'data/household.json';
@@ -20,12 +22,23 @@ async function migrate() {
   console.log('Reading legacy household.json...');
   const legacy = JSON.parse(fs.readFileSync(legacyPath, 'utf8'));
 
+  ensurePiiReady();
   const store = new HouseholdStore('data/households');
+  const locationStore = new LocationStore('data/locations');
+
+  console.log('Creating location in new store...');
+  const location = await locationStore.ensureLegacyLocation({
+    name: legacy.location ?? legacy.name,
+    address: legacy.address ?? null,
+    legacyLocation: legacy.location ?? null,
+  });
 
   console.log('Creating household in new store...');
   const household = await store.createHousehold({
     name: legacy.name || 'Default Household',
-    location: legacy.location || 'Unknown'
+    location_id: location.location_id,
+    location: legacy.location || null,
+    address: legacy.address ?? null,
   });
 
   console.log(`Created household: ${household.household_id}`);

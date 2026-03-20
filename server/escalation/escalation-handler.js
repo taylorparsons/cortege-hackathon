@@ -3,6 +3,8 @@
  * Implements: FR-025, FR-026, FR-027, FR-028, EC9, NFR-004
  */
 
+import { sanitizeString } from '../privacy/pii.js';
+
 // ---------------------------------------------------------------------------
 // Action validation schemas
 // ---------------------------------------------------------------------------
@@ -50,7 +52,7 @@ export class EscalationHandler {
     if (level <= 1) {
       // L0-L1: log only
       console.log(
-        `[escalation] L${level} — instance=${agentInstance.id} member=${agentInstance.memberId} assessment="${agentResponse.assessment}"`
+        `[escalation] L${level} — instance=${agentInstance.id} member=${agentInstance.memberId} assessment="${sanitizeString(agentResponse.assessment)}"`
       );
     } else if (level === 2) {
       // L2: flag for monitoring
@@ -203,7 +205,7 @@ export class EscalationHandler {
       switch (type) {
         case 'log': {
           console.log(
-            `[escalation] ACTION log — instance=${agentInstance.id}${action.reason ? ` reason="${action.reason}"` : ''}`
+            `[escalation] ACTION log — instance=${agentInstance.id}${action.reason ? ` reason="${sanitizeString(action.reason)}"` : ''}`
           );
           results.push({ type, status: 'processed' });
           break;
@@ -211,7 +213,7 @@ export class EscalationHandler {
 
         case 'monitor': {
           console.log(
-            `[escalation] ACTION monitor — target=${action.target} instance=${agentInstance.id}${action.reason ? ` reason="${action.reason}"` : ''}${action.duration ? ` duration=${action.duration}` : ''}`
+            `[escalation] ACTION monitor — target=${sanitizeString(action.target)} instance=${agentInstance.id}${action.reason ? ` reason="${sanitizeString(action.reason)}"` : ''}${action.duration ? ` duration=${action.duration}` : ''}`
           );
           results.push({ type, status: 'processed', target: action.target });
           break;
@@ -219,7 +221,7 @@ export class EscalationHandler {
 
         case 'soft_block': {
           console.log(
-            `[escalation] ACTION soft_block — target=${action.target} reason="${action.reason}" instance=${agentInstance.id}`
+            `[escalation] ACTION soft_block — target=${sanitizeString(action.target)} reason="${sanitizeString(action.reason)}" instance=${agentInstance.id}`
           );
           results.push({ type, status: 'processed', target: action.target });
           break;
@@ -227,7 +229,7 @@ export class EscalationHandler {
 
         case 'hard_block': {
           console.log(
-            `[escalation] ACTION hard_block — target=${action.target} reason="${action.reason}" instance=${agentInstance.id}`
+            `[escalation] ACTION hard_block — target=${sanitizeString(action.target)} reason="${sanitizeString(action.reason)}" instance=${agentInstance.id}`
           );
           if (memoryStore) {
             try {
@@ -248,7 +250,7 @@ export class EscalationHandler {
 
         case 'escalate': {
           console.log(
-            `[escalation] ACTION escalate — level=${action.level} to=${action.to} summary="${action.summary}" instance=${agentInstance.id}`
+            `[escalation] ACTION escalate — level=${action.level} to=${sanitizeString(action.to)} summary="${sanitizeString(action.summary)}" instance=${agentInstance.id}`
           );
           this._emitEscalation(action.level, agentResponse, agentInstance);
           results.push({ type, status: 'processed', level: action.level });
@@ -257,7 +259,7 @@ export class EscalationHandler {
 
         case 'log_evidence': {
           console.log(
-            `[escalation] ACTION log_evidence — reason="${action.reason}"${action.target ? ` target=${action.target}` : ''} instance=${agentInstance.id}`
+            `[escalation] ACTION log_evidence — reason="${sanitizeString(action.reason)}"${action.target ? ` target=${sanitizeString(action.target)}` : ''} instance=${agentInstance.id}`
           );
           const evidence = this._captureEvidence(agentResponse, agentInstance);
           results.push({ type, status: 'processed', evidence });

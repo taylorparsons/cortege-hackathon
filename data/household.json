@@ -2,12 +2,21 @@
   "household_id": "hh_parsons_001",
   "name": "The Parsons Household",
   "location": "Seattle, WA",
+  "address": {
+    "line1": "123 Demo Ave",
+    "line2": null,
+    "city": "Seattle",
+    "region": "WA",
+    "postal_code": "98101",
+    "country": "US"
+  },
   "created": "2026-03-14T10:00:00Z",
   "members": [
     {
       "id": "member_001",
       "name": "Alex",
-      "age": 14,
+      "phone": "+14155550101",
+      "date_of_birth": "2012-05-14",
       "profile_type": "child",
       "companion": "scout",
       "is_primary": false
@@ -15,7 +24,8 @@
     {
       "id": "member_002",
       "name": "Mom",
-      "age": 71,
+      "phone": "+14155550102",
+      "date_of_birth": "1954-08-19",
       "profile_type": "senior",
       "companion": "anchor",
       "is_primary": false,
@@ -24,7 +34,8 @@
     {
       "id": "member_003",
       "name": "Taylor",
-      "age": 38,
+      "phone": "+14155550103",
+      "date_of_birth": "1987-11-03",
       "profile_type": "adult",
       "companion": "sentinel",
       "is_primary": true

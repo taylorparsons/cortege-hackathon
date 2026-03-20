@@ -1,23 +1,81 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useHouseholds } from '../hooks/useHouseholds.js';
+import { LocationManager } from './LocationManager.jsx';
 import { MemberManager } from './MemberManager.jsx';
 
 export function HouseholdSelector({ currentHouseholdId, onSelect }) {
-  const { households, loading, error, createHousehold, deleteHousehold } = useHouseholds();
+  const {
+    households,
+    locations,
+    loading,
+    error,
+    createHousehold,
+    deleteHousehold,
+    getLocation,
+    updateLocation,
+    deleteLocation,
+    updateHousehold,
+  } = useHouseholds();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newLocation, setNewLocation] = useState('');
+  const [locationName, setLocationName] = useState('');
+  const [line1, setLine1] = useState('');
+  const [line2, setLine2] = useState('');
+  const [city, setCity] = useState('');
+  const [region, setRegion] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [country, setCountry] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [selectedLocationId, setSelectedLocationId] = useState('');
+  const [reassignError, setReassignError] = useState('');
+
+  const currentHousehold = households.find((household) => household.household_id === currentHouseholdId) ?? null;
+
+  useEffect(() => {
+    setSelectedLocationId(currentHousehold?.location_id ?? '');
+    setReassignError('');
+  }, [currentHousehold?.location_id]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    setCreateError('');
     try {
-      const household = await createHousehold(newName, newLocation);
+      const household = await createHousehold(newName, {
+        name: locationName,
+        address: {
+          line1,
+          line2: line2 || null,
+          city,
+          region,
+          postal_code: postalCode,
+          country,
+        },
+      });
       setNewName('');
-      setNewLocation('');
+      setLocationName('');
+      setLine1('');
+      setLine2('');
+      setCity('');
+      setRegion('');
+      setPostalCode('');
+      setCountry('');
       setShowCreateForm(false);
       onSelect(household.household_id);
     } catch (err) {
-      console.error('Failed to create household:', err);
+      setCreateError(err.message);
+    }
+  };
+
+  const handleHouseholdReassign = async () => {
+    if (!currentHouseholdId || !selectedLocationId || selectedLocationId === currentHousehold?.location_id) {
+      return;
+    }
+
+    setReassignError('');
+    try {
+      await updateHousehold(currentHouseholdId, { location_id: selectedLocationId });
+    } catch (err) {
+      setReassignError(err.message);
     }
   };
 
@@ -46,6 +104,9 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
           background: 'var(--bg3)', border: '1px solid var(--border)',
           borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'column', gap: 10,
         }}>
+          {createError && (
+            <div style={{ color: '#DC503C', fontSize: 12 }}>{createError}</div>
+          )}
           <input
             type="text"
             placeholder="Household name"
@@ -61,10 +122,88 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
           />
           <input
             type="text"
-            placeholder="Location (optional)"
-            value={newLocation}
-            onChange={(e) => setNewLocation(e.target.value)}
+            placeholder="Location name"
+            value={locationName}
+            onChange={(e) => setLocationName(e.target.value)}
             data-testid="input-household-location"
+            required
+            style={{
+              padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
+              background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
+              outline: 'none',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Address line 1"
+            value={line1}
+            onChange={(e) => setLine1(e.target.value)}
+            data-testid="input-household-address-line1"
+            required
+            style={{
+              padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
+              background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
+              outline: 'none',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Address line 2 (optional)"
+            value={line2}
+            onChange={(e) => setLine2(e.target.value)}
+            data-testid="input-household-address-line2"
+            style={{
+              padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
+              background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
+              outline: 'none',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="City"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            data-testid="input-household-city"
+            required
+            style={{
+              padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
+              background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
+              outline: 'none',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="State / Region"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            data-testid="input-household-region"
+            required
+            style={{
+              padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
+              background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
+              outline: 'none',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Postal code"
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            data-testid="input-household-postal-code"
+            required
+            style={{
+              padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
+              background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
+              outline: 'none',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Country"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            data-testid="input-household-country"
+            required
             style={{
               padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
               background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
@@ -105,7 +244,7 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
                 {household.name}
               </div>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-                {household.location} &middot; {household.member_count} members
+                {(household.location_name ?? household.address_summary ?? household.location ?? 'No location')} &middot; {household.member_count} members
               </div>
             </div>
             {household.household_id !== currentHouseholdId && (
@@ -130,8 +269,56 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
         ))}
       </div>
 
+      <LocationManager
+        locations={locations}
+        households={households}
+        getLocation={getLocation}
+        updateLocation={updateLocation}
+        deleteLocation={deleteLocation}
+      />
+
       {currentHouseholdId && (
         <>
+          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 500, color: 'var(--cream)' }}>
+              Household Location
+            </div>
+            <select
+              data-testid="select-household-location"
+              value={selectedLocationId}
+              onChange={(event) => setSelectedLocationId(event.target.value)}
+              style={{
+                padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border2)',
+                background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 12,
+                outline: 'none',
+              }}
+            >
+              {locations.map((location) => (
+                <option key={location.location_id} value={location.location_id}>
+                  {location.name} ({location.address_summary ?? 'No summary'})
+                </option>
+              ))}
+            </select>
+            <button
+              data-testid="btn-update-household-location"
+              onClick={handleHouseholdReassign}
+              disabled={!selectedLocationId || selectedLocationId === currentHousehold?.location_id}
+              style={{
+                padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(78,205,196,0.3)',
+                background: 'rgba(78,205,196,0.08)', color: 'var(--teal)', cursor: 'pointer',
+                fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 500, letterSpacing: 0.5,
+                opacity: !selectedLocationId || selectedLocationId === currentHousehold?.location_id ? 0.6 : 1,
+              }}
+            >
+              Update Location
+            </button>
+            {reassignError && (
+              <div data-testid="household-location-error" style={{ color: '#DC503C', fontSize: 12 }}>
+                {reassignError}
+              </div>
+            )}
+          </div>
           <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
           <MemberManager householdId={currentHouseholdId} />
         </>

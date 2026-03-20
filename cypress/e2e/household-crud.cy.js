@@ -24,7 +24,12 @@ describe('Household CRUD', () => {
     cy.get('[data-testid="form-create-household"]').should('be.visible');
 
     cy.get('[data-testid="input-household-name"]').type(name);
-    cy.get('[data-testid="input-household-location"]').type('Test City');
+    cy.get('[data-testid="input-household-location"]').type(`${name} Location`);
+    cy.get('[data-testid="input-household-address-line1"]').type('123 Test Lane');
+    cy.get('[data-testid="input-household-city"]').type('Austin');
+    cy.get('[data-testid="input-household-region"]').type('TX');
+    cy.get('[data-testid="input-household-postal-code"]').type('78701');
+    cy.get('[data-testid="input-household-country"]').type('US');
     cy.get('[data-testid="btn-create-household"]').click();
 
     // The new household should now appear as a row in the selector
@@ -73,6 +78,30 @@ describe('Household CRUD', () => {
 
         // Deleted row should be gone
         cy.get(`[data-testid="household-row-${deleteId}"]`).should('not.exist');
+      });
+    });
+  });
+
+  it('blocks deleting a referenced location until the household is reassigned', () => {
+    const name = `E2E Test Location Block ${Date.now()}`;
+
+    cy.createHousehold(name, 'Austin').then(household => {
+      cy.createLocation(`E2E Test Alt Location ${Date.now()}`, 'Bend').then(alternateLocation => {
+        cy.visit('/');
+        cy.openHouseholdSelector();
+        cy.get(`[data-testid="household-row-${household.household_id}"]`).click();
+        cy.get('[data-testid="modal-household-selector"]').should('not.exist');
+
+        cy.openHouseholdSelector();
+        cy.on('window:confirm', () => true);
+        cy.get(`[data-testid="btn-delete-location-${household.location_id}"]`).click();
+        cy.get('[data-testid="location-manager-error"]').should('contain', household.name);
+
+        cy.get('[data-testid="select-household-location"]').select(alternateLocation.location_id);
+        cy.get('[data-testid="btn-update-household-location"]').click();
+        cy.get(`[data-testid="btn-delete-location-${household.location_id}"]`).click();
+
+        cy.get(`[data-testid="location-row-${household.location_id}"]`).should('not.exist');
       });
     });
   });

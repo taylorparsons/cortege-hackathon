@@ -715,3 +715,117 @@ NOTES
 - Files created: playwright.config.js, e2e/helpers.js (5 helpers), 5 spec files (16 tests)
 - Files modified: package.json (added @playwright/test devDependency and test:e2e:pw script)
 - Feature status: SHIPPED — spec marked Done
+- Commit: a272820
+
+---
+
+Session: 2026-03-20 11:47 - 12:48
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, executing-plans, writing-plans, verification-before-completion, finishing-a-development-branch
+Feature: 20260320-pii-encryption-location-model
+Input: CR-20260320-1147, CR-20260320-1203, CR-20260320-1220, CR-20260320-1228, CR-20260320-1248
+Decisions: D-20260320-1147, D-20260320-1203, D-20260320-1220, D-20260320-1228, D-20260320-1248
+Spec: docs/specs/20260320-pii-encryption-location-model/spec.md
+Tasks: docs/specs/20260320-pii-encryption-location-model/tasks.md
+Goal: Encrypt protected household/member/location PII at rest, normalize household location behind `location_id`, and prevent raw PII from reaching logs or external LLM calls.
+
+DONE
+- [2026-03-20 11:47] T-001: Capture request, create privacy/location spec + tasks, and update PRD/traceability/progress. (Skills: athena)
+- [2026-03-20 12:45] T-002: Stabilize privacy helpers for encryption, deterministic tokens, validation, and reusable redaction/sanitization helpers. (Skills: athena)
+- [2026-03-20 12:45] T-003: Complete encrypted household/member persistence and legacy compatibility in HouseholdStore. (Skills: athena)
+- [2026-03-20 12:45] T-004: Complete LocationStore support for encrypted named locations, read models, and legacy-location creation. (Skills: athena)
+- [2026-03-20 12:45] T-005: Update household and location API routes to use canonical `location_id`, expanded trusted reads, and guarded delete semantics. (Skills: athena)
+- [2026-03-20 12:45] T-006: Add household reassignment and location-management data operations to the frontend hook layer. (Skills: athena)
+- [2026-03-20 12:45] T-007: Add location list, edit, delete-blocked, and reassignment UI flows. (Skills: athena)
+- [2026-03-20 12:45] T-008: Sanitize Claude request building, logging, and ingestion paths to prevent raw PII emission. (Skills: athena)
+- [2026-03-20 12:45] T-009: Add regression coverage for encrypted persistence, sanitized LLM payloads, redacted logs, compatibility migration, and guarded location delete/reassignment flows. (Skills: athena, verification-before-completion)
+- [2026-03-20 12:45] T-010: Update docs, test fixtures, and verification commands to match the new location and PII model. (Skills: athena, writing-plans, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Scope includes: encrypted at-rest PII for name/phone/date of birth/location name/address, deterministic phone tokens for matching, `location_id` normalization, redacted logging, and sanitized external LLM requests.
+- Current codebase already has partial `address`, `phone`, and `date_of_birth` support; implementation will harden and normalize those paths rather than adding them from scratch.
+- Scope expansion approved at 2026-03-20 12:03: location management must be full CRUD in both API and UI, with `DELETE /api/locations/:id` returning `409 Conflict` plus blocking household details when the location is still referenced.
+- Planning pass added at 2026-03-20 12:20: execution is now decomposed into smaller file-scoped tasks and mirrored in a dedicated superpowers plan document.
+- Execution resumed at 2026-03-20 12:28 using the superpowers executing-plans workflow.
+- Repo state note: the workspace already contained partial implementation changes on `main`, so execution continues by moving that work onto a feature branch in the current workspace instead of creating a fresh worktree from clean HEAD.
+- Branch: `feature/pii-encryption-location-model`
+- Commands run:
+  - `node --test server/tests/privacy.test.js` → 7 passing
+  - `node --test server/tests/privacy.test.js server/tests/location-store.test.js server/tests/household-store.test.js server/tests/household-api.test.js server/tests/household-integration.test.js` → 25 passing
+  - `npm run build` → PASS
+  - `npm test` → PASS (162 passing, 3 skipped)
+  - `npm run test:e2e:pw -- e2e/household-crud.spec.js e2e/member-crud.spec.js` → PASS (9 passing)
+  - `npm run test:e2e:pw` → PASS (17 passing)
+  - `npx cypress run --spec cypress/e2e/household-crud.cy.js,cypress/e2e/member-crud.cy.js` → PASS after member spec modal-visibility fix
+  - `npx cypress run --spec cypress/e2e/member-crud.cy.js` → PASS (4 passing)
+  - `npx cypress run` → PASS (17 passing)
+- Verification summary:
+  - Privacy helpers now have direct node:test coverage for encryption, deterministic tokens, log redaction, and LLM sanitization.
+  - Household and location storage/API tests were migrated to `node:test` so the repo-native `npm test` command validates the new feature instead of skipping it behind stale `vitest` files.
+- Playwright and Cypress both cover the new guarded location-delete plus household-reassignment workflow.
+- Feature status: SHIPPED — spec marked Done, no remaining execution tasks in ATHENA for this feature.
+- Completion step requested at 2026-03-20 12:48: create a traceable feature commit based on the ATHENA docs and superpowers execution trail.
+
+---
+
+Session: 2026-03-20 13:15
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, project-documentation-system, verification-before-completion
+Feature: 20260320-readme-alignment
+Input: CR-20260320-1315
+Decisions: D-20260320-1315
+Spec: docs/specs/20260320-readme-alignment/spec.md
+Tasks: docs/specs/20260320-readme-alignment/tasks.md
+Goal: Align the top-level onboarding docs with the shipped privacy and location model.
+
+DONE
+- [2026-03-20 13:20] T-001: Capture the README alignment request in ATHENA docs and create a small feature spec/task list. (Skills: athena)
+- [2026-03-20 13:30] T-002: Update `README.md` and `.env.example` so onboarding docs match the shipped privacy and location model, then verify the referenced files and endpoints exist. (Skills: athena, project-documentation-system, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Scope intentionally limited to documentation and env-template alignment; no runtime behavior changes.
+- README updated to cover: encrypted PII at rest, `PII_MASTER_KEY`, saved location CRUD, reassignment-before-delete, and current privacy/location file layout.
+- `.env.example` updated to include `PII_MASTER_KEY` with production/dev guidance.
+- Verification to run before completion: inspect README references, confirm files exist, and ensure the documented `/api/docs` and `/api/locations` routes are present.
+
+---
+
+Session: 2026-03-20 13:45
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, finishing-a-development-branch, verification-before-completion
+Feature: 20260320-main-branch-push
+Input: CR-20260320-1345
+Decisions: D-20260320-1345
+Spec: docs/specs/20260320-main-branch-push/spec.md
+Tasks: docs/specs/20260320-main-branch-push/tasks.md
+Goal: Commit the pending README/docs alignment work, merge the verified feature branch into `main`, and push `origin/main`.
+
+DONE
+
+IN PROGRESS
+- T-001: Capture the publication request in ATHENA docs and prepare the merge/push sequence. (Skills: athena, finishing-a-development-branch)
+
+NEXT
+- Commit the pending README/docs alignment changes on `feature/pii-encryption-location-model`
+- Merge `feature/pii-encryption-location-model` into local `main`
+- Re-run `npm test` on merged `main`
+- Push local `main` to `origin`
+
+NOTES
+- Fresh verification before publication: `npm test` → PASS (`162` passing, `3` skipped) on `feature/pii-encryption-location-model`
+- Merge base with `main`: `eb9b869ab73787fced0e74a3566e27ba6006f78a`
