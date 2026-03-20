@@ -280,3 +280,31 @@ Notes:
 - Currently system supports single household in data/household.json
 - Need to support creating, managing, and switching between multiple households
 - Implementation plan already created at docs/superpowers/plans/2026-03-19-add-household-feature.md
+
+
+## CR-20260320-1000
+Date: 2026-03-20 10:00
+Source: chat
+
+Request (verbatim):
+have you created end to end tests ?
+playwright cypress with with athena and superpowers
+
+Notes:
+- User wants E2E tests using both Playwright and Cypress
+- Tests should cover the full CORTEGE application (household management, companion dashboard, etc.)
+- Follow ATHENA and superpowers workflows for implementation
+
+## CR-20260320-1100
+Date: 2026-03-20 11:00
+Source: chat
+
+Request (verbatim):
+You are implementing Phase 2: Playwright Setup + E2E Tests for the CORTEGE hackathon project. Install Playwright, create playwright.config.js, create e2e/helpers.js, and write 5 test files: navigation.spec.js (3 tests), household-crud.spec.js (4 tests), member-crud.spec.js (4 tests), companion-cards.spec.js (3 tests), live-feed.spec.js (2 tests). Use the provided data-testid attributes. Each test should use beforeEach to clean up via API helpers. Add test:e2e:pw script to package.json.
+
+Notes:
+- Continuation of CR-20260320-1000 (E2E tests request)
+- Phase 2 of 3 (Phase 1 data-testid work already done, Phase 3 is Cypress)
+- Frontend: Vite + React on port 5173; Backend: Express on port 3001
+- All data-testid attributes already present in components
+- Detailed spec provided: exact file paths, test names, helper signatures, playwright.config.js content

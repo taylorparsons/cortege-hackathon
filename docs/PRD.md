@@ -139,6 +139,17 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [specs/20260319-add-household-feature/spec.md](specs/20260319-add-household-feature/spec.md) (Status: Done)
 - Tasks: [specs/20260319-add-household-feature/tasks.md](specs/20260319-add-household-feature/tasks.md)
 
+## Playwright E2E Tests — SHIPPED (Sources: [CR-20260320-1000](requests.md#cr-20260320-1000), [CR-20260320-1100](requests.md#cr-20260320-1100))
+- @playwright/test@1.58.2 installed; `test:e2e:pw` script added to package.json
+- playwright.config.js: webServer auto-starts backend (3001) and frontend (5173), workers: 1 to serialize
+- 5 test files with 16 tests: navigation (3), household-crud (4), member-crud (4), companion-cards (3), live-feed (2)
+- e2e/helpers.js: createTestHousehold, deleteTestHousehold, addTestMember, cleanupTestHouseholds
+- Each test uses beforeEach cleanup; test data prefixed with "E2E Test" for isolation
+- All 16 tests passing: `npx playwright test` → 16 passed (8.8s)
+- Spec: [specs/20260320-playwright-e2e/spec.md](specs/20260320-playwright-e2e/spec.md) (Status: Done)
+- Tasks: [specs/20260320-playwright-e2e/tasks.md](specs/20260320-playwright-e2e/tasks.md)
+- Evidence: e2e/*.spec.js, e2e/helpers.js, playwright.config.js
+
 ## Cypress E2E Tests — SHIPPED (Sources: [CR-20260320-1000](requests.md#cr-20260320-1000); [D-20260320-1000](decisions.md#d-20260320-1000))
 - Cypress installed as dev dependency; `test:e2e:cy` and `test:e2e:cy:open` scripts added to package.json
 - 5 test files with 16 tests total covering navigation, household CRUD, member CRUD, companion cards, and live feed
