@@ -31,3 +31,4 @@ Start here:
 | PII Encryption + Location Model | [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md) | Encrypt household/member/location PII, add `location_id`, and sanitize logs + LLM calls |
 | README Alignment | [`specs/20260320-readme-alignment/spec.md`](specs/20260320-readme-alignment/spec.md) | Align top-level onboarding docs with the shipped privacy and location model |
 | Main Branch Push | [`specs/20260320-main-branch-push/spec.md`](specs/20260320-main-branch-push/spec.md) | Commit pending docs alignment, merge into `main`, and push `origin/main` |
+| Release v0.3.0 | [`specs/20260320-release-v030/spec.md`](specs/20260320-release-v030/spec.md) | Update `v0.3.0` release notes, retag current `main`, and publish the GitHub release |

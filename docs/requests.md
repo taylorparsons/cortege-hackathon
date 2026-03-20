@@ -416,3 +416,20 @@ push to remote on the main branch
 Notes:
 - User explicitly requested publication to `origin/main`
 - Current branch contains an uncommitted README/docs alignment follow-up on top of the verified privacy/location feature branch
+
+## CR-20260320-1415
+Date: 2026-03-20 14:15
+Source: chat
+Decision: [D-20260320-1415](decisions.md#d-20260320-1415)
+Spec: [`specs/20260320-release-v030/spec.md`](specs/20260320-release-v030/spec.md)
+
+Request (verbatim):
+patch the last release
+iterate the tag v0.2.0 to v0.3
+.0
+update the text with what has changed
+https://github.com/taylorparsons/cortege-hackathon/releases
+
+Notes:
+- Current GitHub state: `v0.2.0` release exists, `v0.3.0` tag exists remotely but no GitHub release is published for it
+- The existing `RELEASE-0.3.0.md` file only covers the earlier SQLite slice and is behind the current shipped scope on `main`

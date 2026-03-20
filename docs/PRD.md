@@ -167,6 +167,14 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [specs/20260320-main-branch-push/spec.md](specs/20260320-main-branch-push/spec.md)
 - Tasks: [specs/20260320-main-branch-push/tasks.md](specs/20260320-main-branch-push/tasks.md)
 
+## Release v0.3.0 — SHIPPED (Sources: [CR-20260320-1415](requests.md#cr-20260320-1415); [D-20260320-1415](decisions.md#d-20260320-1415))
+- `RELEASE-0.3.0.md` SHALL describe the full shipped delta from `v0.2.0` to current `main`
+- The `v0.3.0` tag SHALL point to the corrected release commit on `main`
+- The GitHub Releases page SHALL publish a `v0.3.0` release with the updated text
+- Evidence: `RELEASE-0.3.0.md`
+- Spec: [specs/20260320-release-v030/spec.md](specs/20260320-release-v030/spec.md)
+- Tasks: [specs/20260320-release-v030/tasks.md](specs/20260320-release-v030/tasks.md)
+
 ## Playwright E2E Tests — SHIPPED (Sources: [CR-20260320-1000](requests.md#cr-20260320-1000), [CR-20260320-1100](requests.md#cr-20260320-1100))
 - @playwright/test@1.58.2 installed; `test:e2e:pw` script added to package.json
 - playwright.config.js: webServer auto-starts backend (3001) and frontend (5173), workers: 1 to serialize

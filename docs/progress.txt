@@ -832,3 +832,34 @@ NOTES
 - README/publication traceability commit on feature branch: `34de8ee`
 - Local merge commit on `main`: `640a466`
 - Fresh verification after merge: `npm test` → PASS (`162` passing, `3` skipped) on `main`
+
+---
+
+Session: 2026-03-20 14:15
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, git-workflow-automation, verification-before-completion
+Feature: 20260320-release-v030
+Input: CR-20260320-1415
+Decisions: D-20260320-1415
+Spec: docs/specs/20260320-release-v030/spec.md
+Tasks: docs/specs/20260320-release-v030/tasks.md
+Goal: Correct the `v0.3.0` tag and publish an accurate GitHub release from current `main`.
+
+DONE
+
+IN PROGRESS
+- T-001: Capture the release-correction request in ATHENA docs and prepare the release-note/tag update. (Skills: athena, git-workflow-automation)
+
+NEXT
+- Update `RELEASE-0.3.0.md` to describe the shipped delta from `v0.2.0`
+- Commit the release-notes correction on `main`
+- Move tag `v0.3.0` to the corrected release commit and push it
+- Publish the GitHub release with the updated notes
+
+NOTES
+- Current GitHub release state:
+  - `v0.2.0` release exists and is published
+  - remote tag `v0.3.0` exists, but `gh release view v0.3.0` returns `release not found`
+- Current remote tag target for `v0.3.0`: `16a6896`
+- Current `main` HEAD: `21224c3`

@@ -625,3 +625,22 @@ Acceptance / test:
 - The pending README/docs updates are committed with traceability
 - Local `main` contains the feature branch changes
 - `origin/main` is updated to the merged commit
+
+## D-20260320-1415
+Date: 2026-03-20 14:15
+Inputs: [CR-20260320-1415](requests.md#cr-20260320-1415)
+PRD: [Release v0.3.0](PRD.md#release-v030--shipped-sources-cr-20260320-1415-d-20260320-1415)
+Spec: [`specs/20260320-release-v030/spec.md`](specs/20260320-release-v030/spec.md)
+
+Decision:
+Correct the existing `v0.3.0` tag by moving it to the current `main` release commit, update `RELEASE-0.3.0.md` so it reflects the full shipped delta from `v0.2.0`, and publish a GitHub `v0.3.0` release using that updated release-notes file.
+
+Rationale:
+- The remote already has a `v0.3.0` tag, but it points to an older docs-only commit and has no published release entry
+- The checked-in release notes are stale and only describe the SQLite slice, not the later frontend, household, privacy, and testing work
+- Publishing `v0.3.0` from current `main` matches the package version and the actual shipped feature set better than creating a new patch tag
+
+Acceptance / test:
+- `RELEASE-0.3.0.md` summarizes the shipped changes since `v0.2.0`
+- Remote tag `v0.3.0` points at the new release commit on `main`
+- GitHub release `v0.3.0` exists with the updated release text
