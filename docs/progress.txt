@@ -1156,12 +1156,12 @@ Goal: Check in the live-feed bugfix, update README/release notes, and publish a 
 
 DONE
 - [2026-03-20 17:25] T-001: Update `README.md`, release notes, and version metadata for the live-feed patch release. (Skills: athena, project-documentation-system)
+- [2026-03-20 17:30] T-002: Run fresh verification for the live-feed bugfix plus existing household/member flows, then create the local check-in commit. (Skills: athena, verification-before-completion)
 
 IN PROGRESS
 None.
 
 NEXT
-- T-002: Run fresh verification for the live-feed bugfix plus existing household/member flows, then create the local check-in commit. (Skills: athena, verification-before-completion)
 - T-003: Publish the verified patch release as `v0.3.1` on GitHub. (Skills: athena, verification-before-completion)
 
 NOTES
@@ -1176,3 +1176,4 @@ NOTES
   - `npm test` -> PASS (`164` passing, `3` skipped)
   - `npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js,cypress/e2e/live-feed.cy.js` -> PASS (`13` passing, `0` failing)
   - `npm run build` -> PASS
+- Local commit: `e849771` `fix: patch live-feed household scoping and cut v0.3.1`
