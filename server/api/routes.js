@@ -112,6 +112,206 @@ export function createApiRouter(orchestrator) {
   });
 
   // -------------------------------------------------------------------------
+  // POST /api/households
+  // Creates a new household
+  // -------------------------------------------------------------------------
+  router.post('/api/households', async (req, res) => {
+    try {
+      const { name, location } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: 'Household name is required' });
+      }
+      
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+      
+      const household = await orchestrator.householdStore.createHousehold({
+        name,
+        location: location ?? 'Unknown'
+      });
+      
+      res.status(201).json(household);
+    } catch (err) {
+      console.error('[api] POST /api/households error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /api/households
+  // Lists all households
+  // -------------------------------------------------------------------------
+  router.get('/api/households', async (req, res) => {
+    try {
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+      
+      const households = await orchestrator.householdStore.listHouseholds();
+      res.json(households);
+    } catch (err) {
+      console.error('[api] GET /api/households error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /api/households/:id
+  // Gets a specific household with full details
+  // -------------------------------------------------------------------------
+  router.get('/api/households/:id', async (req, res) => {
+    try {
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+      
+      const household = await orchestrator.householdStore.getHousehold(req.params.id);
+      res.json(household);
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error(`[api] GET /api/households/${req.params.id} error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // PUT /api/households/:id
+  // Updates household metadata (name, location)
+  // -------------------------------------------------------------------------
+  router.put('/api/households/:id', async (req, res) => {
+    try {
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+      
+      const { name, location } = req.body;
+      const updates = {};
+      if (name) updates.name = name;
+      if (location) updates.location = location;
+      
+      const household = await orchestrator.householdStore.updateHousehold(
+        req.params.id,
+        updates
+      );
+      
+      res.json(household);
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error(`[api] PUT /api/households/${req.params.id} error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // DELETE /api/households/:id
+  // Deletes a household
+  // -------------------------------------------------------------------------
+  router.delete('/api/households/:id', async (req, res) => {
+    try {
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+      
+      await orchestrator.householdStore.deleteHousehold(req.params.id);
+      res.json({ deleted: true, household_id: req.params.id });
+    } catch (err) {
+      console.error(`[api] DELETE /api/households/${req.params.id} error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // POST /api/households/:id/members
+  // Adds a member to a household
+  // -------------------------------------------------------------------------
+  router.post('/api/households/:id/members', async (req, res) => {
+    try {
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+      
+      const { name, age, profile_type, companion, is_primary, primary_contact } = req.body;
+      
+      if (!name || !profile_type || !companion) {
+        return res.status(400).json({ 
+          error: 'name, profile_type, and companion are required' 
+        });
+      }
+      
+      const member = await orchestrator.householdStore.addMember(req.params.id, {
+        name,
+        age,
+        profile_type,
+        companion,
+        is_primary,
+        primary_contact
+      });
+      
+      res.status(201).json(member);
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error(`[api] POST /api/households/${req.params.id}/members error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // PUT /api/households/:id/members/:memberId
+  // Updates a household member
+  // -------------------------------------------------------------------------
+  router.put('/api/households/:id/members/:memberId', async (req, res) => {
+    try {
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+      
+      const updates = req.body;
+      const member = await orchestrator.householdStore.updateMember(
+        req.params.id,
+        req.params.memberId,
+        updates
+      );
+      
+      res.json(member);
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error(`[api] PUT /api/households/${req.params.id}/members/${req.params.memberId} error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // DELETE /api/households/:id/members/:memberId
+  // Removes a member from a household
+  // -------------------------------------------------------------------------
+  router.delete('/api/households/:id/members/:memberId', async (req, res) => {
+    try {
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+      
+      await orchestrator.householdStore.removeMember(req.params.id, req.params.memberId);
+      res.json({ deleted: true, member_id: req.params.memberId });
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error(`[api] DELETE /api/households/${req.params.id}/members/${req.params.memberId} error:`, err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
   // GET /api/companions
   // Returns status snapshot for all agent instances.
   // -------------------------------------------------------------------------
