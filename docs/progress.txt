@@ -1157,12 +1157,13 @@ Goal: Check in the live-feed bugfix, update README/release notes, and publish a 
 DONE
 - [2026-03-20 17:25] T-001: Update `README.md`, release notes, and version metadata for the live-feed patch release. (Skills: athena, project-documentation-system)
 - [2026-03-20 17:30] T-002: Run fresh verification for the live-feed bugfix plus existing household/member flows, then create the local check-in commit. (Skills: athena, verification-before-completion)
+- [2026-03-20 17:35] T-003: Publish the verified patch release as `v0.3.1` on GitHub. (Skills: athena, verification-before-completion)
 
 IN PROGRESS
 None.
 
 NEXT
-- T-003: Publish the verified patch release as `v0.3.1` on GitHub. (Skills: athena, verification-before-completion)
+None.
 
 NOTES
 - README updates:
@@ -1177,3 +1178,8 @@ NOTES
   - `npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js,cypress/e2e/live-feed.cy.js` -> PASS (`13` passing, `0` failing)
   - `npm run build` -> PASS
 - Local commit: `e849771` `fix: patch live-feed household scoping and cut v0.3.1`
+- Publication:
+  - `git push origin main` -> PASS (`f442ed0` on `origin/main`)
+  - `git push origin v0.3.1` -> PASS
+  - `gh release create v0.3.1 --title "v0.3.1 - Live Feed Household Scoping Fixes" --notes-file RELEASE-0.3.1.md` -> PASS
+  - Release URL: `https://github.com/taylorparsons/cortege-hackathon/releases/tag/v0.3.1`
