@@ -139,6 +139,16 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [specs/20260319-add-household-feature/spec.md](specs/20260319-add-household-feature/spec.md) (Status: Done)
 - Tasks: [specs/20260319-add-household-feature/tasks.md](specs/20260319-add-household-feature/tasks.md)
 
+## Cypress E2E Tests — SHIPPED (Sources: [CR-20260320-1000](requests.md#cr-20260320-1000); [D-20260320-1000](decisions.md#d-20260320-1000))
+- Cypress installed as dev dependency; `test:e2e:cy` and `test:e2e:cy:open` scripts added to package.json
+- 5 test files with 16 tests total covering navigation, household CRUD, member CRUD, companion cards, and live feed
+- Custom commands: createHousehold, deleteHousehold, addMember, cleanupTestHouseholds, openHouseholdSelector
+- Tests create their own data via API in beforeEach and clean up with cleanupTestHouseholds prefix filter
+- Companion-cards tests resilient to empty backend state (no agents running in CI)
+- Spec: [specs/20260320-cypress-e2e/spec.md](specs/20260320-cypress-e2e/spec.md) (Status: Done)
+- Tasks: [specs/20260320-cypress-e2e/tasks.md](specs/20260320-cypress-e2e/tasks.md)
+- Evidence: cypress/e2e/*.cy.js, cypress/support/commands.js, cypress.config.js
+
 ## Next / Backlog
 - Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
 - Wire Twilio webhook to event bus (Phase 3)

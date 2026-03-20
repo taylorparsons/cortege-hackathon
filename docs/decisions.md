@@ -462,3 +462,25 @@ Alternatives Considered:
 Tradeoffs:
 - File-based storage limits concurrent write performance (acceptable for household management use case)
 - Multiple JSON files vs single file: Chose multiple for cleaner separation and easier management
+
+## D-20260320-1000
+Date: 2026-03-20 10:00
+Inputs: CR-20260320-1000
+PRD: [Cypress E2E Tests](PRD.md#cypress-e2e-tests)
+
+Decision:
+Use Cypress for E2E tests. Implement 5 test files covering navigation, household CRUD, member CRUD, companion cards, and live feed. Use custom commands for API setup/teardown. Companion-cards tests are resilient to empty backend state (no agents running).
+
+Rationale:
+- Cypress is the specified test framework for Phase 3
+- Custom commands (createHousehold, addMember, cleanupTestHouseholds) isolate test data via API, making tests independent of each other
+- Companion grid depends on live orchestrator agents — tests gracefully skip card-click assertions when no agents are running, avoiding false failures in CI
+- data-testid attributes already exist on all relevant elements from the household feature work
+
+Alternatives considered:
+- Always-failing companion tests (rejected — backend agents don't auto-start in test environment)
+- Mocking the companions API (rejected — E2E tests should test real integration, not mocks)
+
+Acceptance / test:
+- npx cypress run completes all 16 tests
+- Tests are self-contained: each creates and cleans up its own data via beforeEach

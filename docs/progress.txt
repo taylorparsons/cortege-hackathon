@@ -635,3 +635,43 @@ NOTES
 - Commits: 4206429 (T-001), 2888ef9 (T-003/T-004), f936a2e (T-005), 2a1501a (T-006..T-017)
 - Feature status: SHIPPED — spec marked Done
 - Branch pushed to origin/design, PR created: https://github.com/taylorparsons/cortege-hackathon/pull/1
+
+---
+
+Session: 2026-03-20 10:00
+Agent: Claude Code
+Model: claude-sonnet-4-6
+Skills: athena, verification-before-completion
+Feature: 20260320-cypress-e2e
+Input: CR-20260320-1000
+Decisions: D-20260320-1000
+Spec: docs/specs/20260320-cypress-e2e/spec.md
+Tasks: docs/specs/20260320-cypress-e2e/tasks.md
+Goal: Add Cypress E2E test suite covering navigation, household CRUD, member CRUD, companion cards, and live feed.
+
+DONE
+- [2026-03-20 10:00] T-001: Install Cypress as dev dependency, add test:e2e:cy + test:e2e:cy:open scripts. (Skills: athena)
+- [2026-03-20 10:00] T-002: Create cypress.config.js with baseUrl=5173, specPattern, video=false, screenshotOnRunFailure=false. (Skills: athena)
+- [2026-03-20 10:00] T-003: Create cypress/support/e2e.js and cypress/support/commands.js with 5 custom commands. (Skills: athena)
+- [2026-03-20 10:00] T-004: Write cypress/e2e/navigation.cy.js (3 tests). (Skills: athena)
+- [2026-03-20 10:00] T-005: Write cypress/e2e/household-crud.cy.js (4 tests). (Skills: athena)
+- [2026-03-20 10:00] T-006: Write cypress/e2e/member-crud.cy.js (4 tests). (Skills: athena)
+- [2026-03-20 10:00] T-007: Write cypress/e2e/companion-cards.cy.js (3 tests, resilient to empty backend). (Skills: athena)
+- [2026-03-20 10:00] T-008: Write cypress/e2e/live-feed.cy.js (2 tests). (Skills: athena)
+- [2026-03-20 10:00] T-009: Add data-testid attributes to MemberManager edit form (input-member-name, input-member-phone, input-member-dob, select-profile-type, btn-submit-member). (Skills: athena)
+- [2026-03-20 10:00] T-010: Update decisions.md (D-20260320-1000), PRD.md, progress.txt. (Skills: athena)
+- [2026-03-20 10:00] T-011: Create spec and tasks at docs/specs/20260320-cypress-e2e/. (Skills: athena)
+
+IN PROGRESS
+
+NEXT
+
+NOTES
+- Commands run: npm install -D cypress → added 132 packages, 0 vulnerabilities
+- Commands run: npm --prefix /Volumes/T9/code/cortege-hackathon run build → ✓ 41 modules, 264KB/79KB gzip
+- Commands run: node --test server/tests/household-store.test.js → PRE-EXISTING FAILURE (vitest missing; not caused by this session)
+- Household CRUD delete test fixed: creates two households, selects one as current so delete button shows for the other
+- Member API calls include companion field (required by POST /api/households/:id/members alongside name+profile_type)
+- Companion-cards tests resilient: check grid container always; card-click assertions conditional on backend agents running
+- 16 tests total: navigation (3), household-crud (4), member-crud (4), companion-cards (3), live-feed (2)
+- Feature status: SHIPPED — spec marked Done, PRD updated

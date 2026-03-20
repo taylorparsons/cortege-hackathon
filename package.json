@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test": "node --test server/tests/*.test.js",
     "test:unit": "node --test server/tests/template-parser.test.js server/tests/event-bus.test.js server/tests/memory-store.test.js server/tests/escalation-handler.test.js",
-    "test:integration": "node --test server/tests/integration.test.js server/tests/demo-validation.test.js"
+    "test:integration": "node --test server/tests/integration.test.js server/tests/demo-validation.test.js",
+    "test:e2e:cy": "npx cypress run",
+    "test:e2e:cy:open": "npx cypress open",
+    "test:e2e:pw": "npx playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -24,7 +27,9 @@
     "ws": "^8.18.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@vitejs/plugin-react": "^4.3.0",
+    "cypress": "^15.12.0",
     "supertest": "^7.2.2",
     "vite": "^6.0.0"
   }
