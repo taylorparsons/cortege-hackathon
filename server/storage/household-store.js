@@ -15,11 +15,12 @@ export class HouseholdStore {
     }
   }
 
-  async createHousehold({ name, location }) {
+  async createHousehold({ name, location, address }) {
     const household = {
       household_id: `hh_${randomUUID().slice(0, 8)}`,
       name,
       location,
+      address: address ?? null,
       created: new Date().toISOString(),
       members: []
     };
@@ -53,7 +54,7 @@ export class HouseholdStore {
 
   async updateHousehold(householdId, updates) {
     const household = await this.getHousehold(householdId);
-    const allowed = ['name', 'location'];
+    const allowed = ['name', 'location', 'address'];
     for (const key of allowed) {
       if (updates[key] !== undefined) household[key] = updates[key];
     }
@@ -77,7 +78,8 @@ export class HouseholdStore {
     const member = {
       id: `member_${randomUUID().slice(0, 8)}`,
       name: memberData.name,
-      age: memberData.age,
+      date_of_birth: memberData.date_of_birth ?? null,
+      phone: memberData.phone ?? null,
       profile_type: memberData.profile_type,
       companion: memberData.companion,
       is_primary: memberData.is_primary ?? false,
@@ -100,7 +102,7 @@ export class HouseholdStore {
       throw new Error(`Member ${memberId} not found in household ${householdId}`);
     }
     
-    const allowedMember = ['name', 'age', 'profileType', 'companion'];
+    const allowedMember = ['name', 'date_of_birth', 'profile_type', 'companion', 'phone'];
     for (const key of allowedMember) {
       if (updates[key] !== undefined) member[key] = updates[key];
     }

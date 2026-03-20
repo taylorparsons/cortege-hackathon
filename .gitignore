@@ -15,6 +15,7 @@ build/
 # Runtime data (gitignored, except household config)
 data/memories/
 data/events/
+data/households/
 data/test-*/
 data/*.db
 data/cortege.db.backup.1773876131352
@@ -62,9 +63,11 @@ Thumbs.db
 # Superpowers brainstorming outputs
 .superpowers/
 
-# Test coverage
+# Test coverage & E2E artifacts
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
 
 # Optional npm cache directory
 .npm

@@ -761,7 +761,7 @@ export default function Cortege() {
               { id: "philosophy", label: "The Model" },
               { id: "livefeed", label: "Live Feed" },
             ].map(t => (
-              <button key={t.id} className={`nav-tab ${tab === t.id ? "active" : ""}`} onClick={() => { setTab(t.id); setSelectedId(null); }}>
+              <button key={t.id} className={`nav-tab ${tab === t.id ? "active" : ""}`} data-testid={`tab-${t.id}`} onClick={() => { setTab(t.id); setSelectedId(null); }}>
                 {t.label}
               </button>
             ))}
@@ -769,6 +769,7 @@ export default function Cortege() {
           <div className="nav-status">
             <button
               onClick={() => setShowHouseholdSelector(!showHouseholdSelector)}
+              data-testid="btn-switch-household"
               style={{
                 padding: '5px 12px', borderRadius: 8, border: '1px solid var(--border2)',
                 background: 'var(--bg3)', color: 'var(--muted)', cursor: 'pointer',
@@ -797,11 +798,11 @@ export default function Cortege() {
                 </div>
               ) : (
                 <>
-                  <div className="household-bar">
+                  <div className="household-bar" data-testid="household-bar">
                     <div className="hh-left">
                       <div className="hh-crest">🏠</div>
                       <div>
-                        <div className="hh-name">{household?.name ?? 'Household'}</div>
+                        <div className="hh-name" data-testid="household-name">{household?.name ?? 'Household'}</div>
                         <div className="hh-sub">
                           {household?.location ?? ''}{household?.location ? ' · ' : ''}
                           Cortege since {household?.created ? new Date(household.created).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—'}
@@ -833,7 +834,7 @@ export default function Cortege() {
                       No companions loaded yet. Run a scenario from the Live Feed tab.
                     </div>
                   ) : (
-                    <div className="companion-grid">
+                    <div className="companion-grid" data-testid="companion-grid">
                       {companions.map(c => {
                         const display = getAgentDisplay(c.agentName);
                         const days = c.createdAt ? Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 86400000) : 0;
@@ -878,7 +879,7 @@ export default function Cortege() {
                   )}
 
                   {selected && (
-                    <>
+                    <div data-testid="detail-panel">
                       <DetailPanel
                         c={{
                           ...selected,
@@ -914,7 +915,7 @@ export default function Cortege() {
                           companionName={selected.agentName?.toUpperCase()}
                         />
                       </div>
-                    </>
+                    </div>
                   )}
 
                   {!selected && (
@@ -983,7 +984,7 @@ export default function Cortege() {
       </div>
 
       {showHouseholdSelector && (
-        <div className="modal-overlay" onClick={() => setShowHouseholdSelector(false)}>
+        <div className="modal-overlay" data-testid="modal-household-selector" onClick={() => setShowHouseholdSelector(false)}>
           <div style={{
             background: 'var(--bg2)', border: '1px solid var(--border2)',
             borderRadius: 20, padding: 28, maxWidth: 420, width: '100%',

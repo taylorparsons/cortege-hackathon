@@ -116,7 +116,7 @@ export function EventInjector() {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ fontFamily: "var(--sans)", display: "flex", flexDirection: "column", gap: 14 }}>
+    <form onSubmit={handleSubmit} data-testid="form-event-injector" style={{ fontFamily: "var(--sans)", display: "flex", flexDirection: "column", gap: 14 }}>
       {/* Event type */}
       <div>
         <label style={labelStyle}>Event Type</label>
@@ -152,6 +152,7 @@ export function EventInjector() {
       <button
         type="submit"
         disabled={loading}
+        data-testid="btn-inject-event"
         style={{
           padding: "10px 20px", borderRadius: 8, cursor: loading ? "default" : "pointer",
           border: "1px solid rgba(78,205,196,0.35)",
@@ -163,6 +164,7 @@ export function EventInjector() {
       >
         {loading ? "Injecting…" : "Inject Event"}
       </button>
+
 
       {/* Feedback */}
       {status && (

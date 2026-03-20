@@ -143,19 +143,20 @@ export function createApiRouter(orchestrator) {
   // -------------------------------------------------------------------------
   router.post('/api/households', async (req, res) => {
     try {
-      const { name, location } = req.body;
-      
+      const { name, location, address } = req.body;
+
       if (!name) {
         return res.status(400).json({ error: 'Household name is required' });
       }
-      
+
       if (!orchestrator.householdStore) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
-      
+
       const household = await orchestrator.householdStore.createHousehold({
         name,
-        location: location ?? 'Unknown'
+        location: location ?? 'Unknown',
+        address
       });
       
       res.status(201).json(household);
@@ -214,10 +215,11 @@ export function createApiRouter(orchestrator) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
       
-      const { name, location } = req.body;
+      const { name, location, address } = req.body;
       const updates = {};
       if (name) updates.name = name;
       if (location) updates.location = location;
+      if (address !== undefined) updates.address = address;
       
       const household = await orchestrator.householdStore.updateHousehold(
         req.params.id,
@@ -262,17 +264,18 @@ export function createApiRouter(orchestrator) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
       
-      const { name, age, profile_type, companion, is_primary, primary_contact } = req.body;
-      
+      const { name, date_of_birth, phone, profile_type, companion, is_primary, primary_contact } = req.body;
+
       if (!name || !profile_type || !companion) {
-        return res.status(400).json({ 
-          error: 'name, profile_type, and companion are required' 
+        return res.status(400).json({
+          error: 'name, profile_type, and companion are required'
         });
       }
-      
+
       const member = await orchestrator.householdStore.addMember(req.params.id, {
         name,
-        age,
+        date_of_birth,
+        phone,
         profile_type,
         companion,
         is_primary,
@@ -299,11 +302,12 @@ export function createApiRouter(orchestrator) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
       
-      const { name, age, profileType, companion } = req.body;
+      const { name, date_of_birth, phone, profile_type, companion } = req.body;
       const updates = {};
       if (name !== undefined) updates.name = name;
-      if (age !== undefined) updates.age = age;
-      if (profileType !== undefined) updates.profileType = profileType;
+      if (date_of_birth !== undefined) updates.date_of_birth = date_of_birth;
+      if (phone !== undefined) updates.phone = phone;
+      if (profile_type !== undefined) updates.profile_type = profile_type;
       if (companion !== undefined) updates.companion = companion;
       const member = await orchestrator.householdStore.updateMember(
         req.params.id,

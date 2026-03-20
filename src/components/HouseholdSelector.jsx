@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useHouseholds } from '../hooks/useHouseholds.js';
+import { MemberManager } from './MemberManager.jsx';
 
 export function HouseholdSelector({ currentHouseholdId, onSelect }) {
   const { households, loading, error, createHousehold, deleteHousehold } = useHouseholds();
@@ -24,11 +25,12 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
   if (error) return <div style={{ color: '#DC503C', fontSize: 13, padding: 20, textAlign: 'center' }}>Error: {error}</div>;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div data-testid="household-selector" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h3 style={{ fontFamily: 'var(--serif)', fontSize: 22, fontWeight: 500, color: 'var(--cream)', margin: 0 }}>Households</h3>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
+          data-testid="btn-new-household"
           style={{
             padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(78,205,196,0.3)',
             background: 'rgba(78,205,196,0.08)', color: 'var(--teal)', cursor: 'pointer',
@@ -40,7 +42,7 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
       </div>
 
       {showCreateForm && (
-        <form onSubmit={handleCreate} style={{
+        <form onSubmit={handleCreate} data-testid="form-create-household" style={{
           background: 'var(--bg3)', border: '1px solid var(--border)',
           borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'column', gap: 10,
         }}>
@@ -50,6 +52,7 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             required
+            data-testid="input-household-name"
             style={{
               padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
               background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
@@ -61,13 +64,14 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
             placeholder="Location (optional)"
             value={newLocation}
             onChange={(e) => setNewLocation(e.target.value)}
+            data-testid="input-household-location"
             style={{
               padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border2)',
               background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13,
               outline: 'none',
             }}
           />
-          <button type="submit" style={{
+          <button type="submit" data-testid="btn-create-household" style={{
             padding: '10px 0', borderRadius: 10, border: '1px solid rgba(78,205,196,0.3)',
             background: 'rgba(78,205,196,0.12)', color: 'var(--teal)', cursor: 'pointer',
             fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 500, letterSpacing: 1,
@@ -86,6 +90,7 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
         {households.map(household => (
           <div
             key={household.household_id}
+            data-testid={`household-row-${household.household_id}`}
             onClick={() => onSelect(household.household_id)}
             style={{
               padding: '14px 18px', borderRadius: 14, cursor: 'pointer',
@@ -105,6 +110,7 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
             </div>
             {household.household_id !== currentHouseholdId && (
               <button
+                data-testid={`btn-delete-household-${household.household_id}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (confirm(`Delete ${household.name}?`)) {
@@ -123,6 +129,13 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
           </div>
         ))}
       </div>
+
+      {currentHouseholdId && (
+        <>
+          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
+          <MemberManager householdId={currentHouseholdId} />
+        </>
+      )}
     </div>
   );
 }

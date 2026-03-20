@@ -41,6 +41,39 @@ export function useHouseholds() {
     setHouseholds(prev => prev.filter(h => h.household_id !== householdId));
   };
 
+  const getHousehold = async (householdId) => {
+    const response = await fetch(apiUrl(`/api/households/${householdId}`));
+    if (!response.ok) throw new Error('Failed to fetch household');
+    return response.json();
+  };
+
+  const addMember = async (householdId, memberData) => {
+    const response = await fetch(apiUrl(`/api/households/${householdId}/members`), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(memberData)
+    });
+    if (!response.ok) throw new Error('Failed to add member');
+    return response.json();
+  };
+
+  const updateMember = async (householdId, memberId, updates) => {
+    const response = await fetch(apiUrl(`/api/households/${householdId}/members/${memberId}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (!response.ok) throw new Error('Failed to update member');
+    return response.json();
+  };
+
+  const removeMember = async (householdId, memberId) => {
+    const response = await fetch(apiUrl(`/api/households/${householdId}/members/${memberId}`), {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to remove member');
+  };
+
   useEffect(() => {
     fetchHouseholds();
   }, [fetchHouseholds]);
@@ -51,6 +84,10 @@ export function useHouseholds() {
     error,
     createHousehold,
     deleteHousehold,
+    getHousehold,
+    addMember,
+    updateMember,
+    removeMember,
     refresh: fetchHouseholds
   };
 }

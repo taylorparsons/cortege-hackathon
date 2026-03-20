@@ -20,7 +20,7 @@ export function AgentStatus({ companions = [], processingStates = new Map() }) {
   }
 
   return (
-    <div style={{ fontFamily: "var(--sans)" }}>
+    <div data-testid="agent-status" style={{ fontFamily: "var(--sans)" }}>
       <style>{`
         @keyframes asSpin {
           from { transform: rotate(0deg); }

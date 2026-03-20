@@ -42,7 +42,7 @@ export function EventFeed({ events = [], wsConnected = false }) {
     : {};
 
   return (
-    <div style={{ fontFamily: "var(--sans)" }}>
+    <div data-testid="event-feed" style={{ fontFamily: "var(--sans)" }}>
       <style>{`
         @keyframes efBreathe {
           0%,100% { opacity:1; transform:scale(1); }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const HouseholdContext = createContext(null);
 
@@ -6,6 +6,11 @@ export function HouseholdProvider({ children }) {
   const [currentHouseholdId, setCurrentHouseholdId] = useState(() => {
     return localStorage.getItem('cortege_current_household') || null;
   });
+  const [memberVersion, setMemberVersion] = useState(0);
+
+  const bumpMemberVersion = useCallback(() => {
+    setMemberVersion(v => v + 1);
+  }, []);
 
   useEffect(() => {
     if (currentHouseholdId) {
@@ -16,7 +21,7 @@ export function HouseholdProvider({ children }) {
   }, [currentHouseholdId]);
 
   return (
-    <HouseholdContext.Provider value={{ currentHouseholdId, setCurrentHouseholdId }}>
+    <HouseholdContext.Provider value={{ currentHouseholdId, setCurrentHouseholdId, memberVersion, bumpMemberVersion }}>
       {children}
     </HouseholdContext.Provider>
   );

@@ -10,7 +10,7 @@ import { useHouseholdContext } from '../context/HouseholdContext.jsx';
  * - Re-fetches when household selection changes
  */
 export function useCortegeData() {
-  const { currentHouseholdId } = useHouseholdContext();
+  const { currentHouseholdId, memberVersion } = useHouseholdContext();
   const [household, setHousehold] = useState(null);
   const [companions, setCompanions] = useState([]);
   const [liveEvents, setLiveEvents] = useState([]);
@@ -159,12 +159,12 @@ export function useCortegeData() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-fetch when household selection changes
+  // Re-fetch when household selection or member data changes
   useEffect(() => {
     if (hasFetched.current) {
       fetchData();
     }
-  }, [currentHouseholdId, fetchData]);
+  }, [currentHouseholdId, memberVersion, fetchData]);
 
   return {
     household,
