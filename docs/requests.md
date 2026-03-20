@@ -259,3 +259,24 @@ Source: chat
 
 Request (verbatim):
 add detailed commennt and what has changed and push it to remote on the design branch
+
+
+## CR-20260319-1730
+Date: 2026-03-19 17:30
+Source: chat
+Decision: [D-20260319-1730](decisions.md#d-20260319-1730)
+Spec: [`specs/20260319-add-household-feature/spec.md`](specs/20260319-add-household-feature/spec.md)
+Plan: [`superpowers/plans/2026-03-19-add-household-feature.md`](superpowers/plans/2026-03-19-add-household-feature.md)
+
+Request (verbatim):
+can you access the superpower planner?
+
+using superpowers-writing-plans skillplan how to add a new house hold to the app
+
+Use athena do document the change to implement this add household feature and use skill suerpowers executing-plans to complete the work
+
+Notes:
+- User wants to add multi-household management capability to CORTEGE
+- Currently system supports single household in data/household.json
+- Need to support creating, managing, and switching between multiple households
+- Implementation plan already created at docs/superpowers/plans/2026-03-19-add-household-feature.md

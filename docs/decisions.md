@@ -438,3 +438,27 @@ Acceptance / test:
 - WebSocket updates reflect in real-time on the Household tab
 - Loading and empty states shown gracefully when backend is starting up or has no events yet
 - Running a demo scenario populates the UI with real data
+
+
+## D-20260319-1730
+Date: 2026-03-19 17:30
+Request: [CR-20260319-1730](requests.md#cr-20260319-1730)
+PRD Impact: "Next / Backlog" section
+
+Decision:
+Implement multi-household support to allow CORTEGE to manage multiple households with independent members and agents. Use HouseholdStore pattern (similar to existing storage-adapter.js) to manage household data in separate JSON files under data/households/. Maintain backward compatibility with existing data/household.json for single-household deployments.
+
+Rationale:
+- Current single-household limitation prevents users from managing multiple families/groups
+- File-based storage (JSON) matches existing architecture patterns
+- Backward compatibility ensures existing deployments continue working
+- Implementation plan follows TDD approach with comprehensive test coverage
+
+Alternatives Considered:
+- SQLite-only storage: Rejected - adds complexity, JSON files sufficient for household metadata
+- In-memory only: Rejected - need persistence across restarts
+- Modify existing household.json: Rejected - breaks backward compatibility
+
+Tradeoffs:
+- File-based storage limits concurrent write performance (acceptable for household management use case)
+- Multiple JSON files vs single file: Chose multiple for cleaner separation and easier management
