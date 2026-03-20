@@ -530,3 +530,26 @@ NOTES
 - Commands run: `npm run build` → ✓ built in 488ms, 37 modules transformed
 - Commands run: `curl -i http://localhost:5173/api/household` → 200 OK through the Vite origin
 - Commit: afc57dbe0ebcca7b53d8f076570ba8719be834eb (T-002 localhost frontend API connectivity fix)
+
+---
+
+Session: 2026-03-19 17:07
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena
+Feature: 20260319-gitignore-backup-file
+Input: CR-20260319-1707
+Spec: docs/specs/20260319-gitignore-backup-file/spec.md
+Tasks: docs/specs/20260319-gitignore-backup-file/tasks.md
+Goal: Ignore the requested local backup file in Git.
+
+DONE
+- [2026-03-19 17:08] T-001: Add the requested backup file to `.gitignore` and verify Git treats it as ignored. (Skills: athena)
+
+IN PROGRESS
+
+NEXT
+
+NOTES
+- Requested scope is exact-file ignore only; no broader ignore pattern added
+- Commands run: `git check-ignore -v data/cortege.db.backup.1773876131352` → ignored by `.gitignore:19`

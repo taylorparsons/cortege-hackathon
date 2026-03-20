@@ -16,6 +16,7 @@ build/
 data/memories/
 data/events/
 data/*.db
+data/cortege.db.backup.1773876131352
 data/*.db-shm
 data/*.db-wal
 data/*.sqlite

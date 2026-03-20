@@ -117,6 +117,11 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [`specs/20260319-frontend-dev-connectivity/spec.md`](specs/20260319-frontend-dev-connectivity/spec.md) (Status: Done)
 - Tasks: [`specs/20260319-frontend-dev-connectivity/tasks.md`](specs/20260319-frontend-dev-connectivity/tasks.md)
 
+## Git Hygiene (Sources: [CR-20260319-1707](requests.md#cr-20260319-1707))
+- Ignore the specific local backup artifact `data/cortege.db.backup.1773876131352` in `.gitignore`
+- Spec: [`specs/20260319-gitignore-backup-file/spec.md`](specs/20260319-gitignore-backup-file/spec.md)
+- Tasks: [`specs/20260319-gitignore-backup-file/tasks.md`](specs/20260319-gitignore-backup-file/tasks.md)
+
 ## Next / Backlog
 - Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
 - Wire Twilio webhook to event bus (Phase 3)

@@ -25,3 +25,4 @@ Start here:
 | Agent Diagrams | [`superpowers/specs/2026-03-14-agent-orchestration-diagrams.md`](superpowers/specs/2026-03-14-agent-orchestration-diagrams.md) | Mermaid system diagrams |
 | Frontend API Integration | [`specs/20260319-frontend-api-integration/spec.md`](specs/20260319-frontend-api-integration/spec.md) | Replace mock data with live API data |
 | Frontend Dev Connectivity | [`specs/20260319-frontend-dev-connectivity/spec.md`](specs/20260319-frontend-dev-connectivity/spec.md) | Make localhost UI reach the live backend through the Vite origin |
+| Gitignore Backup File | [`specs/20260319-gitignore-backup-file/spec.md`](specs/20260319-gitignore-backup-file/spec.md) | Ignore the requested local SQLite backup artifact |

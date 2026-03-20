@@ -245,3 +245,10 @@ Notes:
 - Context from same session: user asked to "use $athena to make the right fix" after confirming the UI still showed "Cannot reach backend" when started via `./run-local.sh`
 - Verified root cause: frontend was calling absolute `http://localhost:3001` / `ws://localhost:3001/ws` from Vite dev origin `http://localhost:5173` with no Vite proxy and no backend CORS
 - User goal remains: have the UI use real APIs locally rather than demo-only data
+
+## CR-20260319-1707
+Date: 2026-03-19 17:07
+Source: chat
+
+Request (verbatim):
+add this to .gitignore data/cortege.db.backup.1773876131352
