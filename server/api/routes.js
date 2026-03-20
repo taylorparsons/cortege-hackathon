@@ -127,6 +127,13 @@ function readRecentEvents(limit, dateStr = null) {
   return events;
 }
 
+async function ensureActiveCompanionHousehold(orchestrator, householdId) {
+  if (!householdId || typeof orchestrator.activateHousehold !== 'function') {
+    return;
+  }
+  await orchestrator.activateHousehold(householdId);
+}
+
 // ---------------------------------------------------------------------------
 // createApiRouter
 // ---------------------------------------------------------------------------
@@ -153,6 +160,10 @@ export function createApiRouter(orchestrator) {
     try {
       // Check if household store is enabled
       if (orchestrator.householdStore) {
+        if (orchestrator.activeHousehold) {
+          return res.json(await expandHousehold(orchestrator, orchestrator.activeHousehold));
+        }
+
         // Try to get default household from env or first available
         const defaultId = process.env.DEFAULT_HOUSEHOLD_ID;
 
@@ -574,8 +585,9 @@ export function createApiRouter(orchestrator) {
   // GET /api/companions
   // Returns status snapshot for all agent instances.
   // -------------------------------------------------------------------------
-  router.get('/api/companions', (req, res) => {
+  router.get('/api/companions', async (req, res) => {
     try {
+      await ensureActiveCompanionHousehold(orchestrator, req.query.household_id);
       const companions = [];
       for (const instance of orchestrator.agentInstances.values()) {
         companions.push(instance.getStatus());
@@ -591,8 +603,9 @@ export function createApiRouter(orchestrator) {
   // GET /api/companions/:id
   // Returns status snapshot for a single agent instance.
   // -------------------------------------------------------------------------
-  router.get('/api/companions/:id', (req, res) => {
+  router.get('/api/companions/:id', async (req, res) => {
     try {
+      await ensureActiveCompanionHousehold(orchestrator, req.query.household_id);
       const instance = orchestrator.agentInstances.get(req.params.id);
       if (!instance) {
         return res.status(404).json({ error: `Companion "${req.params.id}" not found` });
@@ -608,8 +621,9 @@ export function createApiRouter(orchestrator) {
   // GET /api/companions/:id/memory
   // Returns the full memory store for a single agent instance.
   // -------------------------------------------------------------------------
-  router.get('/api/companions/:id/memory', (req, res) => {
+  router.get('/api/companions/:id/memory', async (req, res) => {
     try {
+      await ensureActiveCompanionHousehold(orchestrator, req.query.household_id);
       const instance = orchestrator.agentInstances.get(req.params.id);
       if (!instance) {
         return res.status(404).json({ error: `Companion "${req.params.id}" not found` });
@@ -632,8 +646,9 @@ export function createApiRouter(orchestrator) {
   // Returns the last N events for a household member.
   // Query params: limit (default 20)
   // -------------------------------------------------------------------------
-  router.get('/api/companions/:id/activity', (req, res) => {
+  router.get('/api/companions/:id/activity', async (req, res) => {
     try {
+      await ensureActiveCompanionHousehold(orchestrator, req.query.household_id);
       const instance = orchestrator.agentInstances.get(req.params.id);
       if (!instance) {
         return res.status(404).json({ error: `Companion "${req.params.id}" not found` });

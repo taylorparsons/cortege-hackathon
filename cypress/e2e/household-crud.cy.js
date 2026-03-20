@@ -82,6 +82,26 @@ describe('Household CRUD', () => {
     });
   });
 
+  it('renames the selected household from the selector editor', () => {
+    const originalName = `E2E Test Rename ${Date.now()}`;
+    const updatedName = `${originalName} Updated`;
+
+    cy.createHousehold(originalName, 'Rename City').then((household) => {
+      cy.visit('/');
+      cy.openHouseholdSelector();
+      cy.get(`[data-testid="household-row-${household.household_id}"]`).click();
+      cy.get('[data-testid="modal-household-selector"]').should('not.exist');
+
+      cy.openHouseholdSelector();
+      cy.get('[data-testid="household-details-editor"]').scrollIntoView().should('be.visible');
+      cy.get('[data-testid="input-edit-household-name"]').clear().type(updatedName);
+      cy.get('[data-testid="btn-save-household"]').click();
+
+      cy.get('[data-testid="household-name"]').should('contain', updatedName);
+      cy.get(`[data-testid="household-row-${household.household_id}"]`).should('contain', updatedName);
+    });
+  });
+
   it('blocks deleting a referenced location until the household is reassigned', () => {
     const name = `E2E Test Location Block ${Date.now()}`;
 

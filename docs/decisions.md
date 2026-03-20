@@ -218,6 +218,113 @@ Date: 2026-03-18 10:00
 Inputs: CR-20260318-1000
 PRD: [Cost Optimization](PRD.md#cost-optimization)
 
+## D-20260320-1450
+Date: 2026-03-20 14:50
+Inputs: [CR-20260320-1450](requests.md#cr-20260320-1450)
+PRD: [Household Editing UI](PRD.md#household-editing-ui-sources-cr-20260320-1450-d-20260320-1450)
+Spec: [`specs/20260320-household-editor-ui/spec.md`](specs/20260320-household-editor-ui/spec.md)
+
+Decision:
+Implement household editing as an explicit editor inside the existing household selector modal. Keep phone-number changes out of scope for this task and prioritize clearer household-name and member-management access without adding a new page or modal layer.
+
+Rationale:
+- The existing selector modal already contains the selected-household context, location reassignment, and member CRUD, so this is the smallest coherent change.
+- The user's main issue is discoverability and access, not missing backend support for household updates.
+- Adding a dedicated admin page or second modal would increase UI complexity without solving the immediate problem faster.
+
+Alternatives considered:
+- Dedicated household settings modal (rejected for now: more state and navigation work)
+- Full household administration page (rejected for now: too large for the immediate UX gap)
+- Phone-optional and minor-contact fallback in the same task (rejected for now: separate behavior change, lower priority)
+
+Acceptance / test:
+- The selected household can be renamed from the existing household selector modal.
+- The modal presents household details, location reassignment, and member CRUD as one visible editing surface.
+
+## D-20260320-1504
+Date: 2026-03-20 15:04
+Inputs: [CR-20260320-1504](requests.md#cr-20260320-1504)
+PRD: [Member Phone Input UX](PRD.md#member-phone-input-ux-sources-cr-20260320-1504-d-20260320-1504)
+Spec: [`specs/20260320-member-phone-input/spec.md`](specs/20260320-member-phone-input/spec.md)
+
+Decision:
+Keep the backend member API contract strict on E.164 storage and validation, but make the UI normalize common US phone input formats before submit and show inline form errors when member creation or update fails.
+
+Rationale:
+- The screenshot shows a realistic local-format phone entry that should be accepted by the UI even if the API stores the normalized international form.
+- Preserving the E.164 backend contract avoids reopening the privacy/location member schema and API docs unnecessarily.
+- The current silent failure is a UX bug because the error is only logged to the console.
+
+Alternatives considered:
+- Loosen the backend to accept arbitrary phone formats (rejected: weakens canonical storage and validation)
+- Leave backend strict and only improve the error message (rejected: still forces users to guess the exact formatting rules)
+- Make phone optional in the same change (rejected: separate product decision, previously deferred)
+
+Acceptance / test:
+- Adding a member with a common US formatted phone like `1914-764-5049` succeeds and stores the member.
+- Invalid member submissions surface an inline error in the modal instead of failing silently.
+
+## D-20260320-1525
+Date: 2026-03-20 15:25
+Inputs: [CR-20260320-1525](requests.md#cr-20260320-1525)
+PRD: [Active Household Companions](PRD.md#active-household-companions-sources-cr-20260320-1525-d-20260320-1525)
+Spec: [`specs/20260320-active-household-companions/spec.md`](specs/20260320-active-household-companions/spec.md)
+
+Decision:
+Treat the selected household as the active backend household for companion snapshots. Make companion-fetch paths household-aware so the server activates the requested household before returning live companion instances, rather than faking the UI with stale global agent data.
+
+Rationale:
+- The current mismatch is caused by a single global companion set created from the startup household, not by a rendering issue.
+- For a localhost hackathon demo, switching the active household on the backend is the simplest correct behavior.
+- Returning stale or synthetic companion cards for the wrong household would undermine the demo.
+
+Alternatives considered:
+- Filter the existing companion cards in the frontend only (rejected: still uses the wrong backend household)
+- Render synthetic companion cards from member data (rejected: fake state, not live companion instances)
+- Add a separate explicit “activate household” UI step (rejected: user already selected a household; the switch should be authoritative)
+
+Acceptance / test:
+- After selecting a household with two members, the dashboard companion count and visible companion names match that household.
+
+## D-20260320-1545
+Date: 2026-03-20 15:45
+Inputs: [CR-20260320-1545](requests.md#cr-20260320-1545)
+PRD: [Cypress Test Artifacts](PRD.md#cypress-test-artifacts-sources-cr-20260320-1545-d-20260320-1545)
+Spec: [`specs/20260320-cypress-artifacts/spec.md`](specs/20260320-cypress-artifacts/spec.md)
+
+Decision:
+Enable Cypress run videos and failure screenshots by default in the local test config, then rerun the relevant household demo E2E specs and verify that artifact files are produced.
+
+Rationale:
+- The user explicitly wants reviewable artifacts from Cypress only.
+- This is a configuration change, not a test-framework migration.
+- Videos are produced on runs; screenshots remain failure-focused to avoid unnecessary artifact noise.
+
+Alternatives considered:
+- Enable Playwright artifacts too (rejected: user explicitly scoped to Cypress)
+- Record screenshots on every successful step (rejected: too noisy for the requested review aid)
+
+Acceptance / test:
+- `cypress.config.js` enables `video` and `screenshotOnRunFailure`
+- A fresh Cypress run produces video files in the Cypress artifacts directory
+
+## D-20260320-1555
+Date: 2026-03-20 15:55
+Inputs: [CR-20260320-1555](requests.md#cr-20260320-1555)
+PRD: [Cypress Test Artifacts](PRD.md#cypress-test-artifacts-sources-cr-20260320-1545-d-20260320-1545-cr-20260320-1555-d-20260320-1555)
+Spec: [`specs/20260320-cypress-artifacts/spec.md`](specs/20260320-cypress-artifacts/spec.md)
+
+Decision:
+Keep Cypress videos enabled and add an always-on screenshot hook so successful runs also save screenshots, while still leaving `screenshotOnRunFailure` enabled for failure capture.
+
+Rationale:
+- The user explicitly asked for screenshots and videos, not screenshots only on failure.
+- Cypress does not provide success screenshots by config alone; an explicit test hook is the smallest reliable solution.
+- Keeping failure screenshots enabled preserves the default failure artifact behavior as well.
+
+Acceptance / test:
+- A fresh Cypress run produces video files and screenshot files for the executed specs.
+
 Decision:
 Reduce output tokens by removing redundant fields (event_id, agent, instance, stage_check) from submit_assessment tool schema and backfilling server-side. Add prompt caching via Anthropic system message array with cache_control on static template prefix. Add signal vocabulary as soft guidance (not hard enum) to reduce free-text token usage.
 
@@ -644,3 +751,40 @@ Acceptance / test:
 - `RELEASE-0.3.0.md` summarizes the shipped changes since `v0.2.0`
 - Remote tag `v0.3.0` points at the new release commit on `main`
 - GitHub release `v0.3.0` exists with the updated release text
+
+## D-20260320-1435
+Date: 2026-03-20 14:35
+Inputs: [CR-20260320-1435](requests.md#cr-20260320-1435)
+PRD: [API Docs Alignment](PRD.md#api-docs-alignment--shipped-sources-cr-20260320-1435-d-20260320-1435)
+Spec: [`specs/20260320-api-docs-alignment/spec.md`](specs/20260320-api-docs-alignment/spec.md)
+
+Decision:
+Treat this as a narrow docs/API alignment pass. Update `docs/API.md` so the served `/api/docs` page matches the current route behavior for companion status, location CRUD, expanded household responses, and member update fields.
+
+Rationale:
+- `/api/docs` is generated directly from `docs/API.md`, so fixing the markdown fixes the served page
+- The current drift is documentation-only and concentrated in the household/location/companion areas touched by recent changes
+- Keeping the scope to API docs avoids reopening unrelated product docs
+
+Acceptance / test:
+- `docs/API.md` includes the missing location endpoints and current response shapes
+- A local `GET /api/docs` serves the updated API markdown content
+
+## D-20260320-1459
+Date: 2026-03-20 14:59
+Inputs: [CR-20260320-1459](requests.md#cr-20260320-1459)
+PRD: [README Localhost Validation Artifacts](PRD.md#readme-localhost-validation-artifacts--sources-cr-20260320-1459-d-20260320-1459)
+Spec: [`specs/20260320-readme-localhost-artifacts/spec.md`](specs/20260320-readme-localhost-artifacts/spec.md)
+
+Decision:
+Treat this as a docs-and-check-in slice. Update `README.md` with the exact localhost Cypress validation command plus representative screenshot and video artifact links, then create one local commit that includes all current uncommitted changes.
+
+Rationale:
+- The repo now generates reviewable Cypress artifacts, but the top-level onboarding doc does not show where to find them
+- The user asked for a local check-in, not a push, so a traceable local commit is the correct publication scope
+- Folding the README evidence pointers and the local commit into one slice keeps the documentation aligned with the verified demo state
+
+Acceptance / test:
+- `README.md` documents the localhost Cypress run and links to generated screenshots/videos
+- Targeted verification reruns the localhost Cypress specs and confirms the artifact files exist
+- A local Git commit captures all current changes

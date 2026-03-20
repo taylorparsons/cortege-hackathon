@@ -22,14 +22,19 @@ import { ensurePiiReady } from '../privacy/pii.js';
 export class Orchestrator {
   constructor(options = {}) {
     this.household = null;
+    this.activeHousehold = null;
+    this.activeHouseholdId = null;
     this.agentInstances = new Map();
     this.agentFactory = null;
     this.simulator = null;
     this.eventBus = eventBus;
     this.scheduler = null;
+    this.escalationHandler = null;
     this.householdStore = null;
     this.locationStore = null;
     this.enableHouseholdStore = options.enableHouseholdStore ?? false;
+    this._ws = null;
+    this._agentsDir = path.resolve('agents');
   }
 
   // ---------------------------------------------------------------------------
@@ -44,14 +49,9 @@ export class Orchestrator {
    */
   async start(ws) {
     ensurePiiReady();
+    this._ws = ws;
 
-    // 1. Load household
-    const householdPath = path.resolve('data/household.json');
-    const householdData = loadHousehold(householdPath);
-    this.household = householdData.members;
-    console.log(`[orchestrator] Loaded household "${householdData.name}" with ${this.household.length} member(s)`);
-
-    // 1.5. Initialize household store if enabled
+    // 1. Initialize household store if enabled
     if (this.enableHouseholdStore) {
       this.householdStore = new HouseholdStore('data/households');
       this.locationStore = new LocationStore('data/locations');
@@ -59,64 +59,27 @@ export class Orchestrator {
     }
 
     // 2. Load agent templates
-    const agentsDir = path.resolve('agents');
-    const templates = loadTemplates(agentsDir);
+    const templates = loadTemplates(this._agentsDir);
     console.log(`[orchestrator] Loaded ${templates.size} agent template(s)`);
 
     // Expose a minimal agentFactory-like object (supports reload)
     this.agentFactory = {
       templates,
       reload: async () => {
-        const fresh = loadTemplates(agentsDir);
+        const fresh = loadTemplates(this._agentsDir);
         this.agentFactory.templates = fresh;
         console.log('[orchestrator] Agent templates hot-reloaded');
       },
     };
 
-    // 3. Create agent instances (one per household member)
-    this.agentInstances = createInstances(templates, this.household);
-    console.log(`[orchestrator] Created ${this.agentInstances.size} agent instance(s)`);
-
-    // 4. Initialize memory for each instance
-    for (const instance of this.agentInstances.values()) {
-      instance.initMemory();
-    }
-
-    // 5. Create escalation handler
-    const escalationHandler = new EscalationHandler(this.household, ws);
-
-    // 6. Subscribe each agent instance to its relevant event types
-    for (const [instanceId, instance] of this.agentInstances) {
-      const configuredTypes = instance.config?.event_types ?? null;
-
-      let eventTypes;
-      if (Array.isArray(configuredTypes) && configuredTypes.length > 0) {
-        eventTypes = configuredTypes;
-      } else {
-        // Default: subscribe to all external event types
-        eventTypes = [...EXTERNAL_EVENT_TYPES];
-      }
-
-      for (const eventType of eventTypes) {
-        try {
-          eventBus.subscribe(
-            eventType,
-            instanceId,
-            (event) => {
-              instance.processEvent(event, ws).then((response) => {
-                if (response) escalationHandler.handle(response, instance);
-              }).catch((err) => {
-                console.error(`[orchestrator] processEvent error for "${instanceId}": ${err.message}`);
-              });
-            },
-            instance.memberId
-          );
-        } catch (err) {
-          console.warn(`[orchestrator] Could not subscribe "${instanceId}" to "${eventType}": ${err.message}`);
-        }
-      }
-
-      console.log(`[orchestrator] Subscribed "${instanceId}" to: [${eventTypes.join(', ')}]`);
+    // 3. Activate initial household
+    if (this.householdStore) {
+      const initialHouseholdId = await this._resolveInitialHouseholdId();
+      await this.activateHousehold(initialHouseholdId);
+    } else {
+      const householdPath = path.resolve('data/household.json');
+      const householdData = loadHousehold(householdPath);
+      await this._activateHouseholdData(householdData);
     }
 
     // 7. Wire event bus: on any event → emit event:received via ws
@@ -136,8 +99,88 @@ export class Orchestrator {
 
     // 9. Create and start Scheduler
     // Collect custom schedules from all agent template frontmatters
+    console.log('[orchestrator] Started successfully');
+    return this;
+  }
+
+  // ---------------------------------------------------------------------------
+  // stop
+  // ---------------------------------------------------------------------------
+
+  /** Gracefully stop the orchestrator. */
+  stop() {
+    this._teardownActiveHousehold();
+    if (this.scheduler) {
+      this.scheduler.stop();
+    }
+    console.log('[orchestrator] Stopped');
+  }
+
+  async activateHousehold(householdId) {
+    if (!this.householdStore) {
+      throw new Error('Household store not enabled');
+    }
+    if (!householdId) {
+      throw new Error('householdId is required');
+    }
+    if (this.activeHouseholdId === householdId && this.agentInstances.size > 0) {
+      return this.activeHousehold;
+    }
+
+    const household = await this.householdStore.getHousehold(householdId);
+    await this._activateHouseholdData(household);
+    return this.activeHousehold;
+  }
+
+  async _resolveInitialHouseholdId() {
+    const configuredId = process.env.DEFAULT_HOUSEHOLD_ID;
+    if (configuredId) {
+      return configuredId;
+    }
+    const households = await this.householdStore.listHouseholds();
+    if (households.length === 0) {
+      throw new Error('No households found in household store');
+    }
+    return households[0].household_id;
+  }
+
+  async _activateHouseholdData(householdData) {
+    this._teardownActiveHousehold();
+
+    this.activeHousehold = householdData;
+    this.activeHouseholdId = householdData.household_id ?? null;
+    this.household = householdData.members ?? [];
+    console.log(
+      `[orchestrator] Activated household "${householdData.name}" with ${this.household.length} member(s)`
+    );
+
+    this.agentInstances = createInstances(this.agentFactory.templates, this.household);
+    console.log(`[orchestrator] Created ${this.agentInstances.size} agent instance(s)`);
+
+    for (const instance of this.agentInstances.values()) {
+      instance.initMemory();
+    }
+
+    this.escalationHandler = new EscalationHandler(this.household, this._ws);
+    this._subscribeAgentInstances();
+    this._restartScheduler();
+  }
+
+  _teardownActiveHousehold() {
+    if (this.scheduler) {
+      this.scheduler.stop();
+      this.scheduler = null;
+    }
+    for (const [instanceId] of this.agentInstances) {
+      eventBus.unsubscribeAll(instanceId);
+    }
+    this.agentInstances = new Map();
+    this.escalationHandler = null;
+  }
+
+  _restartScheduler() {
     const customSchedules = [];
-    for (const { config } of templates.values()) {
+    for (const { config } of this.agentFactory.templates.values()) {
       if (Array.isArray(config.schedules)) {
         for (const schedule of config.schedules) {
           if (schedule.type && schedule.cron) {
@@ -149,21 +192,38 @@ export class Orchestrator {
 
     this.scheduler = new Scheduler(this.agentInstances, eventBus, { customSchedules });
     this.scheduler.start();
-
-    console.log('[orchestrator] Started successfully');
-    return this;
   }
 
-  // ---------------------------------------------------------------------------
-  // stop
-  // ---------------------------------------------------------------------------
+  _subscribeAgentInstances() {
+    for (const [instanceId, instance] of this.agentInstances) {
+      const configuredTypes = instance.config?.event_types ?? null;
+      const eventTypes = Array.isArray(configuredTypes) && configuredTypes.length > 0
+        ? configuredTypes
+        : [...EXTERNAL_EVENT_TYPES];
 
-  /** Gracefully stop the orchestrator. */
-  stop() {
-    if (this.scheduler) {
-      this.scheduler.stop();
+      for (const eventType of eventTypes) {
+        try {
+          eventBus.subscribe(
+            eventType,
+            instanceId,
+            (event) => {
+              instance.processEvent(event, this._ws).then((response) => {
+                if (response && this.escalationHandler) {
+                  this.escalationHandler.handle(response, instance);
+                }
+              }).catch((err) => {
+                console.error(`[orchestrator] processEvent error for "${instanceId}": ${err.message}`);
+              });
+            },
+            instance.memberId
+          );
+        } catch (err) {
+          console.warn(`[orchestrator] Could not subscribe "${instanceId}" to "${eventType}": ${err.message}`);
+        }
+      }
+
+      console.log(`[orchestrator] Subscribed "${instanceId}" to: [${eventTypes.join(', ')}]`);
     }
-    console.log('[orchestrator] Stopped');
   }
 }
 

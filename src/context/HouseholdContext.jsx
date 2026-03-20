@@ -7,9 +7,14 @@ export function HouseholdProvider({ children }) {
     return localStorage.getItem('cortege_current_household') || null;
   });
   const [memberVersion, setMemberVersion] = useState(0);
+  const [householdVersion, setHouseholdVersion] = useState(0);
 
   const bumpMemberVersion = useCallback(() => {
     setMemberVersion(v => v + 1);
+  }, []);
+
+  const bumpHouseholdVersion = useCallback(() => {
+    setHouseholdVersion(v => v + 1);
   }, []);
 
   useEffect(() => {
@@ -21,7 +26,16 @@ export function HouseholdProvider({ children }) {
   }, [currentHouseholdId]);
 
   return (
-    <HouseholdContext.Provider value={{ currentHouseholdId, setCurrentHouseholdId, memberVersion, bumpMemberVersion }}>
+    <HouseholdContext.Provider
+      value={{
+        currentHouseholdId,
+        setCurrentHouseholdId,
+        memberVersion,
+        bumpMemberVersion,
+        householdVersion,
+        bumpHouseholdVersion,
+      }}
+    >
       {children}
     </HouseholdContext.Provider>
   );

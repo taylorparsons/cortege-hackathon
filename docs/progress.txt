@@ -870,3 +870,230 @@ NOTES
   - `git push origin main` -> updated `main` from `21224c3` to `2ec1263`
   - `git push --force origin v0.3.0` -> moved remote tag from `f96aa19` / `16a6896^{}`
   - `gh release create v0.3.0 --title "v0.3.0 - Privacy-First Household Management and Auditability" --notes-file RELEASE-0.3.0.md`
+
+---
+
+Session: 2026-03-20 14:35
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, project-documentation-system, verification-before-completion
+Feature: 20260320-api-docs-alignment
+Input: CR-20260320-1435
+Decisions: D-20260320-1435
+Spec: docs/specs/20260320-api-docs-alignment/spec.md
+Tasks: docs/specs/20260320-api-docs-alignment/tasks.md
+Goal: Align the served `/api/docs` page with the latest companion, household, location, and member API behavior.
+
+DONE
+- [2026-03-20 14:35] T-001: Capture the API-docs alignment request in ATHENA docs and create a small feature spec/task list. (Skills: athena)
+- [2026-03-20 14:45] T-002: Update `docs/API.md` for the current companion, location, household, and member route behavior and verify the served `/api/docs` output. (Skills: athena, project-documentation-system, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Main docs drift fixed:
+  - companion status examples now use `depthScore`, `eventsProcessed`, and the extended frontend fields
+  - household responses now show `location_details`
+  - location CRUD now documents `GET /api/locations`, `GET /api/locations/:id`, `POST /api/locations`, `PUT /api/locations/:id`, and guarded `DELETE /api/locations/:id`
+  - member docs now include `primary_contact` and the current update-body shape
+- Local verification:
+  - `npm run server` -> started local server on port `3001`
+  - `curl -s http://localhost:3001/api/docs | rg -n "GET /api/locations/:id|PUT /api/locations/:id|depthScore|eventsProcessed|primary_contact|Location Management|location_details"` -> matched all expected updated sections in served output
+
+---
+
+Session: 2026-03-20 14:50
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, test-driven-development
+Feature: 20260320-household-editor-ui
+Input: CR-20260320-1450
+Decisions: D-20260320-1450
+Spec: docs/specs/20260320-household-editor-ui/spec.md
+Tasks: docs/specs/20260320-household-editor-ui/tasks.md
+Goal: Add an explicit selected-household editor in the existing selector modal so household details and member management are easier to use.
+
+DONE
+- [2026-03-20 14:50] T-001: Capture the household-edit UI request in ATHENA docs and add a failing E2E test for renaming the selected household from the selector modal. (Skills: athena, test-driven-development)
+- [2026-03-20 15:05] T-002: Implement the selected-household editor inside `src/components/HouseholdSelector.jsx` and keep location/member management grouped beneath it. (Skills: athena, test-driven-development)
+- [2026-03-20 15:10] T-003: Verify the targeted household-CRUD UI coverage and update ATHENA progress notes. (Skills: athena, test-driven-development)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Scope decision: prioritize inline household editing in the existing modal and defer phone-number behavior changes.
+- RED verification: `npx cypress run --spec cypress/e2e/household-crud.cy.js` -> FAIL on missing `data-testid="household-details-editor"`
+- GREEN verification: `npx cypress run --spec cypress/e2e/household-crud.cy.js` -> PASS (6 passing)
+- Build verification: `npm run build` -> PASS
+- Implementation details:
+  - Added a dedicated selected-household editor with explicit rename/save controls above location and member management.
+  - Added a household-version refresh signal so the main household bar updates after rename without requiring household re-selection.
+  - Tightened the Cypress helper to assert the modal surface instead of the oversized selector wrapper.
+
+---
+
+Session: 2026-03-20 15:04
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, systematic-debugging, test-driven-development
+Feature: 20260320-member-phone-input
+Input: CR-20260320-1504
+Decisions: D-20260320-1504
+Spec: docs/specs/20260320-member-phone-input/spec.md
+Tasks: docs/specs/20260320-member-phone-input/tasks.md
+Goal: Make member add/edit work with realistic phone input and show visible validation errors.
+
+DONE
+- [2026-03-20 15:04] T-001: Capture the member-add bug in ATHENA docs and add a failing E2E test for a common US-formatted phone input. (Skills: athena, systematic-debugging, test-driven-development)
+- [2026-03-20 15:15] T-002: Update `src/components/MemberManager.jsx` to normalize phone input and show inline add/edit errors. (Skills: athena, systematic-debugging, test-driven-development)
+- [2026-03-20 15:18] T-003: Verify the targeted member CRUD flow and update ATHENA progress notes. (Skills: athena, systematic-debugging, test-driven-development)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Root cause confirmed: the member API requires E.164 phone input, while the current UI sends whatever the user typed and only logs request failures to the console.
+- RED verification: `npx cypress run --spec cypress/e2e/member-crud.cy.js` -> FAIL because a member typed with `1914-764-5049` was not created
+- GREEN verification: `npx cypress run --spec cypress/e2e/member-crud.cy.js` -> PASS (5 passing)
+- Build verification: `npm run build` -> PASS
+- Implementation details:
+  - Added client-side phone normalization for common US input before member create/update requests.
+  - Added inline add/edit form error rendering so API failures are visible in the modal.
+
+---
+
+Session: 2026-03-20 15:25
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, systematic-debugging, test-driven-development
+Feature: 20260320-active-household-companions
+Input: CR-20260320-1525
+Decisions: D-20260320-1525
+Spec: docs/specs/20260320-active-household-companions/spec.md
+Tasks: docs/specs/20260320-active-household-companions/tasks.md
+Goal: Keep the dashboard companion cards and counts aligned with the currently selected household.
+
+DONE
+- [2026-03-20 15:25] T-001: Capture the selected-household companion mismatch in ATHENA docs and add a failing E2E test for switching to a two-member household. (Skills: athena, systematic-debugging, test-driven-development)
+- [2026-03-20 15:40] T-002: Make orchestrator companion snapshots household-aware and wire the frontend fetch path to the selected household. (Skills: athena, systematic-debugging, test-driven-development)
+- [2026-03-20 15:42] T-003: Verify the selected-household companion-card flow and update ATHENA progress notes. (Skills: athena, systematic-debugging, test-driven-development)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Root cause confirmed: household switching updates the selected household payload, but `/api/companions` still returns the one global agent-instance set created from the startup household.
+- RED verification: `npx cypress run --spec cypress/e2e/companion-cards.cy.js` -> FAIL because the selected two-member household still showed the stale startup companion set
+- GREEN verification: `npx cypress run --spec cypress/e2e/companion-cards.cy.js` -> PASS (4 passing)
+- Build verification: `npm run build` -> PASS
+- Implementation details:
+  - The orchestrator now activates households from the household store and rebuilds the live agent instance set when the active household changes.
+  - Companion API routes now honor `household_id` so the frontend can request the selected household’s live companions.
+  - The Household tab clears stale selected-card state on household switch and companion detail fetches are household-aware.
+
+---
+
+Session: 2026-03-20 15:45
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, verification-before-completion
+Feature: 20260320-cypress-artifacts
+Input: CR-20260320-1545
+Decisions: D-20260320-1545
+Spec: docs/specs/20260320-cypress-artifacts/spec.md
+Tasks: docs/specs/20260320-cypress-artifacts/tasks.md
+Goal: Enable Cypress recording artifacts and verify they are produced on the current household/member demo specs.
+
+DONE
+- [2026-03-20 15:45] T-001: Capture the Cypress-artifact request in ATHENA docs and enable run videos plus failure screenshots in `cypress.config.js`. (Skills: athena)
+- [2026-03-20 15:50] T-002: Verify Cypress artifact output by rerunning the targeted household/member specs and checking the generated files. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Scope is Cypress-only; Playwright artifact settings remain unchanged.
+- Config change: `cypress.config.js` now sets `video: true` and `screenshotOnRunFailure: true`
+- Verification:
+  - `npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js` -> PASS (9 passing, 0 failing)
+  - `ls -lh cypress/videos` -> generated `member-crud.cy.js.mp4` and `companion-cards.cy.js.mp4`
+  - `ls -lh cypress/screenshots` -> empty after a clean run, which is expected with failure-only screenshots
+
+---
+
+Session: 2026-03-20 15:55
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, verification-before-completion
+Feature: 20260320-cypress-artifacts
+Input: CR-20260320-1555
+Decisions: D-20260320-1555
+Spec: docs/specs/20260320-cypress-artifacts/spec.md
+Tasks: docs/specs/20260320-cypress-artifacts/tasks.md
+Goal: Save screenshots for successful Cypress runs as well as videos.
+
+DONE
+- [2026-03-20 15:55] T-002: Extend the Cypress-artifact setup so successful runs also save screenshots, and update the feature docs accordingly. (Skills: athena)
+- [2026-03-20 16:05] T-003: Verify Cypress artifact output by rerunning the targeted household/member specs and checking the generated video and screenshot files. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- User wants screenshots from successful runs too, not just failure-time screenshots.
+- Config change: `cypress/support/e2e.js` now saves a viewport screenshot after each executed test
+- Verification:
+  - `npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js` -> PASS (9 passing, 0 failing)
+  - `find cypress/screenshots -maxdepth 2 -type f | sort` -> 9 screenshot files across `member-crud` and `companion-cards`
+  - `find cypress/videos -maxdepth 1 -type f | sort` -> `member-crud.cy.js.mp4`, `companion-cards.cy.js.mp4`
+
+---
+
+Session: 2026-03-20 16:10
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, project-documentation-system, verification-before-completion
+Feature: 20260320-readme-localhost-artifacts
+Input: CR-20260320-1459
+Decisions: D-20260320-1459
+Spec: docs/specs/20260320-readme-localhost-artifacts/spec.md
+Tasks: docs/specs/20260320-readme-localhost-artifacts/tasks.md
+Goal: Document the localhost Cypress artifact flow in `README.md` and check in the current local changes.
+
+DONE
+- [2026-03-20 16:10] T-001: Update `README.md` to document the localhost Cypress validation command and link to representative screenshot/video artifacts. (Skills: athena, project-documentation-system)
+- [2026-03-20 16:10] T-002: Rerun the targeted localhost Cypress specs, confirm the README-linked artifacts exist, and create one local Git commit containing the current changes. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- README now includes a dedicated `Localhost Cypress Review Artifacts` section with the exact `npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js` command, two representative screenshot links, inline screenshot embeds, and both MP4 links.
+- Verification:
+  - `npm run build` -> PASS
+  - `npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js` -> PASS (9 passing, 0 failing, 9 screenshots, 2 videos)
+  - Artifact files verified at `cypress/screenshots/member-crud.cy.js/`, `cypress/screenshots/companion-cards.cy.js/`, `cypress/videos/member-crud.cy.js.mp4`, and `cypress/videos/companion-cards.cy.js.mp4`
+- Commit: pending local check-in at end of session; traceability is captured in the commit message for this slice and the related household/editor/phone/companion/artifact/docs features.

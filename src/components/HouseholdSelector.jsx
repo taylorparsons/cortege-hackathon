@@ -3,6 +3,27 @@ import { useHouseholds } from '../hooks/useHouseholds.js';
 import { LocationManager } from './LocationManager.jsx';
 import { MemberManager } from './MemberManager.jsx';
 
+const panelStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+  padding: 16,
+  borderRadius: 14,
+  border: '1px solid var(--border)',
+  background: 'var(--bg3)',
+};
+
+const inputStyle = {
+  padding: '9px 12px',
+  borderRadius: 8,
+  border: '1px solid var(--border2)',
+  background: 'var(--bg4)',
+  color: 'var(--text)',
+  fontFamily: 'var(--sans)',
+  fontSize: 12,
+  outline: 'none',
+};
+
 export function HouseholdSelector({ currentHouseholdId, onSelect }) {
   const {
     households,
@@ -28,13 +49,19 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
   const [createError, setCreateError] = useState('');
   const [selectedLocationId, setSelectedLocationId] = useState('');
   const [reassignError, setReassignError] = useState('');
+  const [editHouseholdName, setEditHouseholdName] = useState('');
+  const [editHouseholdError, setEditHouseholdError] = useState('');
+  const [householdSaved, setHouseholdSaved] = useState(false);
 
   const currentHousehold = households.find((household) => household.household_id === currentHouseholdId) ?? null;
 
   useEffect(() => {
     setSelectedLocationId(currentHousehold?.location_id ?? '');
     setReassignError('');
-  }, [currentHousehold?.location_id]);
+    setEditHouseholdName(currentHousehold?.name ?? '');
+    setEditHouseholdError('');
+    setHouseholdSaved(false);
+  }, [currentHousehold?.location_id, currentHousehold?.name]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -76,6 +103,25 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
       await updateHousehold(currentHouseholdId, { location_id: selectedLocationId });
     } catch (err) {
       setReassignError(err.message);
+    }
+  };
+
+  const handleHouseholdSave = async (event) => {
+    event.preventDefault();
+    if (!currentHouseholdId) return;
+
+    const trimmedName = editHouseholdName.trim();
+    if (!trimmedName || trimmedName === currentHousehold?.name) {
+      return;
+    }
+
+    setEditHouseholdError('');
+    setHouseholdSaved(false);
+    try {
+      await updateHousehold(currentHouseholdId, { name: trimmedName });
+      setHouseholdSaved(true);
+    } catch (err) {
+      setEditHouseholdError(err.message);
     }
   };
 
@@ -269,6 +315,99 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
         ))}
       </div>
 
+      {currentHouseholdId && (
+        <>
+          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
+          <div data-testid="household-details-editor" style={panelStyle}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 18, fontWeight: 500, color: 'var(--cream)' }}>
+                Edit Household
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: 12, lineHeight: 1.5 }}>
+                Update the selected household name here, then manage its location and members below.
+              </div>
+            </div>
+
+            <form onSubmit={handleHouseholdSave} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 6, color: 'var(--muted)', fontSize: 11, letterSpacing: 1 }}>
+                HOUSEHOLD NAME
+                <input
+                  data-testid="input-edit-household-name"
+                  type="text"
+                  value={editHouseholdName}
+                  onChange={(event) => setEditHouseholdName(event.target.value)}
+                  style={inputStyle}
+                />
+              </label>
+              <button
+                data-testid="btn-save-household"
+                type="submit"
+                disabled={!editHouseholdName.trim() || editHouseholdName.trim() === currentHousehold?.name}
+                style={{
+                  padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(78,205,196,0.3)',
+                  background: 'rgba(78,205,196,0.08)', color: 'var(--teal)', cursor: 'pointer',
+                  fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 500, letterSpacing: 0.5,
+                  opacity: !editHouseholdName.trim() || editHouseholdName.trim() === currentHousehold?.name ? 0.6 : 1,
+                }}
+              >
+                Save Household
+              </button>
+              {editHouseholdError && (
+                <div data-testid="household-details-error" style={{ color: '#DC503C', fontSize: 12 }}>
+                  {editHouseholdError}
+                </div>
+              )}
+              {householdSaved && !editHouseholdError && (
+                <div data-testid="household-details-success" style={{ color: 'var(--teal)', fontSize: 12 }}>
+                  Household updated.
+                </div>
+              )}
+            </form>
+
+            <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 500, color: 'var(--cream)' }}>
+                Household Location
+              </div>
+              <select
+                data-testid="select-household-location"
+                value={selectedLocationId}
+                onChange={(event) => setSelectedLocationId(event.target.value)}
+                style={inputStyle}
+              >
+                {locations.map((location) => (
+                  <option key={location.location_id} value={location.location_id}>
+                    {location.name} ({location.address_summary ?? 'No summary'})
+                  </option>
+                ))}
+              </select>
+              <button
+                data-testid="btn-update-household-location"
+                onClick={handleHouseholdReassign}
+                disabled={!selectedLocationId || selectedLocationId === currentHousehold?.location_id}
+                style={{
+                  padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(78,205,196,0.3)',
+                  background: 'rgba(78,205,196,0.08)', color: 'var(--teal)', cursor: 'pointer',
+                  fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 500, letterSpacing: 0.5,
+                  opacity: !selectedLocationId || selectedLocationId === currentHousehold?.location_id ? 0.6 : 1,
+                }}
+              >
+                Update Location
+              </button>
+              {reassignError && (
+                <div data-testid="household-location-error" style={{ color: '#DC503C', fontSize: 12 }}>
+                  {reassignError}
+                </div>
+              )}
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
+            <MemberManager householdId={currentHouseholdId} />
+          </div>
+        </>
+      )}
+
       <LocationManager
         locations={locations}
         households={households}
@@ -276,53 +415,6 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
         updateLocation={updateLocation}
         deleteLocation={deleteLocation}
       />
-
-      {currentHouseholdId && (
-        <>
-          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 500, color: 'var(--cream)' }}>
-              Household Location
-            </div>
-            <select
-              data-testid="select-household-location"
-              value={selectedLocationId}
-              onChange={(event) => setSelectedLocationId(event.target.value)}
-              style={{
-                padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border2)',
-                background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 12,
-                outline: 'none',
-              }}
-            >
-              {locations.map((location) => (
-                <option key={location.location_id} value={location.location_id}>
-                  {location.name} ({location.address_summary ?? 'No summary'})
-                </option>
-              ))}
-            </select>
-            <button
-              data-testid="btn-update-household-location"
-              onClick={handleHouseholdReassign}
-              disabled={!selectedLocationId || selectedLocationId === currentHousehold?.location_id}
-              style={{
-                padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(78,205,196,0.3)',
-                background: 'rgba(78,205,196,0.08)', color: 'var(--teal)', cursor: 'pointer',
-                fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 500, letterSpacing: 0.5,
-                opacity: !selectedLocationId || selectedLocationId === currentHousehold?.location_id ? 0.6 : 1,
-              }}
-            >
-              Update Location
-            </button>
-            {reassignError && (
-              <div data-testid="household-location-error" style={{ color: '#DC503C', fontSize: 12 }}>
-                {reassignError}
-              </div>
-            )}
-          </div>
-          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
-          <MemberManager householdId={currentHouseholdId} />
-        </>
-      )}
     </div>
   );
 }

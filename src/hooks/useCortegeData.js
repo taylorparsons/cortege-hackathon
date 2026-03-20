@@ -10,7 +10,7 @@ import { useHouseholdContext } from '../context/HouseholdContext.jsx';
  * - Re-fetches when household selection changes
  */
 export function useCortegeData() {
-  const { currentHouseholdId, memberVersion } = useHouseholdContext();
+  const { currentHouseholdId, memberVersion, householdVersion } = useHouseholdContext();
   const [household, setHousehold] = useState(null);
   const [companions, setCompanions] = useState([]);
   const [liveEvents, setLiveEvents] = useState([]);
@@ -38,9 +38,13 @@ export function useCortegeData() {
         ? `/api/households/${currentHouseholdId}`
         : '/api/household';
 
+      const companionsEndpoint = currentHouseholdId
+        ? `/api/companions?household_id=${encodeURIComponent(currentHouseholdId)}`
+        : '/api/companions';
+
       const [hhRes, compRes] = await Promise.all([
         fetch(apiUrl(hhEndpoint)),
-        fetch(apiUrl('/api/companions')),
+        fetch(apiUrl(companionsEndpoint)),
       ]);
 
       if (hhRes.ok) {
@@ -164,7 +168,7 @@ export function useCortegeData() {
     if (hasFetched.current) {
       fetchData();
     }
-  }, [currentHouseholdId, memberVersion, fetchData]);
+  }, [currentHouseholdId, memberVersion, householdVersion, fetchData]);
 
   return {
     household,

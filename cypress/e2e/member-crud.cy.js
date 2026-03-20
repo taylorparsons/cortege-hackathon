@@ -38,6 +38,22 @@ describe('Member CRUD', () => {
     cy.contains('Alice Test').should('be.visible');
   });
 
+  it('adds a member when the phone is typed in common US format', () => {
+    cy.openHouseholdSelector();
+    cy.get('[data-testid="modal-household-selector"]').within(() => {
+      cy.get('[data-testid="btn-add-member"]').click({ force: true });
+      cy.get('[data-testid="form-add-member"]').should('exist');
+
+      cy.get('[data-testid="input-member-name"]').type('Chip Parsons', { force: true });
+      cy.get('[data-testid="input-member-phone"]').type('1914-764-5049', { force: true });
+      cy.get('[data-testid="input-member-dob"]').type('2000-01-01', { force: true });
+      cy.get('[data-testid="select-profile-type"]').select('adult', { force: true });
+      cy.get('[data-testid="btn-submit-member"]').click({ force: true });
+    });
+
+    cy.contains('Chip Parsons').should('be.visible');
+  });
+
   it('edits a member and shows the updated name', () => {
     cy.addMember(householdId, {
       name: 'Bob Test',

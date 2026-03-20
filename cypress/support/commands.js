@@ -54,5 +54,6 @@ Cypress.Commands.add('cleanupTestHouseholds', () => {
 
 Cypress.Commands.add('openHouseholdSelector', () => {
   cy.get('[data-testid="btn-switch-household"]').click();
-  cy.get('[data-testid="household-selector"]').should('be.visible');
+  cy.get('[data-testid="modal-household-selector"]').should('be.visible');
+  cy.get('[data-testid="household-selector"]').should('exist');
 });

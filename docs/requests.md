@@ -219,6 +219,76 @@ Notes:
 - Need: Implement production-ready SQLite storage with tamper-evident audit trail
 - Referenced decisions: D-20260315-1155 (SQLite for production), D-20260315-1202 (auditability with hash chain)
 
+## CR-20260320-1450
+Date: 2026-03-20 14:50
+Source: chat
+Decision: [D-20260320-1450](decisions.md#d-20260320-1450)
+Spec: [`specs/20260320-household-editor-ui/spec.md`](specs/20260320-household-editor-ui/spec.md)
+
+Request (verbatim):
+for now I have no way to editing the household in the UI, so that is highest priority 
+I want to do 1, 2 but not as importants as I can enter the same number in all account but I cant add or edit all members
+
+Notes:
+- Context: User previously selected approach `1`, meaning an inline household editor inside the existing household selector modal.
+- Priority is explicit household editing in the UI; optional phone and minor fallback behavior are deferred.
+- User expectation: household edit flow should make it obvious where to update household details and manage members in one place.
+
+## CR-20260320-1504
+Date: 2026-03-20 15:04
+Source: chat
+Decision: [D-20260320-1504](decisions.md#d-20260320-1504)
+Spec: [`specs/20260320-member-phone-input/spec.md`](specs/20260320-member-phone-input/spec.md)
+
+Request (verbatim):
+cdid you test adding a new member? I am not able to do it?
+
+Notes:
+- User provided a screenshot of the add-member form using a non-E.164 phone format (`1914-764-5049`).
+- Current behavior: the API requires E.164 phone input and the UI does not show the validation error when add-member fails.
+
+## CR-20260320-1525
+Date: 2026-03-20 15:25
+Source: chat
+Decision: [D-20260320-1525](decisions.md#d-20260320-1525)
+Spec: [`specs/20260320-active-household-companions/spec.md`](specs/20260320-active-household-companions/spec.md)
+
+Request (verbatim):
+I might have found another UI bug
+selected group_1 and I see names not in here
+
+[Image #1] group_1 has two members [Image #2]
+
+Notes:
+- User showed the dashboard still rendering `Alex`, `Mom`, and `Taylor` after selecting a different household whose member list contains different names.
+- The visible issue affects household companion cards and counts on the main Household tab.
+
+## CR-20260320-1545
+Date: 2026-03-20 15:45
+Source: chat
+Decision: [D-20260320-1545](decisions.md#d-20260320-1545)
+Spec: [`specs/20260320-cypress-artifacts/spec.md`](specs/20260320-cypress-artifacts/spec.md)
+
+Request (verbatim):
+change it to on and test again
+
+Notes:
+- Context: User asked whether end-to-end tests were recording videos and screenshots, and then requested Cypress recording be turned on and re-tested.
+- Scope is Cypress-only.
+
+## CR-20260320-1555
+Date: 2026-03-20 15:55
+Source: chat
+Decision: [D-20260320-1555](decisions.md#d-20260320-1555)
+Spec: [`specs/20260320-cypress-artifacts/spec.md`](specs/20260320-cypress-artifacts/spec.md)
+
+Request (verbatim):
+show both screenshot and videos not failure only
+
+Notes:
+- Continuation of the Cypress-artifacts request.
+- User wants screenshots from successful runs too, not only failure screenshots.
+
 ## CR-20260319-1000
 Date: 2026-03-19 10:00
 Source: chat
@@ -433,3 +503,29 @@ https://github.com/taylorparsons/cortege-hackathon/releases
 Notes:
 - Current GitHub state: `v0.2.0` release exists, `v0.3.0` tag exists remotely but no GitHub release is published for it
 - The existing `RELEASE-0.3.0.md` file only covers the earlier SQLite slice and is behind the current shipped scope on `main`
+
+## CR-20260320-1435
+Date: 2026-03-20 14:35
+Source: chat
+Decision: [D-20260320-1435](decisions.md#d-20260320-1435)
+Spec: [`specs/20260320-api-docs-alignment/spec.md`](specs/20260320-api-docs-alignment/spec.md)
+
+Request (verbatim):
+review the API docs here http://localhost:3001/api/docs and make sure that are accurate with the last changed
+
+Notes:
+- User wants the served `/api/docs` output aligned with the latest household, location, privacy, and companion-status changes
+- The served page is sourced from `docs/API.md`
+
+## CR-20260320-1459
+Date: 2026-03-20 14:59
+Source: chat
+Decision: [D-20260320-1459](decisions.md#d-20260320-1459)
+Spec: [`specs/20260320-readme-localhost-artifacts/spec.md`](specs/20260320-readme-localhost-artifacts/spec.md)
+
+Request (verbatim):
+check in all changes locally, update the readme.md with the localhost test with images and video
+
+Notes:
+- User wants one local commit containing the current uncommitted work
+- README should show the localhost Cypress validation flow with linked screenshot and video artifacts

@@ -31,6 +31,34 @@ function formatPhone(phone) {
   return phone;
 }
 
+function normalizePhoneInput(phone) {
+  if (!phone) return undefined;
+  const trimmed = phone.trim();
+  if (!trimmed) return undefined;
+
+  if (trimmed.startsWith('+')) {
+    return `+${trimmed.slice(1).replace(/\D/g, '')}`;
+  }
+
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return `+${digits}`;
+  }
+  return trimmed;
+}
+
+async function readMemberError(response, fallbackMessage) {
+  try {
+    const payload = await response.json();
+    return payload?.error ?? fallbackMessage;
+  } catch {
+    return fallbackMessage;
+  }
+}
+
 const inputStyle = {
   padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border2)',
   background: 'var(--bg4)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 12,
@@ -49,6 +77,8 @@ export function MemberManager({ householdId }) {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [addError, setAddError] = useState('');
+  const [editError, setEditError] = useState('');
 
   // Add form state
   const [newName, setNewName] = useState('');
@@ -84,50 +114,56 @@ export function MemberManager({ householdId }) {
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    setAddError('');
     try {
       const response = await fetch(apiUrl(`/api/households/${householdId}/members`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newName,
-          phone: newPhone || undefined,
+          phone: normalizePhoneInput(newPhone),
           date_of_birth: newDob || undefined,
           profile_type: newProfileType,
           companion: COMPANION_MAP[newProfileType],
         }),
       });
       if (!response.ok) {
-        throw new Error(`Failed to add member (${response.status})`);
+        const message = await readMemberError(response, `Failed to add member (${response.status})`);
+        throw new Error(message);
       }
       setNewName(''); setNewPhone(''); setNewDob(''); setNewProfileType('adult');
       setShowAddForm(false);
       await fetchMembers();
       bumpMemberVersion();
     } catch (err) {
+      setAddError(err.message);
       console.error('Failed to add member:', err);
     }
   };
 
   const handleEdit = async (memberId) => {
+    setEditError('');
     try {
       const response = await fetch(apiUrl(`/api/households/${householdId}/members/${memberId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editName,
-          phone: editPhone || undefined,
+          phone: normalizePhoneInput(editPhone),
           date_of_birth: editDob || undefined,
           profile_type: editProfileType,
           companion: COMPANION_MAP[editProfileType],
         }),
       });
       if (!response.ok) {
-        throw new Error(`Failed to update member (${response.status})`);
+        const message = await readMemberError(response, `Failed to update member (${response.status})`);
+        throw new Error(message);
       }
       setEditingId(null);
       await fetchMembers();
       bumpMemberVersion();
     } catch (err) {
+      setEditError(err.message);
       console.error('Failed to update member:', err);
     }
   };
@@ -154,6 +190,7 @@ export function MemberManager({ householdId }) {
     setEditPhone(member.phone ?? '');
     setEditDob(member.date_of_birth ?? '');
     setEditProfileType(member.profile_type ?? 'adult');
+    setEditError('');
   };
 
   if (!householdId) return null;
@@ -184,6 +221,11 @@ export function MemberManager({ householdId }) {
           background: 'var(--bg3)', border: '1px solid var(--border)',
           borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', gap: 8,
         }}>
+          {addError && (
+            <div data-testid="member-form-error" style={{ color: '#DC503C', fontSize: 12 }}>
+              {addError}
+            </div>
+          )}
           <input
             data-testid="input-member-name"
             type="text" placeholder="Name" value={newName}
@@ -192,7 +234,7 @@ export function MemberManager({ householdId }) {
           />
           <input
             data-testid="input-member-phone"
-            type="tel" placeholder="Phone (e.g. +15551234567)" value={newPhone}
+            type="tel" placeholder="Phone (e.g. +15551234567 or 914-764-5049)" value={newPhone}
             onChange={(e) => setNewPhone(e.target.value)}
             required
             style={inputStyle}
@@ -245,6 +287,11 @@ export function MemberManager({ householdId }) {
                   background: 'var(--bg3)', border: '1px solid var(--border)',
                   borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 8,
                 }}>
+                  {editError && (
+                    <div data-testid="member-edit-error" style={{ color: '#DC503C', fontSize: 12 }}>
+                      {editError}
+                    </div>
+                  )}
                   <input data-testid="input-member-name" type="text" value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     style={inputStyle} />

@@ -9,6 +9,7 @@ Base URL: `http://localhost:3001`
 - [Scenarios](#scenarios)
 - [Agents](#agents)
 - [Household Management](#household-management)
+- [Location Management](#location-management)
 - [Manual Event Injection](#manual-event-injection)
 - [Twilio Webhooks](#twilio-webhooks)
 - [WebSocket](#websocket)
@@ -82,10 +83,20 @@ Returns status snapshot for all agent instances.
     "memberId": "member-001",
     "memberName": "Dorothy Chen",
     "stage": "pattern-recognition",
-    "depth": 0.15,
-    "eventCount": 42,
-    "lastActivity": "2026-03-18T16:30:00.000Z",
-    "status": "active"
+    "depthScore": 0.15,
+    "eventsProcessed": 42,
+    "agentRole": "Household protector for seniors",
+    "profileType": "senior",
+    "designation": "ANCHOR",
+    "lastAction": {
+      "text": "Flagged suspicious caller claiming urgent payment was needed.",
+      "timestamp": "2026-03-20T18:10:00.000Z",
+      "threatLevel": 3
+    },
+    "trustedContactCount": 2,
+    "blockedContactCount": 1,
+    "threatHistoryCount": 4,
+    "createdAt": "2026-03-18T16:30:00.000Z"
   }
 ]
 ```
@@ -112,10 +123,20 @@ Returns status snapshot for a single agent instance.
   "memberId": "member-001",
   "memberName": "Dorothy Chen",
   "stage": "pattern-recognition",
-  "depth": 0.15,
-  "eventCount": 42,
-  "lastActivity": "2026-03-18T16:30:00.000Z",
-  "status": "active"
+  "depthScore": 0.15,
+  "eventsProcessed": 42,
+  "agentRole": "Household protector for seniors",
+  "profileType": "senior",
+  "designation": "ANCHOR",
+  "lastAction": {
+    "text": "Flagged suspicious caller claiming urgent payment was needed.",
+    "timestamp": "2026-03-20T18:10:00.000Z",
+    "threatLevel": 3
+  },
+  "trustedContactCount": 2,
+  "blockedContactCount": 1,
+  "threatHistoryCount": 4,
+  "createdAt": "2026-03-18T16:30:00.000Z"
 }
 ```
 
@@ -729,6 +750,19 @@ Creates a new household.
   "location_id": "loc_abc12345",
   "location_name": "Smith Family Home",
   "address_summary": "Austin, TX, US",
+  "location_details": {
+    "location_id": "loc_abc12345",
+    "name": "Smith Family Home",
+    "address": {
+      "line1": "123 Main St",
+      "line2": null,
+      "city": "Austin",
+      "region": "TX",
+      "postal_code": "78701",
+      "country": "US"
+    },
+    "address_summary": "Austin, TX, US"
+  },
   "created": "2026-03-19T10:00:00.000Z",
   "members": []
 }
@@ -739,35 +773,6 @@ Creates a new household.
 curl -X POST http://localhost:3001/api/households \
   -H "Content-Type: application/json" \
   -d '{"name":"Smith Family","location_id":"loc_abc12345"}'
-```
-
----
-
-### POST /api/locations
-
-Creates a new saved location.
-
-**Request Body:**
-| Field | Type | Required | Description |
-|---|---|---|---|
-| name | string | Yes | User-facing location name |
-| address | object | Yes | Structured address object |
-
-**Response:** `201 Created`
-```json
-{
-  "location_id": "loc_abc12345",
-  "name": "Smith Family Home",
-  "address": {
-    "line1": "123 Main St",
-    "line2": null,
-    "city": "Austin",
-    "region": "TX",
-    "postal_code": "78701",
-    "country": "US"
-  },
-  "address_summary": "Austin, TX, US"
-}
 ```
 
 ---
@@ -785,6 +790,19 @@ Lists all households (summary view).
     "location_id": "loc_abc12345",
     "location_name": "Smith Family Home",
     "address_summary": "Austin, TX, US",
+    "location_details": {
+      "location_id": "loc_abc12345",
+      "name": "Smith Family Home",
+      "address": {
+        "line1": "123 Main St",
+        "line2": null,
+        "city": "Austin",
+        "region": "TX",
+        "postal_code": "78701",
+        "country": "US"
+      },
+      "address_summary": "Austin, TX, US"
+    },
     "member_count": 3
   }
 ]
@@ -804,7 +822,21 @@ Gets a specific household with full details including members.
   "location_id": "loc_abc12345",
   "location_name": "Smith Family Home",
   "address_summary": "Austin, TX, US",
+  "location_details": {
+    "location_id": "loc_abc12345",
+    "name": "Smith Family Home",
+    "address": {
+      "line1": "123 Main St",
+      "line2": null,
+      "city": "Austin",
+      "region": "TX",
+      "postal_code": "78701",
+      "country": "US"
+    },
+    "address_summary": "Austin, TX, US"
+  },
   "created": "2026-03-19T10:00:00.000Z",
+  "updated_at": "2026-03-20T09:15:00.000Z",
   "members": [
     {
       "id": "member_001",
@@ -860,6 +892,7 @@ Adds a member to a household.
 | profile_type | string | Yes | "adult", "senior", or "child" |
 | companion | string | Yes | "sentinel", "anchor", or "scout" |
 | is_primary | boolean | No | Primary household contact |
+| primary_contact | string \| null | No | Linked primary contact/member reference |
 
 **Response:** `201 Created`
 ```json
@@ -871,6 +904,111 @@ Adds a member to a household.
   "profile_type": "adult",
   "companion": "sentinel",
   "is_primary": false
+}
+```
+
+---
+
+## Location Management
+
+### GET /api/locations
+
+Lists all saved locations.
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "location_id": "loc_abc12345",
+    "name": "Smith Family Home",
+    "address_summary": "Austin, TX, US"
+  }
+]
+```
+
+---
+
+### POST /api/locations
+
+Creates a new saved location.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| name | string | Yes | User-facing location name |
+| address | object | Yes | Structured address object |
+
+**Response:** `201 Created`
+```json
+{
+  "location_id": "loc_abc12345",
+  "name": "Smith Family Home",
+  "address": {
+    "line1": "123 Main St",
+    "line2": null,
+    "city": "Austin",
+    "region": "TX",
+    "postal_code": "78701",
+    "country": "US"
+  },
+  "address_summary": "Austin, TX, US",
+  "created": "2026-03-20T18:00:00.000Z"
+}
+```
+
+---
+
+### GET /api/locations/:id
+
+Gets a saved location with full details.
+
+**Response:** `200 OK`
+```json
+{
+  "location_id": "loc_abc12345",
+  "name": "Smith Family Home",
+  "address": {
+    "line1": "123 Main St",
+    "line2": null,
+    "city": "Austin",
+    "region": "TX",
+    "postal_code": "78701",
+    "country": "US"
+  },
+  "address_summary": "Austin, TX, US",
+  "created": "2026-03-20T18:00:00.000Z",
+  "updated_at": "2026-03-20T18:10:00.000Z"
+}
+```
+
+---
+
+### PUT /api/locations/:id
+
+Updates a saved location name and/or address.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| name | string | No | New location name |
+| address | object | No | Replacement structured address object |
+
+**Response:** `200 OK`
+```json
+{
+  "location_id": "loc_abc12345",
+  "name": "Lake House",
+  "address": {
+    "line1": "9 Lake Rd",
+    "line2": null,
+    "city": "Bend",
+    "region": "OR",
+    "postal_code": "97701",
+    "country": "US"
+  },
+  "address_summary": "Bend, OR, US",
+  "created": "2026-03-20T18:00:00.000Z",
+  "updated_at": "2026-03-20T18:12:00.000Z"
 }
 ```
 
@@ -908,6 +1046,31 @@ Deletes a saved location when no households still reference it.
 
 Updates a household member's details.
 
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| name | string | No | New member name |
+| phone | string | No | Member phone in E.164 format |
+| date_of_birth | string | No | Date of birth in `YYYY-MM-DD` format |
+| profile_type | string | No | "adult", "senior", or "child" |
+| companion | string | No | "sentinel", "anchor", or "scout" |
+| is_primary | boolean | No | Primary household contact |
+| primary_contact | string \| null | No | Linked primary contact/member reference |
+
+**Response:** `200 OK`
+```json
+{
+  "id": "member_abc123",
+  "name": "Alice Smith",
+  "phone": "+14155550123",
+  "date_of_birth": "1989-02-10",
+  "profile_type": "adult",
+  "companion": "sentinel",
+  "is_primary": true,
+  "primary_contact": null
+}
+```
+
 ---
 
 ### DELETE /api/households/:id/members/:memberId
@@ -940,4 +1103,4 @@ For issues or questions:
 ---
 
 **Last Updated:** 2026-03-20  
-**Sources:** CR-20260318-1700; D-20260318-1700; CR-20260320-1147; D-20260320-1147; CR-20260320-1203; D-20260320-1203
+**Sources:** CR-20260318-1700; D-20260318-1700; CR-20260320-1147; D-20260320-1147; CR-20260320-1203; D-20260320-1203; CR-20260320-1435; D-20260320-1435

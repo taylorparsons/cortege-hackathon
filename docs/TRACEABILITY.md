@@ -32,3 +32,9 @@ Start here:
 | README Alignment | [`specs/20260320-readme-alignment/spec.md`](specs/20260320-readme-alignment/spec.md) | Align top-level onboarding docs with the shipped privacy and location model |
 | Main Branch Push | [`specs/20260320-main-branch-push/spec.md`](specs/20260320-main-branch-push/spec.md) | Commit pending docs alignment, merge into `main`, and push `origin/main` |
 | Release v0.3.0 | [`specs/20260320-release-v030/spec.md`](specs/20260320-release-v030/spec.md) | Update `v0.3.0` release notes, retag current `main`, and publish the GitHub release |
+| API Docs Alignment | [`specs/20260320-api-docs-alignment/spec.md`](specs/20260320-api-docs-alignment/spec.md) | Align `docs/API.md` and served `/api/docs` with the latest route behavior |
+| Household Editor UI | [`specs/20260320-household-editor-ui/spec.md`](specs/20260320-household-editor-ui/spec.md) | Add an explicit selected-household editor to the existing household selector modal |
+| Member Phone Input UX | [`specs/20260320-member-phone-input/spec.md`](specs/20260320-member-phone-input/spec.md) | Normalize common member phone input formats in the UI and surface add/edit errors |
+| Active Household Companions | [`specs/20260320-active-household-companions/spec.md`](specs/20260320-active-household-companions/spec.md) | Keep dashboard companion cards aligned with the selected household |
+| Cypress Test Artifacts | [`specs/20260320-cypress-artifacts/spec.md`](specs/20260320-cypress-artifacts/spec.md) | Enable Cypress run videos and failure screenshots and verify artifact output |
+| README Localhost Validation Artifacts | [`specs/20260320-readme-localhost-artifacts/spec.md`](specs/20260320-readme-localhost-artifacts/spec.md) | Document the localhost Cypress artifact workflow in `README.md` and check in the current local changes |

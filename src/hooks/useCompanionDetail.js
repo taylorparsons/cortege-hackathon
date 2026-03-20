@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiUrl } from '../lib/backend-url.js';
+import { useHouseholdContext } from '../context/HouseholdContext.jsx';
 
 /**
  * Fetches activity for a selected companion.
@@ -7,6 +8,7 @@ import { apiUrl } from '../lib/backend-url.js';
  * Memory is handled separately by MemoryViewer component.
  */
 export function useCompanionDetail(companionId) {
+  const { currentHouseholdId } = useHouseholdContext();
   const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +21,11 @@ export function useCompanionDetail(companionId) {
     let cancelled = false;
     setLoading(true);
 
-    fetch(apiUrl(`/api/companions/${companionId}/activity?limit=20`))
+    const query = currentHouseholdId
+      ? `?limit=20&household_id=${encodeURIComponent(currentHouseholdId)}`
+      : '?limit=20';
+
+    fetch(apiUrl(`/api/companions/${companionId}/activity${query}`))
       .then(r => r.ok ? r.json() : [])
       .catch(() => [])
       .then(actData => {
@@ -30,7 +36,7 @@ export function useCompanionDetail(companionId) {
       });
 
     return () => { cancelled = true; };
-  }, [companionId]);
+  }, [companionId, currentHouseholdId]);
 
   return { activity, loading };
 }

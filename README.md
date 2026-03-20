@@ -405,6 +405,30 @@ npm run test:unit
 npm run test:integration
 ```
 
+### Localhost Cypress Review Artifacts
+
+With the backend on `http://localhost:3001` and the frontend on `http://localhost:5173`, rerun the current household/member demo review path with:
+
+```bash
+npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js
+```
+
+That run writes reviewer-friendly artifacts to `cypress/screenshots/` and `cypress/videos/`.
+
+Representative screenshots from the current localhost run:
+
+- [Member CRUD screenshot](cypress/screenshots/member-crud.cy.js/Member%20CRUD%20--%20adds%20a%20member%20and%20the%20member%20row%20appears.png)
+- [Selected-household companion screenshot](cypress/screenshots/companion-cards.cy.js/Companion%20Cards%20--%20shows%20companion%20cards%20for%20the%20selected%20household%20members.png)
+
+![Member CRUD localhost screenshot](cypress/screenshots/member-crud.cy.js/Member%20CRUD%20--%20adds%20a%20member%20and%20the%20member%20row%20appears.png)
+
+![Selected household companion localhost screenshot](cypress/screenshots/companion-cards.cy.js/Companion%20Cards%20--%20shows%20companion%20cards%20for%20the%20selected%20household%20members.png)
+
+Representative videos from the same run:
+
+- [Member CRUD run video](cypress/videos/member-crud.cy.js.mp4)
+- [Companion cards run video](cypress/videos/companion-cards.cy.js.mp4)
+
 ### Creating New Agents
 
 Agents are defined as markdown files with YAML frontmatter:

@@ -741,6 +741,10 @@ export default function Cortege() {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    setSelectedId(null);
+  }, [currentHouseholdId]);
+
   const totalEventsProcessed = companions.reduce((s, c) => s + (c.eventsProcessed ?? 0), 0);
 
   return (
@@ -993,6 +997,7 @@ export default function Cortege() {
             <HouseholdSelector
               currentHouseholdId={currentHouseholdId}
               onSelect={(id) => {
+                setSelectedId(null);
                 setCurrentHouseholdId(id);
                 setShowHouseholdSelector(false);
               }}

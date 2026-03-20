@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiUrl } from '../lib/backend-url.js';
+import { useHouseholdContext } from '../context/HouseholdContext.jsx';
 
 async function readApiError(response, fallbackMessage) {
   let payload = null;
@@ -16,6 +17,7 @@ async function readApiError(response, fallbackMessage) {
 }
 
 export function useHouseholds() {
+  const { bumpHouseholdVersion } = useHouseholdContext();
   const [households, setHouseholds] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,6 +122,7 @@ export function useHouseholds() {
     }
     const household = await response.json();
     setHouseholds(prev => [...prev, household]);
+    bumpHouseholdVersion();
     return household;
   };
 
@@ -136,6 +139,7 @@ export function useHouseholds() {
     setHouseholds(prev => prev.map(item => (
       item.household_id === householdId ? household : item
     )));
+    bumpHouseholdVersion();
     return household;
   };
 
@@ -147,6 +151,7 @@ export function useHouseholds() {
       await readApiError(response, 'Failed to delete household');
     }
     setHouseholds(prev => prev.filter(h => h.household_id !== householdId));
+    bumpHouseholdVersion();
   };
 
   const getHousehold = async (householdId) => {
