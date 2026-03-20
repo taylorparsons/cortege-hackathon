@@ -1287,3 +1287,35 @@ NOTES
 - Commands run:
   - `date '+%Y-%m-%d %H:%M'` -> `2026-03-20 16:07`
   - `rg -n "Twilio Platform|CORTEGE Webhook|CORTEGE Agent Pipeline|LLM|Legend:" docs/PRODUCTION_DEPLOYMENT.md docs/specs/working-demo-with-twilio/spec.md docs/specs/working-demo-with-twilio/tasks.md docs/PRD.md` -> PASS
+
+---
+
+Session: 2026-03-20 16:12
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, verification-before-completion
+Feature: 20260320-twilio-docs-publication
+Input: CR-20260320-1612
+Decisions: D-20260320-1612
+Spec: docs/specs/20260320-twilio-docs-publication/spec.md
+Tasks: docs/specs/20260320-twilio-docs-publication/tasks.md
+Goal: Commit and push the current Twilio docs rewrite and diagram clarification on top of the latest remote main.
+
+DONE
+- [2026-03-20 16:12] T-001: Capture the Twilio docs publication request, create the publication spec/tasks, and verify the working tree is scoped to the intended documentation updates. (Skills: athena, verification-before-completion)
+- [2026-03-20 16:14] T-002: Commit the Twilio docs update on `main` and push it to `origin/main`. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+- Implement `twilio_number` on household records and wire the Twilio webhook to resolve `household_id` from `To`. (Skills: athena)
+
+NOTES
+- Publication commit: `c8fdefd` `docs: clarify Twilio household demo routing`
+- Commands run:
+  - `date '+%Y-%m-%d %H:%M'` -> `2026-03-20 16:12`
+  - `git status --short --branch` -> PASS (`main` with only the intended Twilio docs and audit updates modified)
+  - `rg -n "Twilio Docs Publication|Twilio Platform|CORTEGE Webhook|CORTEGE Agent Pipeline|LLM|one Twilio number per household" ...` -> PASS
+  - `git commit -m "docs: clarify Twilio household demo routing"` -> PASS (`c8fdefd`)
+  - `git push origin main` -> PASS (`4de407d..c8fdefd`)
