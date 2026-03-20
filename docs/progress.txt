@@ -632,5 +632,6 @@ NOTES
 - Build: 40 modules, 256KB/77KB gzip
 - Frontend: HouseholdSelector modal, HouseholdContext with localStorage, useCortegeData with household switching
 - Backward compatibility: GET /api/household falls back to household store → household.json → default
-- Commits: 4206429 (T-001), 2888ef9 (T-003/T-004), f936a2e (T-005)
+- Commits: 4206429 (T-001), 2888ef9 (T-003/T-004), f936a2e (T-005), 2a1501a (T-006..T-017)
 - Feature status: SHIPPED — spec marked Done
+- Branch pushed to origin/design, PR created: https://github.com/taylorparsons/cortege-hackathon/pull/1

@@ -299,7 +299,12 @@ export function createApiRouter(orchestrator) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
       
-      const updates = req.body;
+      const { name, age, profileType, companion } = req.body;
+      const updates = {};
+      if (name !== undefined) updates.name = name;
+      if (age !== undefined) updates.age = age;
+      if (profileType !== undefined) updates.profileType = profileType;
+      if (companion !== undefined) updates.companion = companion;
       const member = await orchestrator.householdStore.updateMember(
         req.params.id,
         req.params.memberId,

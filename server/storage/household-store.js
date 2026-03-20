@@ -53,7 +53,11 @@ export class HouseholdStore {
 
   async updateHousehold(householdId, updates) {
     const household = await this.getHousehold(householdId);
-    Object.assign(household, updates);
+    const allowed = ['name', 'location'];
+    for (const key of allowed) {
+      if (updates[key] !== undefined) household[key] = updates[key];
+    }
+    household.updated_at = new Date().toISOString();
     const filepath = path.join(this.dataDir, `${householdId}.json`);
     fs.writeFileSync(filepath, JSON.stringify(household, null, 2));
     return household;
@@ -61,9 +65,10 @@ export class HouseholdStore {
 
   async deleteHousehold(householdId) {
     const filepath = path.join(this.dataDir, `${householdId}.json`);
-    if (fs.existsSync(filepath)) {
-      fs.unlinkSync(filepath);
+    if (!fs.existsSync(filepath)) {
+      throw new Error(`Household ${householdId} not found`);
     }
+    fs.unlinkSync(filepath);
   }
 
   async addMember(householdId, memberData) {
@@ -95,8 +100,11 @@ export class HouseholdStore {
       throw new Error(`Member ${memberId} not found in household ${householdId}`);
     }
     
-    Object.assign(member, updates);
-    
+    const allowedMember = ['name', 'age', 'profileType', 'companion'];
+    for (const key of allowedMember) {
+      if (updates[key] !== undefined) member[key] = updates[key];
+    }
+
     const filepath = path.join(this.dataDir, `${householdId}.json`);
     fs.writeFileSync(filepath, JSON.stringify(household, null, 2));
     

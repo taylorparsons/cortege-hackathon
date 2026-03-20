@@ -98,6 +98,50 @@ Agents evolve through four maturity stages:
 - **Manual API** - POST /api/events for testing
 - **Twilio Webhook** - Real phone call integration (see [Production Deployment](docs/PRODUCTION_DEPLOYMENT.md))
 
+## 🏠 Household Management
+
+CORTEGE supports multiple households, each with independent members and companion agents.
+
+### Switching Households
+
+Click **"Switch Household"** in the nav bar to open the household selector. Create new households, switch between them, or delete unused ones. Your selection persists across page reloads via localStorage.
+
+### Creating Households via API
+
+```bash
+# Create a household
+curl -X POST http://localhost:3001/api/households \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "Family A", "location": "New York"}'
+
+# Add a member
+curl -X POST http://localhost:3001/api/households/<id>/members \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "Alex", "age": 14, "profileType": "child", "companion": "scout"}'
+```
+
+### Migrating from Legacy Format
+
+If you have an existing `data/household.json`, migrate it to the multi-household store:
+
+```bash
+node scripts/migrate-household.js
+```
+
+This will:
+- Read the legacy `data/household.json`
+- Create a new household in `data/households/`
+- Migrate all members
+- Back up the original as `data/household.json.backup`
+
+The legacy `GET /api/household` endpoint continues to work — it falls back through: household store (by `DEFAULT_HOUSEHOLD_ID`) → first available household → legacy `household.json` → empty default.
+
+### Environment Variables
+
+```bash
+DEFAULT_HOUSEHOLD_ID=<uuid>  # Optional: default household for legacy endpoint
+```
+
 ## 🛠️ Development
 
 ### Storage
@@ -191,7 +235,9 @@ cortege-hackathon/
 │   │   ├── anchor-member-001.json     # Per-agent-instance learning
 │   │   ├── sentinel-member-002.json   # Trusted contacts, patterns, history
 │   │   └── scout-member-003.json      # Grows over time = learning
-│   └── household.json                  # Household member profiles + pairings
+│   ├── households/                     # Multi-household JSON files
+│   │   └── <uuid>.json               # One file per household (members, config)
+│   └── household.json                  # Legacy single-household file (backward compat)
 │
 ├── docs/                               # Documentation
 │   ├── API.md                          # Complete REST + WebSocket API reference
@@ -202,15 +248,26 @@ cortege-hackathon/
 │   ├── decisions.md                    # Design decision log (D-*)
 │   ├── progress.txt                    # Execution log (session notes)
 │   ├── specs/                          # Feature specifications
+│   │   ├── 20260319-add-household-feature/  # Multi-household management
+│   │   │   ├── spec.md                 # 10 FRs, 3 NFRs, acceptance scenarios
+│   │   │   └── tasks.md                # 17 tasks (16 done, 1 deferred)
+│   │   ├── 20260319-frontend-api-integration/ # Live API data in frontend
+│   │   │   ├── spec.md
+│   │   │   └── tasks.md
 │   │   ├── working-demo-with-twilio/   # Twilio integration spec
 │   │   │   ├── spec.md                 # Requirements + acceptance criteria
 │   │   │   └── tasks.md                # Implementation tasks
-│   │   └── 20260315-storage-auditability/  # Storage design spec
-│   │       └── spec.md
+│   │   └── ...                         # Additional feature specs
 │   └── superpowers/                    # Design specifications (architecture)
-│       └── specs/
-│           ├── 2026-03-14-agent-orchestration-design.md    # Complete system design
-│           └── 2026-03-14-agent-orchestration-diagrams.md  # Mermaid diagrams
+│       ├── specs/
+│       │   ├── 2026-03-14-agent-orchestration-design.md    # Agent system design
+│       │   ├── 2026-03-14-agent-orchestration-diagrams.md  # Agent system diagrams
+│       │   ├── 2026-03-19-household-management-design.md   # Household design
+│       │   └── 2026-03-19-household-management-diagrams.md # Household diagrams
+│       └── plans/                      # Implementation plans
+│           ├── 2026-03-19-add-household-feature.md
+│           ├── 2026-03-19-frontend-api-integration.md
+│           └── 2026-03-18-sqlite-auditability.md
 │
 ├── scenarios/                          # Demo scenario definitions (JSON)
 │   ├── _template.json                  # Template for creating scenarios
@@ -219,6 +276,7 @@ cortege-hackathon/
 │   └── tech-support.json              # Tech support scam
 │
 ├── scripts/                            # Utility scripts
+│   ├── migrate-household.js           # Migrate legacy household.json to multi-household
 │   ├── migrate-to-sqlite.js           # Migrate JSON files to SQLite
 │   └── validate-hash-chain.js         # Verify audit trail integrity
 │
@@ -246,12 +304,13 @@ cortege-hackathon/
 │   │   ├── orchestrator.js            # Main coordinator
 │   │   ├── event-bus.js               # Typed EventEmitter + SQLite persistence
 │   │   └── scheduler.js               # node-cron for timed tasks
-│   ├── storage/                        # SQLite storage layer
-│   │   ├── schema.sql                 # Database schema with triggers
+│   ├── storage/                        # Storage layer
+│   │   ├── schema.sql                 # SQLite schema with triggers
 │   │   ├── db.js                      # Database connection + queries
 │   │   ├── hash-chain.js              # SHA-256 hash chain computation
+│   │   ├── household-store.js         # Multi-household JSON file store
 │   │   └── storage-adapter.js         # Multi-mode storage (sqlite/json/dual)
-│   └── tests/                          # Test suite (131 tests)
+│   └── tests/                          # Test suite (151 tests)
 │       ├── integration.test.js        # End-to-end flows
 │       ├── demo-validation.test.js    # Demo scenario validation
 │       ├── template-parser.test.js    # Agent template parsing
@@ -260,17 +319,30 @@ cortege-hackathon/
 │       ├── escalation-handler.test.js # Threat routing
 │       ├── db.test.js                 # SQLite database operations
 │       ├── hash-chain.test.js         # Hash chain computation
-│       └── sqlite-triggers.test.js    # Append-only trigger validation
+│       ├── sqlite-triggers.test.js    # Append-only trigger validation
+│       ├── household-store.test.js    # Household store CRUD (8 tests)
+│       ├── household-api.test.js      # Household API endpoints (8 tests)
+│       └── household-integration.test.js # Household end-to-end (4 tests)
 │
 ├── src/                                # Frontend (React + Vite)
-│   ├── main.jsx                        # React entry point
+│   ├── main.jsx                        # React entry point (HouseholdProvider wrapper)
 │   ├── Cortege.jsx                     # Main dashboard component
-│   └── components/                     # UI components
-│       ├── EventFeed.jsx              # Real-time event stream
-│       ├── AgentStatus.jsx            # Companion status cards
-│       ├── MemoryViewer.jsx           # Agent memory inspector
-│       ├── ScenarioRunner.jsx         # Demo scenario controls
-│       └── EventInjector.jsx          # Manual event submission
+│   ├── components/                     # UI components
+│   │   ├── EventFeed.jsx              # Real-time event stream
+│   │   ├── AgentStatus.jsx            # Companion status cards
+│   │   ├── HouseholdSelector.jsx      # Household switching modal
+│   │   ├── MemoryViewer.jsx           # Agent memory inspector
+│   │   ├── ScenarioRunner.jsx         # Demo scenario controls
+│   │   └── EventInjector.jsx          # Manual event submission
+│   ├── context/                        # React contexts
+│   │   └── HouseholdContext.jsx       # Current household state + localStorage
+│   ├── hooks/                          # Custom React hooks
+│   │   ├── useCortegeData.js          # REST + WebSocket data (household-scoped)
+│   │   ├── useCompanionDetail.js      # Companion detail panel data
+│   │   └── useHouseholds.js           # Household CRUD operations
+│   └── lib/                            # Shared utilities
+│       ├── backend-url.js             # API/WS URL helper (proxy-aware)
+│       └── companion-display.js       # Agent type → display properties
 │
 ├── .env                                # Environment config (gitignored)
 ├── .env.example                        # Environment template
@@ -335,15 +407,29 @@ LEARNING_FAST_MODE=true                  # Lower stage thresholds
 TWILIO_ACCOUNT_SID=your_sid
 TWILIO_AUTH_TOKEN=your_token
 
+# Household
+DEFAULT_HOUSEHOLD_ID=                    # Default household for legacy endpoint
+
 # Debug
 CLAUDE_DEBUG=1                           # Enable API debug logging
 ```
 
 ## 📊 API Endpoints
 
-### Household & Companions
+### Household Management
 
-- `GET /api/household` - Get household members
+- `POST /api/households` - Create a new household
+- `GET /api/households` - List all households
+- `GET /api/households/:id` - Get household by ID
+- `PUT /api/households/:id` - Update household
+- `DELETE /api/households/:id` - Delete household
+- `POST /api/households/:id/members` - Add member to household
+- `PUT /api/households/:id/members/:mid` - Update member
+- `DELETE /api/households/:id/members/:mid` - Remove member
+- `GET /api/household` - Legacy endpoint (backward-compatible fallback)
+
+### Companions
+
 - `GET /api/companions` - Get all agent instances
 - `GET /api/companions/:id` - Get specific agent
 - `GET /api/companions/:id/memory` - Get agent memory
