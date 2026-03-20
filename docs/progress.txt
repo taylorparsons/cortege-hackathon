@@ -847,19 +847,26 @@ Tasks: docs/specs/20260320-release-v030/tasks.md
 Goal: Correct the `v0.3.0` tag and publish an accurate GitHub release from current `main`.
 
 DONE
+- [2026-03-20 14:15] T-001: Capture the release-correction request in ATHENA docs and prepare the release-note/tag update. (Skills: athena, git-workflow-automation)
+- [2026-03-20 14:22] T-002: Refresh `RELEASE-0.3.0.md` with the shipped delta from `v0.2.0` to current `main`. (Skills: athena)
+- [2026-03-20 14:24] T-003: Move remote tag `v0.3.0` to the corrected release commit on `main`. (Skills: git-workflow-automation)
+- [2026-03-20 14:25] T-004: Publish the GitHub `v0.3.0` release from the corrected tag and notes file. (Skills: git-workflow-automation, verification-before-completion)
 
 IN PROGRESS
-- T-001: Capture the release-correction request in ATHENA docs and prepare the release-note/tag update. (Skills: athena, git-workflow-automation)
+None.
 
 NEXT
-- Update `RELEASE-0.3.0.md` to describe the shipped delta from `v0.2.0`
-- Commit the release-notes correction on `main`
-- Move tag `v0.3.0` to the corrected release commit and push it
-- Publish the GitHub release with the updated notes
+None.
 
 NOTES
 - Current GitHub release state:
   - `v0.2.0` release exists and is published
-  - remote tag `v0.3.0` exists, but `gh release view v0.3.0` returns `release not found`
-- Current remote tag target for `v0.3.0`: `16a6896`
-- Current `main` HEAD: `21224c3`
+  - `v0.3.0` release now published at `https://github.com/taylorparsons/cortege-hackathon/releases/tag/v0.3.0`
+- Previous remote tag target for `v0.3.0`: `16a6896`
+- Corrected release-notes commit on `main`: `2ec1263`
+- Remote annotated tag object for `v0.3.0`: `edef670`
+- Remote dereferenced commit for `v0.3.0`: `2ec1263`
+- Publication commands:
+  - `git push origin main` -> updated `main` from `21224c3` to `2ec1263`
+  - `git push --force origin v0.3.0` -> moved remote tag from `f96aa19` / `16a6896^{}`
+  - `gh release create v0.3.0 --title "v0.3.0 - Privacy-First Household Management and Auditability" --notes-file RELEASE-0.3.0.md`
