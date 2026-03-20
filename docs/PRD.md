@@ -78,17 +78,18 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Template expansion: Worked Examples section pushes body past Haiku's 2048-token cache minimum (Sources: [D-20260318-1200](decisions.md#d-20260318-1200))
 - Target: ~64% cost reduction per event with cache hits
 
-## Working Demo with Twilio (Sources: [CR-20260318-1640](requests.md#cr-20260318-1640); [D-20260318-1640](decisions.md#d-20260318-1640))
+## Working Demo with Twilio (Sources: [CR-20260318-1640](requests.md#cr-20260318-1640); [D-20260318-1640](decisions.md#d-20260318-1640); [CR-20260320-1550](requests.md#cr-20260320-1550); [D-20260320-1550](decisions.md#d-20260320-1550); [CR-20260320-1559](requests.md#cr-20260320-1559); [D-20260320-1559](decisions.md#d-20260320-1559); [CR-20260320-1607](requests.md#cr-20260320-1607); [D-20260320-1607](decisions.md#d-20260320-1607))
 - Working demo guide created: [`PRODUCTION_DEPLOYMENT.md`](PRODUCTION_DEPLOYMENT.md)
 - Spec created: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
 - Tasks created: [`specs/working-demo-with-twilio/tasks.md`](specs/working-demo-with-twilio/tasks.md)
-- Goal: Working localhost demo with real Twilio integration showing actual use cases
-- Four integration options documented: call forwarding (recommended), number porting, mobile app (future), carrier partnerships (long-term)
-- Call forwarding setup instructions for T-Mobile, Verizon, AT&T
-- Twilio account setup and webhook configuration for localhost testing
-- UI focused on real working features only
-- 19 functional requirements, 10 non-functional requirements, 8 edge cases
-- 7 implementation phases, estimated 5 days
+- Goal: Working localhost demo with real Twilio integration using one Twilio number per household
+- Routing model: Twilio `To` number resolves `household_id` before member-level routing
+- Deployment guide now targets ngrok-based localhost testing plus the household store model, not legacy `household.json`
+- Twilio docs require redacted phone logging and preserved signature validation guidance
+- Deployment guide includes Mermaid sequence diagrams for the allowed-call and blocked-call outcomes
+- Deployment guide now separates Twilio platform, CORTEGE webhook, CORTEGE agent pipeline, and LLM lanes in those diagrams
+- UI should stay focused on real working household-scoped features only
+- Spec and task list updated around the household-number model
 
 ## API Documentation (Sources: [CR-20260318-1700](requests.md#cr-20260318-1700); [D-20260318-1700](decisions.md#d-20260318-1700))
 - Comprehensive API documentation created: [`API.md`](API.md)
@@ -238,6 +239,13 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [specs/20260320-live-feed-patch-release/spec.md](specs/20260320-live-feed-patch-release/spec.md)
 - Tasks: [specs/20260320-live-feed-patch-release/tasks.md](specs/20260320-live-feed-patch-release/tasks.md)
 
+## Twilio Docs Publication (Sources: [CR-20260320-1612](requests.md#cr-20260320-1612); [D-20260320-1612](decisions.md#d-20260320-1612))
+- The current Twilio documentation rewrite and clarified sequence diagrams SHALL be committed on `main` as a docs-only update
+- The docs update SHALL be pushed to `origin/main`
+- Evidence: `docs/PRODUCTION_DEPLOYMENT.md`, `docs/specs/working-demo-with-twilio/spec.md`, `docs/specs/working-demo-with-twilio/tasks.md`, `docs/progress.txt`
+- Spec: [specs/20260320-twilio-docs-publication/spec.md](specs/20260320-twilio-docs-publication/spec.md)
+- Tasks: [specs/20260320-twilio-docs-publication/tasks.md](specs/20260320-twilio-docs-publication/tasks.md)
+
 ## Playwright E2E Tests — SHIPPED (Sources: [CR-20260320-1000](requests.md#cr-20260320-1000), [CR-20260320-1100](requests.md#cr-20260320-1100))
 - @playwright/test@1.58.2 installed; `test:e2e:pw` script added to package.json
 - playwright.config.js: webServer auto-starts backend (3001) and frontend (5173), workers: 1 to serialize
@@ -261,10 +269,11 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 
 ## Next / Backlog
 - Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
-- Wire Twilio webhook to event bus (Phase 3)
-- Implement Twilio signature validation (Phase 3)
-- Test with live Twilio account and real phone calls on localhost (Phase 6)
-- Update UI to show only working features with real use cases
+- Add `twilio_number` to the household model and validate uniqueness
+- Wire Twilio webhook to event bus with `To -> household_id` routing
+- Implement Twilio signature validation
+- Test with live Twilio account and real phone calls on localhost through ngrok
+- Update UI to show only working features with real household-scoped use cases
 
 ## Agent Orchestration Implementation (Sources: [CR-20260317-1400](requests.md#cr-20260317-1400))
 - Implementation spec created: [`.kiro/specs/agent-orchestration-implementation/requirements.md`](../.kiro/specs/agent-orchestration-implementation/requirements.md)

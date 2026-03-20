@@ -825,3 +825,80 @@ Acceptance / test:
 - `README.md` documents the live-feed household-scoping fix and localhost artifact coverage
 - The verified local changes are committed
 - A `v0.3.1` GitHub release exists for the current `main`
+
+## D-20260320-1550
+Date: 2026-03-20 15:50
+Inputs: [CR-20260320-1550](requests.md#cr-20260320-1550)
+PRD: [Working Demo with Twilio](PRD.md#working-demo-with-twilio-sources-cr-20260318-1640-d-20260318-1640-cr-20260320-1550-d-20260320-1550)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Decision:
+Rewrite the Twilio demo docs around one Twilio number per household. The Twilio number is the household ingress point, maps directly to `household_id`, and no longer relies on the older per-user proxy-number model or `household.json` production guidance.
+
+Rationale:
+- The user explicitly selected one number per household as the hackathon routing model
+- The current docs still describe a per-user forwarding architecture that is ambiguous for routing and no longer matches the household-centric product direction
+- The shipped household/location/privacy work means Twilio guidance must reference the household store and protected data model, not legacy inline configuration files
+
+Alternatives considered:
+- Keep the old multi-option Twilio docs and add a note about households (rejected — leaves the main docs teaching the wrong architecture)
+- Use one Twilio number per member (rejected for the hackathon — clearer routing, but more operational overhead than needed for the demo)
+
+Acceptance / test:
+- `docs/PRODUCTION_DEPLOYMENT.md` describes the household-number routing flow and current localhost/ngrok path
+- `docs/specs/working-demo-with-twilio/spec.md` and `tasks.md` align with `To -> household_id` routing and the household store model
+- `docs/PRD.md` backlog and Twilio summary reference the new household-number direction
+
+## D-20260320-1559
+Date: 2026-03-20 15:59
+Inputs: [CR-20260320-1559](requests.md#cr-20260320-1559)
+PRD: [Working Demo with Twilio](PRD.md#working-demo-with-twilio-sources-cr-20260318-1640-d-20260318-1640-cr-20260320-1550-d-20260320-1550-cr-20260320-1559-d-20260320-1559)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Decision:
+Add Mermaid sequence diagrams to the Twilio demo guide for the two target outcomes: an allowed call that is bridged back to the original household number, and a blocked call that is terminated before it reaches the household line.
+
+Rationale:
+- The current text explains routing, but the demo narrative is easier to understand visually
+- The user explicitly asked for the final “call reaches the original household number” path and the blocked path
+- The diagrams should document the target Twilio behavior without implying that call bridging is already shipped in code
+
+Acceptance / test:
+- `docs/PRODUCTION_DEPLOYMENT.md` contains Mermaid sequence diagrams for both the allowed and blocked call outcomes
+- The Twilio feature spec/tasks mention the diagram requirement so the audit trail covers the new documentation request
+
+## D-20260320-1607
+Date: 2026-03-20 16:07
+Inputs: [CR-20260320-1607](requests.md#cr-20260320-1607)
+PRD: [Working Demo with Twilio](PRD.md#working-demo-with-twilio-sources-cr-20260318-1640-d-20260318-1640-cr-20260320-1550-d-20260320-1550-cr-20260320-1559-d-20260320-1559-cr-20260320-1607-d-20260320-1607)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Decision:
+Update the Twilio Mermaid diagrams to separate the Twilio platform, CORTEGE webhook, CORTEGE agent pipeline, and LLM into distinct lanes so the viewer can see exactly where Twilio ends and CORTEGE/LLM processing begins.
+
+Rationale:
+- The first draft made `CORTEGE Webhook + Routing` look like it might be Twilio-owned code
+- The user explicitly asked whether the highlighted lane was Twilio and whether there was an LLM call
+- Distinct lanes are the clearest way to show that Twilio sends the webhook, CORTEGE handles routing, and the LLM is an optional downstream call inside the agent pipeline
+
+Acceptance / test:
+- `docs/PRODUCTION_DEPLOYMENT.md` diagrams include separate participants for Twilio, CORTEGE webhook, CORTEGE agent pipeline, and LLM
+- The Twilio spec/tasks mention the lane-clarity requirement for the diagrams
+
+## D-20260320-1612
+Date: 2026-03-20 16:12
+Inputs: [CR-20260320-1612](requests.md#cr-20260320-1612)
+PRD: [Twilio Docs Publication](PRD.md#twilio-docs-publication-sources-cr-20260320-1612-d-20260320-1612)
+Spec: [`specs/20260320-twilio-docs-publication/spec.md`](specs/20260320-twilio-docs-publication/spec.md)
+
+Decision:
+Publish the current Twilio documentation rewrite as a docs-only follow-up on top of the latest `main`. Use one commit covering the Twilio guide, Twilio spec/tasks, and the ATHENA audit updates, then push `main` to `origin`.
+
+Rationale:
+- The working tree changes are all documentation and audit-trail updates tied to the active Twilio direction
+- The user explicitly asked to push this update on top of the latest remote change, so the correct publication path is a docs-only commit on `main`
+- Keeping the Twilio guide/spec/task changes in one traceable commit preserves the narrative from routing-model choice to final diagram clarification
+
+Acceptance / test:
+- The current Twilio documentation changes are committed on `main`
+- `origin/main` contains the new docs-only commit

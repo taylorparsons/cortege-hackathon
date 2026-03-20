@@ -559,3 +559,58 @@ Notes:
 - User wants the current live-feed bugfix checked in locally
 - README should be updated again to reflect the latest shipped live-feed and companion-identity behavior
 - Remote release should be patched after verification
+
+## CR-20260320-1550
+Date: 2026-03-20 15:50
+Source: chat
+Decision: [D-20260320-1550](decisions.md#d-20260320-1550)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Request (verbatim):
+this want the Twilio docs rewritten now around the new household-number model
+
+Notes:
+- Continuation of the Twilio-routing discussion in the same session
+- User chose one Twilio number per household as the hackathon routing model
+- Existing docs currently describe the older per-user forwarding / proxy-number model and need to be rewritten
+
+## CR-20260320-1559
+Date: 2026-03-20 15:59
+Source: chat
+Decision: [D-20260320-1559](decisions.md#d-20260320-1559)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Request (verbatim):
+in a md file from above add a sequence mermaid diagram to when the final call end up back to the original household number and when it is blocked
+
+Notes:
+- Continuation of the active Twilio documentation rewrite
+- User wants the Twilio guide to show both target outcomes visually:
+  - call allowed and bridged back to the original household line
+  - call blocked before it reaches the household line
+
+## CR-20260320-1607
+Date: 2026-03-20 16:07
+Source: chat
+Decision: [D-20260320-1607](decisions.md#d-20260320-1607)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Request (verbatim):
+yes add it
+
+Notes:
+- Continuation of the Twilio diagram clarification thread
+- User approved updating the Mermaid diagrams so it is visually clear which lane is Twilio, which lane is CORTEGE code, and where the optional LLM call happens
+
+## CR-20260320-1612
+Date: 2026-03-20 16:12
+Source: chat
+Decision: [D-20260320-1612](decisions.md#d-20260320-1612)
+Spec: [`specs/20260320-twilio-docs-publication/spec.md`](specs/20260320-twilio-docs-publication/spec.md)
+
+Request (verbatim):
+commit these changes and on the documentation and push to remote as a doc updated on top of the last change
+
+Notes:
+- User wants the current Twilio documentation rewrite and diagram clarification committed now
+- User explicitly wants the docs update pushed to the remote on top of the last published change

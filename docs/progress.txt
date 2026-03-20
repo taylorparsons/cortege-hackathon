@@ -1183,3 +1183,107 @@ NOTES
   - `git push origin v0.3.1` -> PASS
   - `gh release create v0.3.1 --title "v0.3.1 - Live Feed Household Scoping Fixes" --notes-file RELEASE-0.3.1.md` -> PASS
   - Release URL: `https://github.com/taylorparsons/cortege-hackathon/releases/tag/v0.3.1`
+
+---
+
+Session: 2026-03-20 15:50
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena
+Feature: working-demo-with-twilio
+Input: CR-20260320-1550
+Decisions: D-20260320-1550
+Spec: docs/specs/working-demo-with-twilio/spec.md
+Tasks: docs/specs/working-demo-with-twilio/tasks.md
+Goal: Rewrite the Twilio docs around the one-number-per-household model and remove the stale per-user proxy guidance.
+
+DONE
+- [2026-03-20 15:50] T-001: Capture the Twilio-doc rewrite request in ATHENA docs and record the household-number architectural decision. (Skills: athena)
+- [2026-03-20 15:55] T-002: Rewrite `docs/PRODUCTION_DEPLOYMENT.md`, `docs/specs/working-demo-with-twilio/spec.md`, and `docs/specs/working-demo-with-twilio/tasks.md` around `To -> household_id` routing and the current household-store model. (Skills: athena)
+- [2026-03-20 15:58] T-003: Update `docs/PRD.md` backlog/summary and verify the old proxy-number and `household.json` assumptions are gone. (Skills: athena)
+
+IN PROGRESS
+None.
+
+NEXT
+- Implement `twilio_number` on household records and wire the Twilio webhook to resolve `household_id` from `To`. (Skills: athena)
+
+NOTES
+- Scope is documentation and source-of-truth alignment only; no runtime code changed in this session.
+- The rewritten Twilio direction is now:
+  - one Twilio number per household
+  - `To` number resolves `household_id`
+  - member-level routing happens only after household resolution
+  - legacy `household.json` is not the target for Twilio work
+- Commands run:
+  - `date '+%Y-%m-%d %H:%M'` -> `2026-03-20 15:50`
+  - `rg -n "proxy number|forward to user's original number|household\\.json update for production|each member needs a separate Twilio proxy number|log all Twilio webhook requests \\(CallSid, From, To, timestamp\\)" docs/PRODUCTION_DEPLOYMENT.md docs/specs/working-demo-with-twilio/spec.md docs/specs/working-demo-with-twilio/tasks.md docs/PRD.md` -> PASS (no matches)
+  - `rg -n "one Twilio number per household|To -> household_id|twilio_number|household-primary-member" docs/PRODUCTION_DEPLOYMENT.md docs/specs/working-demo-with-twilio/spec.md docs/specs/working-demo-with-twilio/tasks.md docs/PRD.md` -> PASS (expected matches found)
+
+---
+
+Session: 2026-03-20 15:59
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, project-documentation-system
+Feature: working-demo-with-twilio
+Input: CR-20260320-1559
+Decisions: D-20260320-1559
+Spec: docs/specs/working-demo-with-twilio/spec.md
+Tasks: docs/specs/working-demo-with-twilio/tasks.md
+Goal: Add Mermaid sequence diagrams to the Twilio guide for the allowed and blocked final call outcomes.
+
+DONE
+- [2026-03-20 15:59] T-001: Capture the diagram request in ATHENA docs and extend the Twilio spec/task list with the new visual-doc requirement. (Skills: athena)
+- [2026-03-20 16:02] T-002: Add Mermaid sequence diagrams to `docs/PRODUCTION_DEPLOYMENT.md` for the allowed bridged-call path and the blocked-call path. (Skills: athena, project-documentation-system)
+- [2026-03-20 16:03] T-003: Update the PRD Twilio summary and verify the new sequence-diagram markers exist. (Skills: athena)
+
+IN PROGRESS
+None.
+
+NEXT
+- Implement `twilio_number` on household records and wire the Twilio webhook to resolve `household_id` from `To`. (Skills: athena)
+
+NOTES
+- Scope is docs-only; the diagrams describe target Twilio behavior and do not imply that bridging is already implemented in code.
+- The guide now shows:
+  - allowed call -> Twilio bridges back to the original household line
+  - blocked call -> Twilio terminates before household delivery
+- Commands run:
+  - `date '+%Y-%m-%d %H:%M'` -> `2026-03-20 15:59`
+  - `rg -n "sequenceDiagram|Allowed Call: Bridged Back|Blocked Call: Terminated" docs/PRODUCTION_DEPLOYMENT.md docs/specs/working-demo-with-twilio/spec.md docs/specs/working-demo-with-twilio/tasks.md docs/PRD.md` -> PASS
+
+---
+
+Session: 2026-03-20 16:07
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, project-documentation-system
+Feature: working-demo-with-twilio
+Input: CR-20260320-1607
+Decisions: D-20260320-1607
+Spec: docs/specs/working-demo-with-twilio/spec.md
+Tasks: docs/specs/working-demo-with-twilio/tasks.md
+Goal: Make the Twilio sequence diagrams explicitly show which lane is Twilio, which is CORTEGE code, and where the optional LLM call happens.
+
+DONE
+- [2026-03-20 16:07] T-001: Capture the diagram-lane clarification request in ATHENA docs and extend the Twilio spec/task list with an explicit lane-separation requirement. (Skills: athena)
+- [2026-03-20 16:10] T-002: Rewrite the Mermaid diagrams in `docs/PRODUCTION_DEPLOYMENT.md` to use separate lanes for Twilio platform, CORTEGE webhook, CORTEGE agent pipeline, and LLM. (Skills: athena, project-documentation-system)
+- [2026-03-20 16:11] T-003: Update the PRD Twilio summary and verify the new lane labels exist in the guide. (Skills: athena)
+
+IN PROGRESS
+None.
+
+NEXT
+- Implement `twilio_number` on household records and wire the Twilio webhook to resolve `household_id` from `To`. (Skills: athena)
+
+NOTES
+- Scope is docs-only; this clarifies ownership boundaries in the diagrams and does not change runtime behavior.
+- The diagrams now make these boundaries explicit:
+  - `Twilio Platform` = Twilio-managed call handling
+  - `CORTEGE Webhook` = `POST /ingest/twilio/voice`
+  - `CORTEGE Agent Pipeline` = event routing + companion processing
+  - `LLM` = optional downstream call from the agent pipeline, not from Twilio
+- Commands run:
+  - `date '+%Y-%m-%d %H:%M'` -> `2026-03-20 16:07`
+  - `rg -n "Twilio Platform|CORTEGE Webhook|CORTEGE Agent Pipeline|LLM|Legend:" docs/PRODUCTION_DEPLOYMENT.md docs/specs/working-demo-with-twilio/spec.md docs/specs/working-demo-with-twilio/tasks.md docs/PRD.md` -> PASS

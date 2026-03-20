@@ -40,3 +40,4 @@ Start here:
 | README Localhost Validation Artifacts | [`specs/20260320-readme-localhost-artifacts/spec.md`](specs/20260320-readme-localhost-artifacts/spec.md) | Document the localhost Cypress artifact workflow in `README.md` and check in the current local changes |
 | Live Feed Household Data | [`specs/20260320-live-feed-household-data/spec.md`](specs/20260320-live-feed-household-data/spec.md) | Fix hard-coded live-feed members and stale companion activity inherited from pre-creation history |
 | Live Feed Patch Release | [`specs/20260320-live-feed-patch-release/spec.md`](specs/20260320-live-feed-patch-release/spec.md) | Check in the live-feed bugfix, update `README.md`, and publish a new patch release |
+| Twilio Docs Publication | [`specs/20260320-twilio-docs-publication/spec.md`](specs/20260320-twilio-docs-publication/spec.md) | Commit and push the Twilio household-number doc rewrite and clarified diagrams |
