@@ -568,9 +568,9 @@ Tasks: docs/specs/20260319-design-branch-push/tasks.md
 Goal: Add a detailed shipped-change summary and push the current `design` branch to `origin`.
 
 DONE
+- [2026-03-19 17:11] T-001: Add detailed shipped-change summary to ATHENA progress log and push `design` to `origin`. (Skills: athena)
 
 IN PROGRESS
-- [2026-03-19 17:10] T-001: Add detailed shipped-change summary to ATHENA progress log and push `design` to `origin`. (Skills: athena)
 
 NEXT
 
@@ -581,3 +581,6 @@ NOTES
   - Git hygiene work ignored the specific generated backup artifact `data/cortege.db.backup.1773876131352` without broadening ignore scope.
   - Verification already completed for the shipped frontend work: `npm test` passed (135 pass / 0 fail / 3 skipped), `npm run build` passed, and the Vite-origin API path returned 200 for `/api/household`.
   - Local traceability commits already created for the implementation and follow-up docs: `afc57db`, `8c5444a`, `d0f1c94`, `d082916`.
+  - Publication commit created with detailed shipped summary: `1b11268`.
+- Commands run: `git push origin design` → pushed `design` to `origin/design`
+- Remote push range: `16a6896..1b11268`
