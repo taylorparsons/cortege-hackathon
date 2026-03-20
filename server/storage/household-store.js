@@ -6,6 +6,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import {
+  decryptHouseholdName,
+  decryptMemberFromStorage,
+  encryptHouseholdName,
+  encryptMemberForStorage,
+} from '../privacy/pii.js';
 
 export class HouseholdStore {
   constructor(dataDir = 'data/households') {
@@ -15,31 +21,34 @@ export class HouseholdStore {
     }
   }
 
-  async createHousehold({ name, location, address }) {
+  async createHousehold({ name, location_id = null, location = null, address = null }) {
     const household = {
       household_id: `hh_${randomUUID().slice(0, 8)}`,
       name,
+      location_id,
       location,
-      address: address ?? null,
+      address,
       created: new Date().toISOString(),
-      members: []
+      members: [],
     };
-    
+
     const filepath = path.join(this.dataDir, `${household.household_id}.json`);
-    fs.writeFileSync(filepath, JSON.stringify(household, null, 2));
-    
-    return household;
+    fs.writeFileSync(filepath, JSON.stringify(this._encodeHousehold(household), null, 2));
+
+    return this.getHousehold(household.household_id);
   }
 
   async listHouseholds() {
     const files = fs.readdirSync(this.dataDir).filter(f => f.endsWith('.json'));
     return files.map(f => {
       const data = JSON.parse(fs.readFileSync(path.join(this.dataDir, f), 'utf8'));
+      const household = this._decodeHousehold(data);
       return {
-        household_id: data.household_id,
-        name: data.name,
-        location: data.location,
-        member_count: data.members?.length ?? 0
+        household_id: household.household_id,
+        name: household.name,
+        location_id: household.location_id ?? null,
+        location: household.location ?? null,
+        member_count: household.members?.length ?? 0
       };
     });
   }
@@ -49,19 +58,19 @@ export class HouseholdStore {
     if (!fs.existsSync(filepath)) {
       throw new Error(`Household ${householdId} not found`);
     }
-    return JSON.parse(fs.readFileSync(filepath, 'utf8'));
+    return this._decodeHousehold(JSON.parse(fs.readFileSync(filepath, 'utf8')));
   }
 
   async updateHousehold(householdId, updates) {
     const household = await this.getHousehold(householdId);
-    const allowed = ['name', 'location', 'address'];
-    for (const key of allowed) {
-      if (updates[key] !== undefined) household[key] = updates[key];
-    }
+    if (updates.name !== undefined) household.name = updates.name;
+    if (updates.location_id !== undefined) household.location_id = updates.location_id;
+    if (updates.location !== undefined) household.location = updates.location;
+    if (updates.address !== undefined) household.address = updates.address;
     household.updated_at = new Date().toISOString();
     const filepath = path.join(this.dataDir, `${householdId}.json`);
-    fs.writeFileSync(filepath, JSON.stringify(household, null, 2));
-    return household;
+    fs.writeFileSync(filepath, JSON.stringify(this._encodeHousehold(household), null, 2));
+    return this.getHousehold(householdId);
   }
 
   async deleteHousehold(householdId) {
@@ -70,6 +79,13 @@ export class HouseholdStore {
       throw new Error(`Household ${householdId} not found`);
     }
     fs.unlinkSync(filepath);
+  }
+
+  async findHouseholdsByLocationId(locationId) {
+    if (!locationId) return [];
+
+    const households = await this.listHouseholds();
+    return households.filter((household) => household.location_id === locationId);
   }
 
   async addMember(householdId, memberData) {
@@ -89,7 +105,7 @@ export class HouseholdStore {
     household.members.push(member);
     
     const filepath = path.join(this.dataDir, `${householdId}.json`);
-    fs.writeFileSync(filepath, JSON.stringify(household, null, 2));
+    fs.writeFileSync(filepath, JSON.stringify(this._encodeHousehold(household), null, 2));
     
     return member;
   }
@@ -102,13 +118,21 @@ export class HouseholdStore {
       throw new Error(`Member ${memberId} not found in household ${householdId}`);
     }
     
-    const allowedMember = ['name', 'date_of_birth', 'profile_type', 'companion', 'phone'];
+    const allowedMember = [
+      'name',
+      'date_of_birth',
+      'profile_type',
+      'companion',
+      'phone',
+      'is_primary',
+      'primary_contact',
+    ];
     for (const key of allowedMember) {
       if (updates[key] !== undefined) member[key] = updates[key];
     }
 
     const filepath = path.join(this.dataDir, `${householdId}.json`);
-    fs.writeFileSync(filepath, JSON.stringify(household, null, 2));
+    fs.writeFileSync(filepath, JSON.stringify(this._encodeHousehold(household), null, 2));
     
     return member;
   }
@@ -124,6 +148,32 @@ export class HouseholdStore {
     household.members.splice(index, 1);
     
     const filepath = path.join(this.dataDir, `${householdId}.json`);
-    fs.writeFileSync(filepath, JSON.stringify(household, null, 2));
+    fs.writeFileSync(filepath, JSON.stringify(this._encodeHousehold(household), null, 2));
+  }
+
+  _decodeHousehold(raw) {
+    return {
+      household_id: raw.household_id,
+      name: decryptHouseholdName(raw),
+      location_id: raw.location_id ?? null,
+      location: raw.location ?? null,
+      address: raw.address ?? null,
+      created: raw.created,
+      updated_at: raw.updated_at ?? null,
+      members: (raw.members ?? []).map((member) => decryptMemberFromStorage(member)),
+    };
+  }
+
+  _encodeHousehold(household) {
+    return {
+      household_id: household.household_id,
+      name_enc: encryptHouseholdName(household.name),
+      location_id: household.location_id ?? null,
+      location: household.location ?? null,
+      address: household.address ?? null,
+      created: household.created,
+      updated_at: household.updated_at ?? null,
+      members: (household.members ?? []).map((member) => encryptMemberForStorage(member)),
+    };
   }
 }

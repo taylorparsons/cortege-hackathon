@@ -12,6 +12,8 @@ import { EventSimulator } from '../ingestion/simulator.js';
 import { Scheduler } from './scheduler.js';
 import { EXTERNAL_EVENT_TYPES } from './event-bus.js';
 import { HouseholdStore } from '../storage/household-store.js';
+import { LocationStore } from '../storage/location-store.js';
+import { ensurePiiReady } from '../privacy/pii.js';
 
 // ---------------------------------------------------------------------------
 // Orchestrator
@@ -26,6 +28,7 @@ export class Orchestrator {
     this.eventBus = eventBus;
     this.scheduler = null;
     this.householdStore = null;
+    this.locationStore = null;
     this.enableHouseholdStore = options.enableHouseholdStore ?? false;
   }
 
@@ -40,6 +43,8 @@ export class Orchestrator {
    * @returns {Promise<Orchestrator>}  this, for chaining
    */
   async start(ws) {
+    ensurePiiReady();
+
     // 1. Load household
     const householdPath = path.resolve('data/household.json');
     const householdData = loadHousehold(householdPath);
@@ -49,6 +54,7 @@ export class Orchestrator {
     // 1.5. Initialize household store if enabled
     if (this.enableHouseholdStore) {
       this.householdStore = new HouseholdStore('data/households');
+      this.locationStore = new LocationStore('data/locations');
       console.log('[orchestrator] Household store initialized');
     }
 

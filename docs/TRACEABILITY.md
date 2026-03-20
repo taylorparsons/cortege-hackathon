@@ -28,3 +28,4 @@ Start here:
 | Gitignore Backup File | [`specs/20260319-gitignore-backup-file/spec.md`](specs/20260319-gitignore-backup-file/spec.md) | Ignore the requested local SQLite backup artifact |
 | Design Branch Push | [`specs/20260319-design-branch-push/spec.md`](specs/20260319-design-branch-push/spec.md) | Add detailed shipped summary and push the current design branch |
 | Add Household Feature | [`specs/20260319-add-household-feature/spec.md`](specs/20260319-add-household-feature/spec.md) | Multi-household management with CRUD API, selector UI, migration |
+| PII Encryption + Location Model | [`specs/20260320-pii-encryption-location-model/spec.md`](specs/20260320-pii-encryption-location-model/spec.md) | Encrypt household/member/location PII, add `location_id`, and sanitize logs + LLM calls |

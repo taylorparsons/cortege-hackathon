@@ -6,6 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import StorageAdapter from '../storage/storage-adapter.js';
+import { sanitizeMemoryForLLM } from '../privacy/pii.js';
 
 const adapter = new StorageAdapter();
 
@@ -171,6 +172,10 @@ export class MemoryStore {
    */
   serialize() {
     return JSON.stringify(this.memory, null, 2);
+  }
+
+  serializeForLLM(context = {}) {
+    return JSON.stringify(sanitizeMemoryForLLM(this.memory, context), null, 2);
   }
 
   // -------------------------------------------------------------------------

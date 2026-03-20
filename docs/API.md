@@ -20,32 +20,42 @@ Base URL: `http://localhost:3001`
 
 ### GET /api/household
 
-Returns the household members array.
+Returns the default household view. With the household/location store enabled, this is the first available household (or `DEFAULT_HOUSEHOLD_ID`) expanded with decrypted location details.
 
 **Query Parameters:** None
 
 **Response:**
 ```json
-[
-  {
-    "id": "member-001",
-    "name": "Dorothy Chen",
-    "age": 78,
-    "role": "grandmother",
-    "phone": "+1-555-0101",
-    "email": "dorothy.chen@example.com",
-    "agents": ["anchor"]
+{
+  "household_id": "hh_abc12345",
+  "name": "Smith Family",
+  "location_id": "loc_abc12345",
+  "location_name": "Smith Family Home",
+  "address_summary": "Austin, TX, US",
+  "location_details": {
+    "location_id": "loc_abc12345",
+    "name": "Smith Family Home",
+    "address": {
+      "line1": "123 Main St",
+      "line2": null,
+      "city": "Austin",
+      "region": "TX",
+      "postal_code": "78701",
+      "country": "US"
+    }
   },
-  {
-    "id": "member-002",
-    "name": "Marcus Chen",
-    "age": 45,
-    "role": "son",
-    "phone": "+1-555-0102",
-    "email": "marcus.chen@example.com",
-    "agents": ["sentinel"]
-  }
-]
+  "members": [
+    {
+      "id": "member_001",
+      "name": "Alice Smith",
+      "phone": "+14155550101",
+      "date_of_birth": "1948-04-12",
+      "profile_type": "senior",
+      "companion": "anchor",
+      "is_primary": true
+    }
+  ]
+}
 ```
 
 **Example:**
@@ -709,14 +719,16 @@ Creates a new household.
 | Field | Type | Required | Description |
 |---|---|---|---|
 | name | string | Yes | Household name |
-| location | string | No | Location (defaults to "Unknown") |
+| location_id | string | Yes | Existing saved location ID |
 
 **Response:** `201 Created`
 ```json
 {
   "household_id": "hh_abc12345",
   "name": "Smith Family",
-  "location": "Austin, TX",
+  "location_id": "loc_abc12345",
+  "location_name": "Smith Family Home",
+  "address_summary": "Austin, TX, US",
   "created": "2026-03-19T10:00:00.000Z",
   "members": []
 }
@@ -726,7 +738,36 @@ Creates a new household.
 ```bash
 curl -X POST http://localhost:3001/api/households \
   -H "Content-Type: application/json" \
-  -d '{"name":"Smith Family","location":"Austin, TX"}'
+  -d '{"name":"Smith Family","location_id":"loc_abc12345"}'
+```
+
+---
+
+### POST /api/locations
+
+Creates a new saved location.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| name | string | Yes | User-facing location name |
+| address | object | Yes | Structured address object |
+
+**Response:** `201 Created`
+```json
+{
+  "location_id": "loc_abc12345",
+  "name": "Smith Family Home",
+  "address": {
+    "line1": "123 Main St",
+    "line2": null,
+    "city": "Austin",
+    "region": "TX",
+    "postal_code": "78701",
+    "country": "US"
+  },
+  "address_summary": "Austin, TX, US"
+}
 ```
 
 ---
@@ -741,7 +782,9 @@ Lists all households (summary view).
   {
     "household_id": "hh_abc12345",
     "name": "Smith Family",
-    "location": "Austin, TX",
+    "location_id": "loc_abc12345",
+    "location_name": "Smith Family Home",
+    "address_summary": "Austin, TX, US",
     "member_count": 3
   }
 ]
@@ -758,13 +801,16 @@ Gets a specific household with full details including members.
 {
   "household_id": "hh_abc12345",
   "name": "Smith Family",
-  "location": "Austin, TX",
+  "location_id": "loc_abc12345",
+  "location_name": "Smith Family Home",
+  "address_summary": "Austin, TX, US",
   "created": "2026-03-19T10:00:00.000Z",
   "members": [
     {
       "id": "member_001",
       "name": "John Smith",
-      "age": 45,
+      "phone": "+14155550123",
+      "date_of_birth": "1980-04-12",
       "profile_type": "adult",
       "companion": "sentinel",
       "is_primary": true
@@ -777,13 +823,13 @@ Gets a specific household with full details including members.
 
 ### PUT /api/households/:id
 
-Updates household metadata (name, location).
+Updates household metadata (name, `location_id`).
 
 **Request Body:**
 | Field | Type | Required | Description |
 |---|---|---|---|
 | name | string | No | New household name |
-| location | string | No | New location |
+| location_id | string | No | New saved location ID |
 
 ---
 
@@ -809,7 +855,8 @@ Adds a member to a household.
 | Field | Type | Required | Description |
 |---|---|---|---|
 | name | string | Yes | Member name |
-| age | number | No | Member age |
+| phone | string | Yes | Member phone in E.164 format |
+| date_of_birth | string | No | Date of birth in `YYYY-MM-DD` format |
 | profile_type | string | Yes | "adult", "senior", or "child" |
 | companion | string | Yes | "sentinel", "anchor", or "scout" |
 | is_primary | boolean | No | Primary household contact |
@@ -819,10 +866,39 @@ Adds a member to a household.
 {
   "id": "member_abc123",
   "name": "Alice Smith",
-  "age": 35,
+  "phone": "+14155550123",
+  "date_of_birth": "1989-02-10",
   "profile_type": "adult",
   "companion": "sentinel",
   "is_primary": false
+}
+```
+
+---
+
+### DELETE /api/locations/:id
+
+Deletes a saved location when no households still reference it.
+
+**Response:** `200 OK`
+```json
+{
+  "deleted": true,
+  "location_id": "loc_abc12345"
+}
+```
+
+**Conflict Response:** `409 Conflict`
+```json
+{
+  "error": "Location is still referenced by households",
+  "location_id": "loc_abc12345",
+  "households": [
+    {
+      "household_id": "hh_abc12345",
+      "name": "Smith Family"
+    }
+  ]
 }
 ```
 
@@ -863,5 +939,5 @@ For issues or questions:
 
 ---
 
-**Last Updated:** 2026-03-18  
-**Sources:** CR-20260318-1700; D-20260318-1700; SPEC-20260318-sqlite-auditability
+**Last Updated:** 2026-03-20  
+**Sources:** CR-20260318-1700; D-20260318-1700; CR-20260320-1147; D-20260320-1147; CR-20260320-1203; D-20260320-1203

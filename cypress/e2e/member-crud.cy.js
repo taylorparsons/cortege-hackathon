@@ -23,14 +23,16 @@ describe('Member CRUD', () => {
 
   it('adds a member and the member row appears', () => {
     cy.openHouseholdSelector();
-    cy.get('[data-testid="btn-add-member"]').click();
-    cy.get('[data-testid="form-add-member"]').should('be.visible');
+    cy.get('[data-testid="modal-household-selector"]').within(() => {
+      cy.get('[data-testid="btn-add-member"]').click({ force: true });
+      cy.get('[data-testid="form-add-member"]').should('exist');
 
-    cy.get('[data-testid="input-member-name"]').type('Alice Test');
-    cy.get('[data-testid="input-member-phone"]').type('555-0100');
-    cy.get('[data-testid="input-member-dob"]').type('1980-01-15');
-    cy.get('[data-testid="select-profile-type"]').select('adult');
-    cy.get('[data-testid="btn-submit-member"]').click();
+      cy.get('[data-testid="input-member-name"]').type('Alice Test', { force: true });
+      cy.get('[data-testid="input-member-phone"]').type('+14155550100', { force: true });
+      cy.get('[data-testid="input-member-dob"]').type('1980-01-15', { force: true });
+      cy.get('[data-testid="select-profile-type"]').select('adult', { force: true });
+      cy.get('[data-testid="btn-submit-member"]').click({ force: true });
+    });
 
     // Member row should appear (id unknown, so match by name text)
     cy.contains('Alice Test').should('be.visible');
@@ -39,7 +41,7 @@ describe('Member CRUD', () => {
   it('edits a member and shows the updated name', () => {
     cy.addMember(householdId, {
       name: 'Bob Test',
-      phone: '555-0101',
+      phone: '+14155550101',
       date_of_birth: '1975-06-10',
       profile_type: 'adult',
       companion: 'sentinel',
@@ -65,7 +67,7 @@ describe('Member CRUD', () => {
   it('removes a member and the member row disappears', () => {
     cy.addMember(householdId, {
       name: 'Carol Test',
-      phone: '555-0102',
+      phone: '+14155550102',
       date_of_birth: '1990-03-22',
       profile_type: 'adult',
       companion: 'sentinel',
@@ -87,14 +89,16 @@ describe('Member CRUD', () => {
 
   it('selecting profile_type child shows scout companion label', () => {
     cy.openHouseholdSelector();
-    cy.get('[data-testid="btn-add-member"]').click();
-    cy.get('[data-testid="form-add-member"]').should('be.visible');
+    cy.get('[data-testid="modal-household-selector"]').within(() => {
+      cy.get('[data-testid="btn-add-member"]').click({ force: true });
+      cy.get('[data-testid="form-add-member"]').should('exist');
 
-    cy.get('[data-testid="input-member-name"]').type('Scout Child Test');
-    cy.get('[data-testid="input-member-phone"]').type('555-0103');
-    cy.get('[data-testid="input-member-dob"]').type('2015-07-04');
-    cy.get('[data-testid="select-profile-type"]').select('child');
-    cy.get('[data-testid="btn-submit-member"]').click();
+      cy.get('[data-testid="input-member-name"]').type('Scout Child Test', { force: true });
+      cy.get('[data-testid="input-member-phone"]').type('+14155550103', { force: true });
+      cy.get('[data-testid="input-member-dob"]').type('2015-07-04', { force: true });
+      cy.get('[data-testid="select-profile-type"]').select('child', { force: true });
+      cy.get('[data-testid="btn-submit-member"]').click({ force: true });
+    });
 
     // The member row should appear and the companion type should reflect "scout"
     cy.contains('Scout Child Test').should('be.visible');

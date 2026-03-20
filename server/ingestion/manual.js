@@ -5,6 +5,7 @@
 
 import { Router } from 'express';
 import { ALL_EVENT_TYPES, generateEventId } from '../orchestrator/event-bus.js';
+import { redactForLogs } from '../privacy/pii.js';
 
 // ---------------------------------------------------------------------------
 // Factory
@@ -55,6 +56,7 @@ export function createManualRouter(eventBus) {
     try {
       eventBus.emit(coreEvent);
     } catch (err) {
+      console.warn('[manual] Event rejected:', redactForLogs(coreEvent));
       return res.status(400).json({ error: err.message });
     }
 

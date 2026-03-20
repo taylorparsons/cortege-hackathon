@@ -139,6 +139,19 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [specs/20260319-add-household-feature/spec.md](specs/20260319-add-household-feature/spec.md) (Status: Done)
 - Tasks: [specs/20260319-add-household-feature/tasks.md](specs/20260319-add-household-feature/tasks.md)
 
+## Privacy-First Household Data (Sources: [CR-20260320-1147](requests.md#cr-20260320-1147); [D-20260320-1147](decisions.md#d-20260320-1147); [CR-20260320-1203](requests.md#cr-20260320-1203); [D-20260320-1203](decisions.md#d-20260320-1203))
+- Household records SHALL reference locations by `location_id` instead of using `location` as the primary location model
+- Location records SHALL store encrypted location name and encrypted structured address
+- The API SHALL support full location CRUD, including guarded delete semantics for referenced locations
+- Member records SHALL store encrypted full name, encrypted phone, and encrypted date of birth at rest
+- Deterministic phone tokens SHALL support equality lookup without persisting plaintext phone values
+- External LLM calls SHALL use sanitized event and memory payloads with aliases instead of raw PII
+- Server logs and error messages SHALL redact or tokenize PII so cleartext phone, address, date of birth, and full name are not emitted
+- Trusted household/location/member read paths MAY return decrypted values to the UI, but persistence, logs, and external calls SHALL use protected forms
+- The UI SHALL provide location list, edit, and guarded delete flows, and SHALL support household reassignment before location deletion
+- Spec: [specs/20260320-pii-encryption-location-model/spec.md](specs/20260320-pii-encryption-location-model/spec.md)
+- Tasks: [specs/20260320-pii-encryption-location-model/tasks.md](specs/20260320-pii-encryption-location-model/tasks.md)
+
 ## Playwright E2E Tests — SHIPPED (Sources: [CR-20260320-1000](requests.md#cr-20260320-1000), [CR-20260320-1100](requests.md#cr-20260320-1100))
 - @playwright/test@1.58.2 installed; `test:e2e:pw` script added to package.json
 - playwright.config.js: webServer auto-starts backend (3001) and frontend (5173), workers: 1 to serialize

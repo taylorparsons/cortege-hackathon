@@ -109,15 +109,36 @@ Click **"Switch Household"** in the nav bar to open the household selector. Crea
 ### Creating Households via API
 
 ```bash
+# Create a named location
+LOCATION_ID=$(curl -s -X POST http://localhost:3001/api/locations \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Family A Home",
+    "address": {
+      "line1": "123 Main St",
+      "line2": null,
+      "city": "New York",
+      "region": "NY",
+      "postal_code": "10001",
+      "country": "US"
+    }
+  }' | jq -r '.location_id')
+
 # Create a household
 curl -X POST http://localhost:3001/api/households \
   -H 'Content-Type: application/json' \
-  -d '{"name": "Family A", "location": "New York"}'
+  -d "{\"name\": \"Family A\", \"location_id\": \"$LOCATION_ID\"}"
 
 # Add a member
 curl -X POST http://localhost:3001/api/households/<id>/members \
   -H 'Content-Type: application/json' \
-  -d '{"name": "Alex", "age": 14, "profileType": "child", "companion": "scout"}'
+  -d '{
+    "name": "Alex",
+    "phone": "+14155550123",
+    "date_of_birth": "2012-05-14",
+    "profile_type": "child",
+    "companion": "scout"
+  }'
 ```
 
 ### Migrating from Legacy Format

@@ -6,6 +6,7 @@
 import { callClaude } from '../claude/claude-client.js';
 import { parseAgentResponse, SUBMIT_ASSESSMENT_TOOL } from '../claude/response-schema.js';
 import { MemoryStore } from './memory-store.js';
+import { sanitizeEventForLLM } from '../privacy/pii.js';
 
 export class AgentInstance {
   /**
@@ -145,14 +146,15 @@ export class AgentInstance {
 
     // Build Claude prompt — split for prompt caching
     const templateBody = this.systemPrompt;
-    const memoryText = this.memoryStore.serialize();
+    const piiContext = {
+      member: {
+        id: this.memberId,
+        name: this.memberName,
+      },
+    };
+    const memoryText = this.memoryStore.serializeForLLM(piiContext);
 
-    const userMessage = JSON.stringify({
-      event_type: event.type,
-      event_id: event.id,
-      payload: event.payload,
-      timestamp: event.timestamp,
-    });
+    const userMessage = JSON.stringify(sanitizeEventForLLM(event, piiContext));
 
     // Model override from agent template frontmatter
     const model = this.config?.model ?? undefined;
