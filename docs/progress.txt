@@ -816,16 +816,19 @@ Tasks: docs/specs/20260320-main-branch-push/tasks.md
 Goal: Commit the pending README/docs alignment work, merge the verified feature branch into `main`, and push `origin/main`.
 
 DONE
+- [2026-03-20 13:45] T-001: Capture the publication request in ATHENA docs and prepare the merge/push sequence. (Skills: athena, finishing-a-development-branch)
+- [2026-03-20 13:46] T-002: Commit the pending README/docs alignment changes on `feature/pii-encryption-location-model`. (Skills: athena)
+- [2026-03-20 13:48] T-003: Merge `feature/pii-encryption-location-model` into local `main` and re-run `npm test` on the merged branch. (Skills: athena, verification-before-completion)
 
 IN PROGRESS
-- T-001: Capture the publication request in ATHENA docs and prepare the merge/push sequence. (Skills: athena, finishing-a-development-branch)
+None.
 
 NEXT
-- Commit the pending README/docs alignment changes on `feature/pii-encryption-location-model`
-- Merge `feature/pii-encryption-location-model` into local `main`
-- Re-run `npm test` on merged `main`
 - Push local `main` to `origin`
 
 NOTES
 - Fresh verification before publication: `npm test` → PASS (`162` passing, `3` skipped) on `feature/pii-encryption-location-model`
 - Merge base with `main`: `eb9b869ab73787fced0e74a3566e27ba6006f78a`
+- README/publication traceability commit on feature branch: `34de8ee`
+- Local merge commit on `main`: `640a466`
+- Fresh verification after merge: `npm test` → PASS (`162` passing, `3` skipped) on `main`
