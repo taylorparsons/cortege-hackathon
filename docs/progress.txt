@@ -553,3 +553,4 @@ NEXT
 NOTES
 - Requested scope is exact-file ignore only; no broader ignore pattern added
 - Commands run: `git check-ignore -v data/cortege.db.backup.1773876131352` → ignored by `.gitignore:19`
+- Commit: d0f1c94f04781f72c902fe2cbb060a8b5ae2e7e1 (T-001 ignore requested SQLite backup artifact)
