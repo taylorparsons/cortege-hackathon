@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiUrl } from "../lib/backend-url.js";
 
 const EVENT_TYPES = [
@@ -8,12 +8,6 @@ const EVENT_TYPES = [
   "financial_transaction",
   "contact_request",
   "login_attempt",
-];
-
-const MEMBERS = [
-  { id: "member_001", label: "member_001 — Alex" },
-  { id: "member_002", label: "member_002 — Mom" },
-  { id: "member_003", label: "member_003 — Taylor" },
 ];
 
 const EXAMPLE_PAYLOADS = {
@@ -57,12 +51,32 @@ const EXAMPLE_PAYLOADS = {
 /**
  * EventInjector — Manually inject CoreEvents into the backend.
  */
-export function EventInjector() {
+export function EventInjector({ members = [] }) {
+  const memberOptions = useMemo(() => (
+    Array.isArray(members)
+      ? members.map((member) => ({
+          id: member.id,
+          label: `${member.id} — ${member.name}`,
+        }))
+      : []
+  ), [members]);
+
   const [type, setType]           = useState(EVENT_TYPES[0]);
-  const [target, setTarget]       = useState(MEMBERS[0].id);
+  const [target, setTarget]       = useState(memberOptions[0]?.id ?? '');
   const [payloadStr, setPayloadStr] = useState(JSON.stringify(EXAMPLE_PAYLOADS[EVENT_TYPES[0]], null, 2));
   const [status, setStatus]       = useState(null); // null | { ok, msg }
   const [loading, setLoading]     = useState(false);
+
+  useEffect(() => {
+    if (memberOptions.length === 0) {
+      setTarget('');
+      return;
+    }
+
+    if (!memberOptions.some((member) => member.id === target)) {
+      setTarget(memberOptions[0].id);
+    }
+  }, [memberOptions, target]);
 
   function handleTypeChange(newType) {
     setType(newType);
@@ -85,7 +99,7 @@ export function EventInjector() {
     const event = {
       type,
       source: "manual_injection",
-      target_member: target,
+      target_member: target || null,
       timestamp: new Date().toISOString(),
       payload,
     };
@@ -129,7 +143,13 @@ export function EventInjector() {
       <div>
         <label style={labelStyle}>Target Member</label>
         <select value={target} onChange={e => setTarget(e.target.value)} style={selectStyle}>
-          {MEMBERS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+          {memberOptions.length === 0 ? (
+            <option value="">No household members available</option>
+          ) : (
+            memberOptions.map((member) => (
+              <option key={member.id} value={member.id}>{member.label}</option>
+            ))
+          )}
         </select>
       </div>
 

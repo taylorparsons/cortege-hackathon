@@ -529,3 +529,33 @@ check in all changes locally, update the readme.md with the localhost test with 
 Notes:
 - User wants one local commit containing the current uncommitted work
 - README should show the localhost Cypress validation flow with linked screenshot and video artifacts
+
+## CR-20260320-1515
+Date: 2026-03-20 15:15
+Source: chat
+Decision: [D-20260320-1515](decisions.md#d-20260320-1515)
+Spec: [`specs/20260320-live-feed-household-data/spec.md`](specs/20260320-live-feed-household-data/spec.md)
+
+Request (verbatim):
+found a bug on the new profile for Sam Dodge the Silent Activity log is not correct this account was just created
+[Image #1]
+[Image #2] live feed is hard coded to inject events
+
+Notes:
+- User reports a newly created member showing stale historical entries in the companion detail "Silent Activity Log"
+- User also reports the Live Feed event injector still showing hard-coded default members instead of the selected household members
+- User explicitly said not to worry about backward compatibility for this bug-fix path
+
+## CR-20260320-1719
+Date: 2026-03-20 17:19
+Source: chat
+Decision: [D-20260320-1719](decisions.md#d-20260320-1719)
+Spec: [`specs/20260320-live-feed-patch-release/spec.md`](specs/20260320-live-feed-patch-release/spec.md)
+
+Request (verbatim):
+check it in, update readme.md and patch the last release on remote
+
+Notes:
+- User wants the current live-feed bugfix checked in locally
+- README should be updated again to reflect the latest shipped live-feed and companion-identity behavior
+- Remote release should be patched after verification

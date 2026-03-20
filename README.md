@@ -97,6 +97,7 @@ Agents evolve through four maturity stages:
 - **Event Simulator** - Demo scenarios (default)
 - **Manual API** - POST /api/events for testing
 - **Twilio Webhook** - Real phone call integration (see [Production Deployment](docs/PRODUCTION_DEPLOYMENT.md))
+- **Live Feed event injector** - Targets the currently selected household members instead of the legacy hard-coded demo defaults
 
 ## 🏠 Household Management
 
@@ -173,6 +174,14 @@ The current household data model is privacy-first:
 - Logs and external LLM calls use redacted or aliased values instead of raw PII
 
 For production deployments, set a strong `PII_MASTER_KEY`. In development, the server falls back to a dev-only key if it is unset.
+
+### Stable Companion Identity
+
+Companion runtime instances are keyed by the stable `member.id`, not by the member display name. That matters for demo reliability:
+
+- A newly created `Sam Dodge` does not inherit another `Sam Dodge`'s old memory or activity
+- Live companion activity starts from that member's actual creation time
+- The selected-household Live Feed and Household detail surfaces stay aligned to the same member identity
 
 ## 🛠️ Development
 
@@ -410,7 +419,7 @@ npm run test:integration
 With the backend on `http://localhost:3001` and the frontend on `http://localhost:5173`, rerun the current household/member demo review path with:
 
 ```bash
-npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js
+npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js,cypress/e2e/live-feed.cy.js
 ```
 
 That run writes reviewer-friendly artifacts to `cypress/screenshots/` and `cypress/videos/`.
@@ -428,6 +437,14 @@ Representative videos from the same run:
 
 - [Member CRUD run video](cypress/videos/member-crud.cy.js.mp4)
 - [Companion cards run video](cypress/videos/companion-cards.cy.js.mp4)
+- [Live Feed run video](cypress/videos/live-feed.cy.js.mp4)
+
+Latest live-feed proof points from the current localhost run:
+
+- [Live Feed screenshot](cypress/screenshots/live-feed.cy.js/Live%20Feed%20--%20event%20injector%20target%20list%20uses%20the%20selected%20household%20members.png)
+- [Live Feed activity API screenshot](cypress/screenshots/live-feed.cy.js/Live%20Feed%20--%20newly%20created%20companions%20start%20with%20an%20empty%20activity%20API%20response.png)
+
+![Live Feed localhost screenshot](cypress/screenshots/live-feed.cy.js/Live%20Feed%20--%20event%20injector%20target%20list%20uses%20the%20selected%20household%20members.png)
 
 ### Creating New Agents
 

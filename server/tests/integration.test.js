@@ -218,9 +218,23 @@ describe('Agent hot-reload (EC6)', () => {
     const templates = loadTemplates(path.resolve('agents'));
     const instances = createInstances(templates, MEMBERS);
     assert.equal(instances.size, 3);
-    assert.ok(instances.has('anchor-mom'));
-    assert.ok(instances.has('scout-alex'));
-    assert.ok(instances.has('sentinel-taylor'));
+    assert.ok(instances.has('anchor-member_002'));
+    assert.ok(instances.has('scout-member_001'));
+    assert.ok(instances.has('sentinel-member_003'));
+  });
+
+  test('createInstances keys instances by member id, not display name', () => {
+    const templates = loadTemplates(path.resolve('agents'));
+    const duplicateNames = [
+      { id: 'member_a', name: 'Sam Dodge', profile_type: 'adult', companion: 'sentinel', is_primary: false },
+      { id: 'member_b', name: 'Sam Dodge', profile_type: 'adult', companion: 'sentinel', is_primary: false },
+    ];
+
+    const instances = createInstances(templates, duplicateNames);
+
+    assert.equal(instances.size, 2);
+    assert.ok(instances.has('sentinel-member_a'));
+    assert.ok(instances.has('sentinel-member_b'));
   });
 
   test('loadTemplates can be called twice (simulating hot-reload)', () => {

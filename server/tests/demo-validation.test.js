@@ -208,8 +208,8 @@ describe('10.3.3 Memory viewer API contract', () => {
       { id: 'member_002', name: 'Mom', profile_type: 'senior', companion: 'anchor', is_primary: false },
     ]);
 
-    const instance = instances.get('anchor-mom');
-    assert.ok(instance, 'Expected anchor-mom instance');
+    const instance = instances.get('anchor-member_002');
+    assert.ok(instance, 'Expected anchor-member_002 instance');
 
     instance.initMemory('/tmp');
     const status = instance.getStatus();

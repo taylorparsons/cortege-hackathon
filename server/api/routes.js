@@ -134,6 +134,18 @@ async function ensureActiveCompanionHousehold(orchestrator, householdId) {
   await orchestrator.activateHousehold(householdId);
 }
 
+function getCompanionCreatedAt(instance) {
+  const createdAt =
+    instance?.getStatus?.()?.createdAt ??
+    instance?.memoryStore?.getMemory?.()?.created ??
+    instance?.memory?.created ??
+    null;
+
+  if (!createdAt) return null;
+  const timestamp = Date.parse(createdAt);
+  return Number.isNaN(timestamp) ? null : timestamp;
+}
+
 // ---------------------------------------------------------------------------
 // createApiRouter
 // ---------------------------------------------------------------------------
@@ -656,11 +668,18 @@ export function createApiRouter(orchestrator) {
 
       const limit = Math.min(parseInt(req.query.limit ?? '20', 10) || 20, 200);
       const memberId = instance.getMemberId();
+      const companionCreatedAt = getCompanionCreatedAt(instance);
 
       // Read events and filter to those targeting this member (or broadcast events)
       const allEvents = readRecentEvents(limit * 5); // over-fetch then filter
       const memberEvents = allEvents
         .filter((e) => !e.target_member || e.target_member === memberId)
+        .filter((e) => {
+          if (!companionCreatedAt) return true;
+          const eventTimestamp = Date.parse(e.timestamp);
+          if (Number.isNaN(eventTimestamp)) return false;
+          return eventTimestamp >= companionCreatedAt;
+        })
         .slice(0, limit);
 
       res.json(memberEvents);

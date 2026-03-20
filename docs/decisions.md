@@ -788,3 +788,40 @@ Acceptance / test:
 - `README.md` documents the localhost Cypress run and links to generated screenshots/videos
 - Targeted verification reruns the localhost Cypress specs and confirms the artifact files exist
 - A local Git commit captures all current changes
+
+## D-20260320-1515
+Date: 2026-03-20 15:15
+Inputs: [CR-20260320-1515](requests.md#cr-20260320-1515)
+PRD: [Live Feed Household Data](PRD.md#live-feed-household-data-sources-cr-20260320-1515-d-20260320-1515)
+Spec: [`specs/20260320-live-feed-household-data/spec.md`](specs/20260320-live-feed-household-data/spec.md)
+
+Decision:
+Treat the Live Feed and companion-detail views as household-scoped runtime surfaces. Replace the hard-coded event-injector member list with members from the selected household, and prevent companion activity APIs from showing pre-existing global history that predates the selected companion.
+
+Rationale:
+- The current event injector is plainly wrong because it still renders the original static demo members regardless of the selected household
+- The current companion activity route over-reads the global event log and includes broadcast history that existed before a newly created companion was provisioned
+- For the demo, the correct behavior is to show only household-relevant member choices and only activity that belongs to that companion after it existed
+
+Acceptance / test:
+- Live Feed shows the selected household’s actual members in the event-injector target dropdown
+- A newly created companion does not show stale historical activity from before its creation
+
+## D-20260320-1719
+Date: 2026-03-20 17:19
+Inputs: [CR-20260320-1719](requests.md#cr-20260320-1719)
+PRD: [Live Feed Patch Release](PRD.md#live-feed-patch-release-sources-cr-20260320-1719-d-20260320-1719)
+Spec: [`specs/20260320-live-feed-patch-release/spec.md`](specs/20260320-live-feed-patch-release/spec.md)
+
+Decision:
+Treat this as a patch release from the current verified `main`. Update `README.md` to document the live-feed injector/member-identity fix and the new localhost artifact coverage, then ship a new `v0.3.1` release on GitHub instead of rewriting the existing `v0.3.0` release.
+
+Rationale:
+- The current changes are additive bug fixes on top of an already published `v0.3.0`, which fits a semver patch release better than mutating the old release
+- The README should reflect the latest live-feed behavior because that bug directly affected the demo workflow
+- Publishing a new patch release preserves a clean release history and avoids rewriting the previous release record
+
+Acceptance / test:
+- `README.md` documents the live-feed household-scoping fix and localhost artifact coverage
+- The verified local changes are committed
+- A `v0.3.1` GitHub release exists for the current `main`

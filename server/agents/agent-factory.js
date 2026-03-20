@@ -75,7 +75,6 @@ export function createInstances(templates, members) {
   const instances = new Map();
 
   for (const member of members) {
-    const memberName = member.name.toLowerCase();
     let matchedName = null;
     let matchedTemplate = null;
 
@@ -112,7 +111,7 @@ export function createInstances(templates, members) {
       continue;
     }
 
-    const instanceId = `${matchedName}-${memberName}`;
+    const instanceId = `${matchedName}-${member.id}`;
     const instance = new AgentInstance({
       id: instanceId,
       agentName: matchedName,

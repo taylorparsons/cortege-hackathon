@@ -222,6 +222,22 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [specs/20260320-readme-localhost-artifacts/spec.md](specs/20260320-readme-localhost-artifacts/spec.md)
 - Tasks: [specs/20260320-readme-localhost-artifacts/tasks.md](specs/20260320-readme-localhost-artifacts/tasks.md)
 
+## Live Feed Household Data (Sources: [CR-20260320-1515](requests.md#cr-20260320-1515); [D-20260320-1515](decisions.md#d-20260320-1515))
+- The Live Feed event injector SHALL derive target members from the currently selected household instead of a hard-coded default member list
+- Companion activity queries SHALL exclude events that predate the selected companion’s creation time
+- Verification SHALL cover the dynamic event-injector member list and the empty initial activity state for a newly created companion
+- Evidence: `src/components/EventInjector.jsx`, `src/Cortege.jsx`, `server/api/routes.js`, `cypress/e2e/live-feed.cy.js`, `server/tests/companion-activity.test.js`
+- Spec: [specs/20260320-live-feed-household-data/spec.md](specs/20260320-live-feed-household-data/spec.md)
+- Tasks: [specs/20260320-live-feed-household-data/tasks.md](specs/20260320-live-feed-household-data/tasks.md)
+
+## Live Feed Patch Release (Sources: [CR-20260320-1719](requests.md#cr-20260320-1719); [D-20260320-1719](decisions.md#d-20260320-1719))
+- `README.md` SHALL describe the live-feed target-member fix and the stable companion identity behavior that prevents same-name members from inheriting old activity
+- The current live-feed bugfix changes SHALL be checked in locally after verification
+- A new `v0.3.1` patch release SHALL be published from the verified `main` branch
+- Evidence: `README.md`, `RELEASE-0.3.1.md`, `package.json`, `docs/progress.txt`
+- Spec: [specs/20260320-live-feed-patch-release/spec.md](specs/20260320-live-feed-patch-release/spec.md)
+- Tasks: [specs/20260320-live-feed-patch-release/tasks.md](specs/20260320-live-feed-patch-release/tasks.md)
+
 ## Playwright E2E Tests — SHIPPED (Sources: [CR-20260320-1000](requests.md#cr-20260320-1000), [CR-20260320-1100](requests.md#cr-20260320-1100))
 - @playwright/test@1.58.2 installed; `test:e2e:pw` script added to package.json
 - playwright.config.js: webServer auto-starts backend (3001) and frontend (5173), workers: 1 to serialize

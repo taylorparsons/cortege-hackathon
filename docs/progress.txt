@@ -1097,3 +1097,82 @@ NOTES
   - `npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js` -> PASS (9 passing, 0 failing, 9 screenshots, 2 videos)
   - Artifact files verified at `cypress/screenshots/member-crud.cy.js/`, `cypress/screenshots/companion-cards.cy.js/`, `cypress/videos/member-crud.cy.js.mp4`, and `cypress/videos/companion-cards.cy.js.mp4`
 - Commit: pending local check-in at end of session; traceability is captured in the commit message for this slice and the related household/editor/phone/companion/artifact/docs features.
+
+---
+
+Session: 2026-03-20 16:35
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, systematic-debugging, test-driven-development, verification-before-completion
+Feature: 20260320-live-feed-household-data
+Input: CR-20260320-1515
+Decisions: D-20260320-1515
+Spec: docs/specs/20260320-live-feed-household-data/spec.md
+Tasks: docs/specs/20260320-live-feed-household-data/tasks.md
+Goal: Fix stale companion activity and hard-coded live-feed member targeting for the selected household.
+
+DONE
+- [2026-03-20 16:35] T-001: Capture the live-feed household-scoping bug in ATHENA docs and add failing regression coverage for the event-injector member list and the new-companion empty activity state. (Skills: athena, systematic-debugging, test-driven-development)
+- [2026-03-20 16:45] T-002: Replace the hard-coded event-injector member list with selected-household members and filter companion activity to exclude events before companion creation. (Skills: athena, systematic-debugging, test-driven-development)
+- [2026-03-20 16:55] T-003: Re-key companion instances by `member.id` so new same-name members do not inherit old memory/activity, then rerun targeted API and Cypress verification. (Skills: athena, systematic-debugging, test-driven-development, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Root causes confirmed:
+  - `src/components/EventInjector.jsx` still used a hard-coded `Alex / Mom / Taylor` member array instead of the selected household.
+  - `GET /api/companions/:id/activity` read the global event log and included historical broadcast/targeted events that predated a companion.
+  - In the live server, name-based instance IDs like `sentinel-sam dodge` reused prior memory files, so a newly created same-name member inherited stale creation time and activity context.
+- RED verification:
+  - `node --test server/tests/companion-activity.test.js` -> FAIL with old broadcast/targeted events leaking into a new companion’s activity
+  - `npx cypress run --spec cypress/e2e/live-feed.cy.js` -> FAIL on hard-coded injector members and stale activity response
+  - `node --test server/tests/integration.test.js server/tests/demo-validation.test.js` -> FAIL after test updates until `createInstances()` stopped keying by member name
+- GREEN verification:
+  - `node --test server/tests/companion-activity.test.js` -> PASS
+  - `node --test server/tests/integration.test.js server/tests/demo-validation.test.js` -> PASS (39 passing, 1 skipped)
+  - `npx cypress run --spec cypress/e2e/live-feed.cy.js` -> PASS (4 passing, 0 failing)
+  - `npm run build` -> PASS
+- Implementation details:
+  - `EventInjector` now receives `household.members` from `src/Cortege.jsx` and derives the target dropdown dynamically.
+  - `server/api/routes.js` now filters companion activity to events at or after the companion creation timestamp.
+  - `server/agents/agent-factory.js` now keys instances and memory files by `member.id`, preventing same-name household members from inheriting previous runtime state.
+
+---
+
+Session: 2026-03-20 17:25
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, project-documentation-system, verification-before-completion
+Feature: 20260320-live-feed-patch-release
+Input: CR-20260320-1719
+Decisions: D-20260320-1719
+Spec: docs/specs/20260320-live-feed-patch-release/spec.md
+Tasks: docs/specs/20260320-live-feed-patch-release/tasks.md
+Goal: Check in the live-feed bugfix, update README/release notes, and publish a patch release.
+
+DONE
+- [2026-03-20 17:25] T-001: Update `README.md`, release notes, and version metadata for the live-feed patch release. (Skills: athena, project-documentation-system)
+
+IN PROGRESS
+None.
+
+NEXT
+- T-002: Run fresh verification for the live-feed bugfix plus existing household/member flows, then create the local check-in commit. (Skills: athena, verification-before-completion)
+- T-003: Publish the verified patch release as `v0.3.1` on GitHub. (Skills: athena, verification-before-completion)
+
+NOTES
+- README updates:
+  - documents the selected-household Live Feed injector behavior
+  - documents stable companion identity by `member.id`
+  - adds `live-feed.cy.js` artifacts to the localhost Cypress review section
+- Release metadata updates:
+  - `package.json` bumped from `0.3.0` to `0.3.1`
+  - `RELEASE-0.3.1.md` created for the patch release notes
+- Verification:
+  - `npm test` -> PASS (`164` passing, `3` skipped)
+  - `npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js,cypress/e2e/live-feed.cy.js` -> PASS (`13` passing, `0` failing)
+  - `npm run build` -> PASS

@@ -979,7 +979,7 @@ export default function Cortege() {
                 </div>
                 <div className="live-panel">
                   <div className="live-panel-title">Event Injector</div>
-                  <EventInjector />
+                  <EventInjector members={household?.members ?? []} />
                 </div>
               </div>
             </>
