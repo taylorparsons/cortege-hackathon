@@ -11,19 +11,22 @@ import { EscalationHandler } from '../escalation/escalation-handler.js';
 import { EventSimulator } from '../ingestion/simulator.js';
 import { Scheduler } from './scheduler.js';
 import { EXTERNAL_EVENT_TYPES } from './event-bus.js';
+import { HouseholdStore } from '../storage/household-store.js';
 
 // ---------------------------------------------------------------------------
 // Orchestrator
 // ---------------------------------------------------------------------------
 
 export class Orchestrator {
-  constructor() {
+  constructor(options = {}) {
     this.household = null;
     this.agentInstances = new Map();
     this.agentFactory = null;
     this.simulator = null;
     this.eventBus = eventBus;
     this.scheduler = null;
+    this.householdStore = null;
+    this.enableHouseholdStore = options.enableHouseholdStore ?? false;
   }
 
   // ---------------------------------------------------------------------------
@@ -42,6 +45,12 @@ export class Orchestrator {
     const householdData = loadHousehold(householdPath);
     this.household = householdData.members;
     console.log(`[orchestrator] Loaded household "${householdData.name}" with ${this.household.length} member(s)`);
+
+    // 1.5. Initialize household store if enabled
+    if (this.enableHouseholdStore) {
+      this.householdStore = new HouseholdStore('data/households');
+      console.log('[orchestrator] Household store initialized');
+    }
 
     // 2. Load agent templates
     const agentsDir = path.resolve('agents');

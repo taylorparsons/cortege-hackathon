@@ -24,7 +24,9 @@ async function main() {
   const httpServer = http.createServer(app);
 
   // 3. Create orchestrator (needed before ws so we can pass it)
-  const orchestrator = new Orchestrator();
+  const orchestrator = new Orchestrator({
+    enableHouseholdStore: true
+  });
 
   // 4. Create WebSocket server
   const { ws } = createWebSocketServer(httpServer, orchestrator);
