@@ -554,3 +554,30 @@ NOTES
 - Requested scope is exact-file ignore only; no broader ignore pattern added
 - Commands run: `git check-ignore -v data/cortege.db.backup.1773876131352` → ignored by `.gitignore:19`
 - Commit: d0f1c94f04781f72c902fe2cbb060a8b5ae2e7e1 (T-001 ignore requested SQLite backup artifact)
+
+---
+
+Session: 2026-03-19 17:09
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena
+Feature: 20260319-design-branch-push
+Input: CR-20260319-1709
+Spec: docs/specs/20260319-design-branch-push/spec.md
+Tasks: docs/specs/20260319-design-branch-push/tasks.md
+Goal: Add a detailed shipped-change summary and push the current `design` branch to `origin`.
+
+DONE
+
+IN PROGRESS
+- [2026-03-19 17:10] T-001: Add detailed shipped-change summary to ATHENA progress log and push `design` to `origin`. (Skills: athena)
+
+NEXT
+
+NOTES
+- Detailed shipped summary for recent work:
+  - Frontend API integration removed hardcoded mock household/companion data from the main UI and replaced it with live API-backed state, live detail fetches, and WebSocket-driven updates.
+  - Frontend dev connectivity fixed the local-development transport contract by replacing hardcoded absolute backend URLs with same-origin-relative paths, adding a shared transport helper, adding Vite proxy rules for `/api`, `/ingest`, and `/ws`, and adding `npm run server` so local startup instructions match the actual backend entrypoint.
+  - Git hygiene work ignored the specific generated backup artifact `data/cortege.db.backup.1773876131352` without broadening ignore scope.
+  - Verification already completed for the shipped frontend work: `npm test` passed (135 pass / 0 fail / 3 skipped), `npm run build` passed, and the Vite-origin API path returned 200 for `/api/household`.
+  - Local traceability commits already created for the implementation and follow-up docs: `afc57db`, `8c5444a`, `d0f1c94`, `d082916`.

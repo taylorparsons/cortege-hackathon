@@ -122,6 +122,12 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Spec: [`specs/20260319-gitignore-backup-file/spec.md`](specs/20260319-gitignore-backup-file/spec.md)
 - Tasks: [`specs/20260319-gitignore-backup-file/tasks.md`](specs/20260319-gitignore-backup-file/tasks.md)
 
+## Branch Publication (Sources: [CR-20260319-1709](requests.md#cr-20260319-1709))
+- Add a detailed shipped-change summary to `docs/progress.txt` for the recent frontend dev-connectivity and Git hygiene work
+- Push the current `design` branch to `origin`
+- Spec: [`specs/20260319-design-branch-push/spec.md`](specs/20260319-design-branch-push/spec.md)
+- Tasks: [`specs/20260319-design-branch-push/tasks.md`](specs/20260319-design-branch-push/tasks.md)
+
 ## Next / Backlog
 - Execute working demo tasks from [working demo spec](specs/working-demo-with-twilio/tasks.md)
 - Wire Twilio webhook to event bus (Phase 3)

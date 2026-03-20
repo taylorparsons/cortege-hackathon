@@ -252,3 +252,10 @@ Source: chat
 
 Request (verbatim):
 add this to .gitignore data/cortege.db.backup.1773876131352
+
+## CR-20260319-1709
+Date: 2026-03-19 17:09
+Source: chat
+
+Request (verbatim):
+add detailed commennt and what has changed and push it to remote on the design branch
