@@ -692,3 +692,76 @@ Request (verbatim):
 Notes:
 - Continuation of the household fraud-case demo feature
 - User explicitly wants a clean local commit plus README links to the current captured videos and screenshots
+
+## CR-20260321-0801
+Date: 2026-03-21 08:01
+Source: chat
+Decision: [D-20260321-0801](decisions.md#d-20260321-0801)
+Spec: [`specs/20260321-deck-pptx-export/spec.md`](specs/20260321-deck-pptx-export/spec.md)
+
+Request (verbatim):
+Create a deck.pptx PowerPoint file from the existing reveal.js presentation at deck.html (repo root:
+/Volumes/T9/code/cortege-hackathon/deck.html). Read that file for the exact content. Use the python-pptx library. Match the design:
+
+- Dark background (#111009), amber accent (#E8A838), teal (#4ECDC4), light text (#F0EAD8)
+- Fonts: Cormorant Garamond for headings, Outfit for body (fall back to system fonts if needed)
+- 8 slides, content exactly as in deck.html:
+  a. Title: "CORTEGE" + subtitle "AI Security Companions for Every Household" + names (Taylor Parsons, Rich Rosenthal, Jennifer McKinney) +
+  repo link
+  b. The Problem: "$64B" stat, grandparent scam quote, 77% daily exposure stats, source line
+  c. The Solution: 3 agent cards (ANCHOR/senior, SENTINEL/adult, SCOUT/teen)
+  d. How It Learns: 4-stage pipeline (Baseline → Pattern Recognition → Predictive → Cortege Mode) + L0-L4 escalation bar
+  e. Live Product: embed 3 screenshots from cypress/screenshots/ (household editor, fraud case, companion cards)
+  f. Platform Not Just an App: architecture diagram (Twilio → Event Bus → Orchestrator → Claude/Memory/Escalation → SQLite)
+  g. Production Signals: 8 badges (PII encryption, hash chain, L0-L4, 174 tests, 64% cost reduction, Twilio, multi-household, audit log)
+  h. The Business: 130M households, $64B losses, 3→N agent types, start/expand/moat narrative + repo link
+
+Screenshot paths for slide 5:
+- cypress/screenshots/household-crud.cy.js/Household CRUD -- saves Twilio routing numbers and primary member from the household editor.png
+- cypress/screenshots/fraud-case-demo.cy.js/Fraud Case Demo -- creates a household fraud case from a recent Twilio call and one evidence item.png
+- cypress/screenshots/companion-cards.cy.js/Companion Cards -- shows companion cards for the selected household members.png
+
+Save to deck.pptx in the repo root.
+
+Notes:
+- Follow-up approval: `do it`
+- The reveal.js source file already exists at repo root as `deck.html`
+
+## CR-20260321-0815
+Date: 2026-03-21 08:15
+Source: chat
+Decision: [D-20260321-0815](decisions.md#d-20260321-0815)
+Spec: [`specs/20260321-pptx-codex-skill/spec.md`](specs/20260321-pptx-codex-skill/spec.md)
+
+Request (verbatim):
+create a new skill for codex that I can use in the future for any pptx
+
+Notes:
+- The request is for a reusable Codex skill, not a repo-specific one-off script
+- The installed Codex skill directory in this environment is `/Users/taylorparsons/.codex/skills`
+
+## CR-20260321-0820
+Date: 2026-03-21 08:20
+Source: chat
+Decision: [D-20260321-0820](decisions.md#d-20260321-0820)
+Spec: [`specs/20260321-pptx-codex-skill/spec.md`](specs/20260321-pptx-codex-skill/spec.md)
+
+Request (verbatim):
+include the scripts needed to use the skill so that part is done
+
+Notes:
+- Follow-up to the just-installed global Codex PPTX skill
+- The user wants the skill to include executable helpers, not only written guidance
+
+## CR-20260321-0826
+Date: 2026-03-21 08:26
+Source: chat
+Decision: [D-20260321-0826](decisions.md#d-20260321-0826)
+Spec: [`specs/20260321-proprietary-license/spec.md`](specs/20260321-proprietary-license/spec.md)
+
+Request (verbatim):
+for the git project add a liscense that this is not open source, and all rights are reserved
+
+Notes:
+- The repository is already marked `"private": true` in `package.json` but does not yet declare an explicit proprietary license notice.
+- The request is to make the non-open-source status explicit in repo files.

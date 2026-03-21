@@ -312,3 +312,21 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - 8 implementation phases, estimated 7.5 days (1.5 weeks)
 - Migration strategy: dual-write mode → verify → cutover → deprecate JSON files
 - Backward compatibility maintained during migration
+
+## PowerPoint Deck Export (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
+- The repo SHALL include a reproducible Python workflow that generates [`deck.pptx`](../deck.pptx) from [`deck.html`](../deck.html) using `python-pptx`. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
+- The generated PowerPoint SHALL contain 8 slides whose copy matches the current reveal.js source content in [`deck.html`](../deck.html). (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
+- The generated PowerPoint SHALL match the existing visual system closely using native slide background, typography targets, accent colors, cards, badges, and diagram shapes, with font fallback when the requested fonts are unavailable. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
+- The live-product slide SHALL embed the three existing Cypress screenshots already referenced by the reveal.js presentation. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801))
+- Verification SHALL run the generator and inspect the resulting `.pptx` for slide count, representative text, and embedded media. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
+
+## Global Codex PPTX Skill (Sources: [CR-20260321-0815](requests.md#cr-20260321-0815); [D-20260321-0815](decisions.md#d-20260321-0815))
+- A reusable global Codex skill SHALL be installed at `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md` for future PowerPoint-generation work. (Sources: [CR-20260321-0815](requests.md#cr-20260321-0815); [D-20260321-0815](decisions.md#d-20260321-0815))
+- The skill SHALL guide editable-first PPTX generation with `python-pptx`, including source-of-truth reading, design-token extraction, native slide construction, asset embedding, and verification. (Sources: [CR-20260321-0815](requests.md#cr-20260321-0815); [D-20260321-0815](decisions.md#d-20260321-0815))
+- Verification SHALL confirm the installed skill file exists in the global Codex skill directory after creation. (Sources: [CR-20260321-0815](requests.md#cr-20260321-0815); [D-20260321-0815](decisions.md#d-20260321-0815))
+- The global skill SHALL include reusable helper scripts for PPTX scaffolding and artifact inspection under its own `scripts/` directory. (Sources: [CR-20260321-0820](requests.md#cr-20260321-0820); [D-20260321-0820](decisions.md#d-20260321-0820))
+
+## Repository Licensing (Sources: [CR-20260321-0826](requests.md#cr-20260321-0826); [D-20260321-0826](decisions.md#d-20260321-0826))
+- The repository SHALL include a top-level `LICENSE` file stating that the project is proprietary, not open source, and all rights are reserved. (Sources: [CR-20260321-0826](requests.md#cr-20260321-0826); [D-20260321-0826](decisions.md#d-20260321-0826))
+- `package.json` SHALL declare `"license": "UNLICENSED"` to keep package metadata aligned with the proprietary repository status. (Sources: [CR-20260321-0826](requests.md#cr-20260321-0826); [D-20260321-0826](decisions.md#d-20260321-0826))
+- `README.md` SHALL explicitly state that the project is not open source and that all rights are reserved. (Sources: [CR-20260321-0826](requests.md#cr-20260321-0826); [D-20260321-0826](decisions.md#d-20260321-0826))

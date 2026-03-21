@@ -42,3 +42,6 @@ Start here:
 | Live Feed Patch Release | [`specs/20260320-live-feed-patch-release/spec.md`](specs/20260320-live-feed-patch-release/spec.md) | Check in the live-feed bugfix, update `README.md`, and publish a new patch release |
 | Twilio Docs Publication | [`specs/20260320-twilio-docs-publication/spec.md`](specs/20260320-twilio-docs-publication/spec.md) | Commit and push the Twilio household-number doc rewrite and clarified diagrams |
 | Household Fraud Case Demo | [`specs/20260320-household-fraud-case-demo/spec.md`](specs/20260320-household-fraud-case-demo/spec.md) | Pivot the hackathon demo to a household-scoped fraud case built from a live call plus one manual evidence item |
+| PowerPoint Deck Export | [`specs/20260321-deck-pptx-export/spec.md`](specs/20260321-deck-pptx-export/spec.md) | Generate a native PowerPoint deck from `deck.html` with the shipped screenshots embedded |
+| Global Codex PPTX Skill | [`specs/20260321-pptx-codex-skill/spec.md`](specs/20260321-pptx-codex-skill/spec.md) | Install a reusable global Codex skill for future PPTX generation work |
+| Repository Licensing | [`specs/20260321-proprietary-license/spec.md`](specs/20260321-proprietary-license/spec.md) | Declare the repo as proprietary, not open source, and all rights reserved |

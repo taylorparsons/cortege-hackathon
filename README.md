@@ -653,7 +653,8 @@ See [PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) for details.
 
 ## 📄 License
 
-No license is specified yet.
+This project is proprietary, not open source, and all rights are reserved. See
+[`LICENSE`](LICENSE).
 
 ## 🙏 Acknowledgments
 

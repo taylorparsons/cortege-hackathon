@@ -1022,3 +1022,92 @@ Acceptance / test:
 - `README.md` documents the exact Cypress localhost suite and links to the generated screenshots/videos
 - `data/fraud-cases/` is gitignored
 - The working tree is committed cleanly after final verification
+
+## D-20260321-0801
+Date: 2026-03-21 08:01
+Inputs: [CR-20260321-0801](requests.md#cr-20260321-0801)
+PRD: [PowerPoint Deck Export](PRD.md#powerpoint-deck-export-sources-cr-20260321-0801-d-20260321-0801)
+Spec: [`specs/20260321-deck-pptx-export/spec.md`](specs/20260321-deck-pptx-export/spec.md)
+
+Decision:
+Generate the PowerPoint as native `python-pptx` slides and shapes from the content in `deck.html`, rather than rasterizing the HTML into slide images.
+
+Rationale:
+- The user explicitly asked for `python-pptx`.
+- A native slide deck remains editable in PowerPoint and keeps screenshots, text, and layout elements separable.
+- Reproducing the reveal.js presentation approximately with PowerPoint primitives is sufficient for the requested design match without introducing an HTML rendering dependency.
+- Fonts may fall back at open time if the local PowerPoint environment does not have `Cormorant Garamond` or `Outfit`; the generator should still target those families.
+
+Alternatives considered:
+- Export the HTML deck as screenshots and embed one image per slide (rejected: fast, but not editable and does not meaningfully use `python-pptx`)
+- Attempt full HTML/CSS rendering inside PowerPoint generation (rejected: brittle and unnecessary for this deck)
+
+Acceptance / test:
+- A repo-local Python generator creates `deck.pptx` with 8 slides, key text copied from `deck.html`, and embedded screenshot media for the live-product slide.
+
+## D-20260321-0815
+Date: 2026-03-21 08:15
+Inputs: [CR-20260321-0815](requests.md#cr-20260321-0815)
+PRD: [Global Codex PPTX Skill](PRD.md#global-codex-pptx-skill-sources-cr-20260321-0815-d-20260321-0815)
+Spec: [`specs/20260321-pptx-codex-skill/spec.md`](specs/20260321-pptx-codex-skill/spec.md)
+
+Decision:
+Create a global Codex skill under `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md` that teaches a reusable, editable-first `python-pptx` workflow for future presentation tasks.
+
+Rationale:
+- The user asked for something reusable in future Codex sessions, which implies installation in the global Codex skill directory instead of only this repo.
+- The recently added deck-export workflow provides a concrete pattern worth generalizing: source fidelity first, native slide primitives, explicit theme tokens, media embedding, and output verification.
+- A skill should encode decision rules and verification, not just copy one repo’s script.
+
+Alternatives considered:
+- Keep the guidance only in this repo (rejected: not reusable across future sessions)
+- Create a skill tied only to reveal.js-to-PowerPoint conversion (rejected: too narrow for “any pptx”)
+
+Acceptance / test:
+- The new skill exists at `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md`
+- The skill frontmatter and content clearly guide future PPTX tasks and reference verification expectations
+
+## D-20260321-0820
+Date: 2026-03-21 08:20
+Inputs: [CR-20260321-0820](requests.md#cr-20260321-0820)
+PRD: [Global Codex PPTX Skill](PRD.md#global-codex-pptx-skill-sources-cr-20260321-0815-d-20260321-0815)
+Spec: [`specs/20260321-pptx-codex-skill/spec.md`](specs/20260321-pptx-codex-skill/spec.md)
+
+Decision:
+Extend the global PPTX skill with reusable helper scripts: one scaffold script that creates starter build/test files in the current repo, and one inspection script that validates a generated `.pptx` artifact.
+
+Rationale:
+- A skill that only describes a workflow still leaves repetitive setup work for future sessions.
+- Scaffolding and inspection are the two recurring tasks that are broad enough to reuse across deck projects without hard-coding one repo's slide content.
+- Keeping the scripts inside the global skill directory makes the skill self-contained and directly usable.
+
+Alternatives considered:
+- Embed large code blocks only in `SKILL.md` (rejected: less reusable, harder to invoke)
+- Ship one monolithic generator script (rejected: too opinionated for “any pptx” use case)
+
+Acceptance / test:
+- The global skill directory contains helper scripts under `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/`
+- The skill text references those scripts and their intended usage
+
+## D-20260321-0826
+Date: 2026-03-21 08:26
+Inputs: [CR-20260321-0826](requests.md#cr-20260321-0826)
+PRD: [Repository Licensing](PRD.md#repository-licensing-sources-cr-20260321-0826-d-20260321-0826)
+Spec: [`specs/20260321-proprietary-license/spec.md`](specs/20260321-proprietary-license/spec.md)
+
+Decision:
+Implement the request by adding a repo-root `LICENSE` file with a proprietary "All Rights Reserved" notice, marking `package.json` as `UNLICENSED`, and updating the README license section to state that the project is not open source.
+
+Rationale:
+- A top-level `LICENSE` file is the clearest repository-wide statement of rights and restrictions.
+- `package.json` metadata should match the repo-wide legal notice for tooling and package consumers.
+- The README should make the status visible to human readers without requiring them to inspect metadata files.
+
+Alternatives considered:
+- Rely only on `"private": true` in `package.json` (rejected: private publication status is not the same as an explicit license notice)
+- Add only a `LICENSE` file and leave existing README/package metadata unchanged (rejected: inconsistent signals across the repo)
+
+Acceptance / test:
+- `LICENSE` states the project is proprietary, not open source, and all rights are reserved
+- `package.json` contains `"license": "UNLICENSED"`
+- `README.md` license section matches the proprietary status

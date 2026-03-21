@@ -1521,3 +1521,145 @@ NOTES
   - `npm test` -> PASS (`174` passing, `3` skipped)
   - `npm run build` -> PASS
   - `npx cypress run --spec cypress/e2e/navigation.cy.js,cypress/e2e/household-crud.cy.js,cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js,cypress/e2e/live-feed.cy.js,cypress/e2e/fraud-case-demo.cy.js` -> PASS (`24` passing across `6` specs)
+
+---
+
+Session: 2026-03-21 08:01
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, brainstorming, test-driven-development, verification-before-completion
+Feature: 20260321-deck-pptx-export
+Input: CR-20260321-0801
+Decisions: D-20260321-0801
+Spec: docs/specs/20260321-deck-pptx-export/spec.md
+Tasks: docs/specs/20260321-deck-pptx-export/tasks.md
+Goal: Generate `deck.pptx` from `deck.html` with `python-pptx`, matching the current reveal.js slide copy and visual system closely enough for presentation use.
+
+DONE
+- [2026-03-21 08:05] T-001: Capture the deck-export request in ATHENA docs and write the feature spec/tasks for the PowerPoint workflow. (Skills: athena, brainstorming)
+- [2026-03-21 08:06] T-002: Add a failing verification test for the deck export workflow before implementing the generator, and verify RED. (Skills: athena, test-driven-development)
+- [2026-03-21 08:08] T-003: Implement the `python-pptx` generator and create `deck.pptx` in the repo root. (Skills: athena, test-driven-development)
+- [2026-03-21 08:09] T-004: Run final verification for the generated deck and confirm the artifact exists. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+
+NOTES
+- Local Python dependency setup:
+  - `python3 -m venv .venv && .venv/bin/pip install python-pptx Pillow` -> PASS
+- RED verification:
+  - `.venv/bin/python -m unittest scripts/test_build_deck_pptx.py` -> FAIL (`scripts/build_deck_pptx.py` missing)
+- GREEN verification:
+  - `.venv/bin/python -m unittest scripts/test_build_deck_pptx.py` -> PASS (`1` test, `0` failures)
+  - `ls -lh deck.pptx` -> PASS (`571K`)
+- Implementation details:
+  - Added `scripts/build_deck_pptx.py` to build a native 8-slide PowerPoint deck with native text, shapes, diagram primitives, badges, and embedded screenshots.
+  - Added `scripts/test_build_deck_pptx.py` to verify slide count, representative source text, and embedded media in the generated `.pptx`.
+  - The generator reads `deck.html` and fails fast if the expected source-deck snippets are missing, so the workflow stays coupled to the current reveal.js deck copy.
+- Working tree note:
+  - Unrelated pre-existing untracked items remained in the repo (`public/`, `e2e/demo-recording.spec.js`, `playwright.demo.config.js`, `demo/playwright-results/`) and were left untouched.
+
+---
+
+Session: 2026-03-21 08:15
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, writing-skills, verification-before-completion
+Feature: 20260321-pptx-codex-skill
+Input: CR-20260321-0815
+Decisions: D-20260321-0815
+Spec: docs/specs/20260321-pptx-codex-skill/spec.md
+Tasks: docs/specs/20260321-pptx-codex-skill/tasks.md
+Goal: Install a reusable global Codex skill for future PPTX generation work.
+
+DONE
+- [2026-03-21 08:16] T-001: Capture the reusable Codex PPTX-skill request in ATHENA docs and create the feature spec/tasks. (Skills: athena, writing-skills)
+- [2026-03-21 08:17] T-002: Install the new global Codex skill at `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md`. (Skills: writing-skills)
+- [2026-03-21 08:17] T-003: Verify the installed skill file exists and is readable in the global Codex skill directory. (Skills: verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+
+NOTES
+- Install step:
+  - `install -d /Users/taylorparsons/.codex/skills/pptx-presentation-builder`
+  - `cat > /Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md <<'EOF' ... EOF` -> PASS
+- Verification:
+  - `sed -n '1,220p' /Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md` -> PASS
+  - `test -r /Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md && echo readable` -> PASS (`readable`)
+  - `ls -ld /Users/taylorparsons/.codex/skills/pptx-presentation-builder /Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md` -> PASS
+- Skill scope:
+  - The installed skill is intentionally broad enough for HTML/markdown/screenshots/spec-driven deck work, but still opinionated toward editable native `python-pptx` output and explicit verification.
+
+---
+
+Session: 2026-03-21 08:26
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, verification-before-completion
+Feature: 20260321-proprietary-license
+Input: CR-20260321-0826
+Decisions: D-20260321-0826
+Spec: docs/specs/20260321-proprietary-license/spec.md
+Tasks: docs/specs/20260321-proprietary-license/tasks.md
+Goal: Add an explicit proprietary license notice so the repository is clearly not open source and all rights are reserved.
+
+DONE
+- [2026-03-21 08:26] T-001: Capture the proprietary-license request in ATHENA docs and create the feature spec/tasks. (Skills: athena)
+- [2026-03-21 08:26] T-002: Add the proprietary `LICENSE` notice and align `package.json` and `README.md` with the non-open-source status. (Skills: athena)
+- [2026-03-21 08:26] T-003: Verify the repo files consistently declare the project as proprietary and unlicensed for open-source use. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+
+NOTES
+- Implementation:
+  - Added repo-root `LICENSE` with a proprietary "All rights reserved" notice.
+  - Updated `package.json` to declare `"license": "UNLICENSED"`.
+  - Replaced the README placeholder license note with an explicit non-open-source statement.
+- Verification:
+  - `rg -n "UNLICENSED|All rights reserved|not open source|proprietary" LICENSE README.md package.json` -> PASS
+  - `python3 -m json.tool package.json >/dev/null && echo package.json-ok` -> PASS (`package.json-ok`)
+  - `git diff -- LICENSE README.md package.json docs/requests.md docs/decisions.md docs/TRACEABILITY.md docs/PRD.md docs/progress.txt docs/specs/20260321-proprietary-license/spec.md docs/specs/20260321-proprietary-license/tasks.md` -> PASS
+
+---
+
+Session: 2026-03-21 08:20
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, writing-skills, verification-before-completion
+Feature: 20260321-pptx-codex-skill
+Input: CR-20260321-0820
+Decisions: D-20260321-0820
+Spec: docs/specs/20260321-pptx-codex-skill/spec.md
+Tasks: docs/specs/20260321-pptx-codex-skill/tasks.md
+Goal: Extend the global PPTX Codex skill with helper scripts so it is directly usable for future PPTX work.
+
+DONE
+- [2026-03-21 08:26] T-004: Add reusable scaffold and inspection scripts to the global PPTX skill and update `SKILL.md` to reference them. (Skills: writing-skills)
+- [2026-03-21 08:26] T-005: Verify the helper scripts by smoke-testing scaffolded output and checking a real `.pptx` artifact. (Skills: verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+
+NOTES
+- Installed helpers under `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/`:
+  - `scaffold_pptx_workflow.py`
+  - `inspect_pptx.py`
+- Verification:
+  - `find /Users/taylorparsons/.codex/skills/pptx-presentation-builder -maxdepth 2 -type f | sort` -> PASS
+  - `python3 /Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/inspect_pptx.py /Volumes/T9/code/cortege-hackathon/deck.pptx --expect-slides 8 --expect-media-min 3 --expect-text CORTEGE --expect-text '174 passing tests'` -> PASS
+  - `python3 /Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/scaffold_pptx_workflow.py --slug smoke_deck --output smoke_deck.pptx --force` in `/private/tmp/pptx-skill-smoke` -> PASS
+  - `/Volumes/T9/code/cortege-hackathon/.venv/bin/python scripts/build_smoke_deck_pptx.py` in `/private/tmp/pptx-skill-smoke` -> PASS
+  - `/Volumes/T9/code/cortege-hackathon/.venv/bin/python -m unittest scripts/test_build_smoke_deck_pptx.py` in `/private/tmp/pptx-skill-smoke` -> PASS (`1` test)
+- Fixes made during verification:
+  - Corrected the scaffold template source-guard so it does not fail by default before a real source file is wired in.
+  - Corrected the scaffolded unittest template so the generated failure message keeps escaped `\\n` sequences instead of emitting an invalid multiline f-string.
