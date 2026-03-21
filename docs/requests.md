@@ -778,3 +778,16 @@ check in a push to remote
 Notes:
 - Current local work includes the deck-export workflow, proprietary-license updates, and ATHENA docs for the March 21 changes.
 - The repo root also contains a duplicate renamed PPTX export and an Office lock file that are not referenced by the repo specs.
+
+## CR-20260321-0836
+Date: 2026-03-21 08:36
+Source: chat
+Decision: [D-20260321-0836](decisions.md#d-20260321-0836)
+Spec: [`specs/20260321-pptx-artifact-swap/spec.md`](specs/20260321-pptx-artifact-swap/spec.md)
+
+Request (verbatim):
+use this cortege-AI-Agents-Week-long-Hack.pptx  and remove the demo.pptx
+
+Notes:
+- There is no `demo.pptx` file in the repo.
+- The current tracked PPTX artifacts are `deck.pptx` and `cortege-AI-Agents-Week-long-Hack.pptx`.

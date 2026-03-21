@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "build_deck_pptx.py"
-OUTPUT = ROOT / "deck.pptx"
+OUTPUT = ROOT / "cortege-AI-Agents-Week-long-Hack.pptx"
 
 
 class BuildDeckPptxTest(unittest.TestCase):
@@ -27,7 +27,10 @@ class BuildDeckPptxTest(unittest.TestCase):
             0,
             msg=f"deck build failed\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}",
         )
-        self.assertTrue(OUTPUT.exists(), "deck.pptx was not created")
+        self.assertTrue(
+            OUTPUT.exists(),
+            "cortege-AI-Agents-Week-long-Hack.pptx was not created",
+        )
 
         with zipfile.ZipFile(OUTPUT) as archive:
             names = archive.namelist()

@@ -46,3 +46,4 @@ Start here:
 | Global Codex PPTX Skill | [`specs/20260321-pptx-codex-skill/spec.md`](specs/20260321-pptx-codex-skill/spec.md) | Install a reusable global Codex skill for future PPTX generation work |
 | Repository Licensing | [`specs/20260321-proprietary-license/spec.md`](specs/20260321-proprietary-license/spec.md) | Declare the repo as proprietary, not open source, and all rights reserved |
 | Main Publication | [`specs/20260321-main-publication/spec.md`](specs/20260321-main-publication/spec.md) | Commit the March 21 repo work on `main` and push it to `origin/main` |
+| PPTX Artifact Swap | [`specs/20260321-pptx-artifact-swap/spec.md`](specs/20260321-pptx-artifact-swap/spec.md) | Use `cortege-AI-Agents-Week-long-Hack.pptx` as the canonical deck artifact and remove `deck.pptx` |

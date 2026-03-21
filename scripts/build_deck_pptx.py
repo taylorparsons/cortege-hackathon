@@ -10,7 +10,7 @@ from pptx.util import Inches, Pt
 
 ROOT = Path(__file__).resolve().parents[1]
 DECK_HTML = ROOT / "deck.html"
-OUTPUT = ROOT / "deck.pptx"
+OUTPUT = ROOT / "cortege-AI-Agents-Week-long-Hack.pptx"
 
 BG = "111009"
 AMBER = "E8A838"

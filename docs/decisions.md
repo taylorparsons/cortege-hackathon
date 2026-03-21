@@ -1134,3 +1134,26 @@ Acceptance / test:
 - A local commit records the intended March 21 repo changes with ATHENA traceability
 - `origin/main` advances to that commit
 - The pushed commit excludes `cortege-AI-Agents-Week-long-Hack.pptx` and `~$cortege-AI-Agents-Week-long-Hack.pptx`
+
+## D-20260321-0836
+Date: 2026-03-21 08:36
+Inputs: [CR-20260321-0836](requests.md#cr-20260321-0836)
+PRD: [PowerPoint Deck Export](PRD.md#powerpoint-deck-export-sources-cr-20260321-0801-cr-20260321-0836-d-20260321-0801-d-20260321-0836)
+Spec: [`specs/20260321-pptx-artifact-swap/spec.md`](specs/20260321-pptx-artifact-swap/spec.md)
+
+Decision:
+Interpret the requested `demo.pptx` removal as removal of the currently tracked repo deck artifact `deck.pptx`, because no `demo.pptx` exists. Make `cortege-AI-Agents-Week-long-Hack.pptx` the canonical repo deck artifact and update the generator, verification script, and current docs to target that filename.
+
+Rationale:
+- The user explicitly named `cortege-AI-Agents-Week-long-Hack.pptx` as the file to use.
+- There is no `demo.pptx` in the repository, so the nearest current PPTX artifact to remove is `deck.pptx`.
+- Updating the generator and verification script keeps future repo behavior aligned with the canonical artifact name instead of leaving the filename swap as a one-off manual exception.
+
+Alternatives considered:
+- Ask a clarifying question before acting (rejected: the repo context makes the intended swap reasonably inferable)
+- Keep `deck.pptx` as the generated artifact and treat `cortege-AI-Agents-Week-long-Hack.pptx` as a one-off manual export (rejected: inconsistent repo contract)
+
+Acceptance / test:
+- `deck.pptx` is removed from source control
+- `cortege-AI-Agents-Week-long-Hack.pptx` remains the tracked deck artifact
+- The deck generator and verification script target `cortege-AI-Agents-Week-long-Hack.pptx`

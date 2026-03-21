@@ -313,12 +313,12 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Migration strategy: dual-write mode → verify → cutover → deprecate JSON files
 - Backward compatibility maintained during migration
 
-## PowerPoint Deck Export (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
-- The repo SHALL include a reproducible Python workflow that generates [`deck.pptx`](../deck.pptx) from [`deck.html`](../deck.html) using `python-pptx`. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
+## PowerPoint Deck Export (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [CR-20260321-0836](requests.md#cr-20260321-0836); [D-20260321-0801](decisions.md#d-20260321-0801); [D-20260321-0836](decisions.md#d-20260321-0836))
+- The repo SHALL include a reproducible Python workflow that generates [`cortege-AI-Agents-Week-long-Hack.pptx`](../cortege-AI-Agents-Week-long-Hack.pptx) from [`deck.html`](../deck.html) using `python-pptx`. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [CR-20260321-0836](requests.md#cr-20260321-0836); [D-20260321-0801](decisions.md#d-20260321-0801); [D-20260321-0836](decisions.md#d-20260321-0836))
 - The generated PowerPoint SHALL contain 8 slides whose copy matches the current reveal.js source content in [`deck.html`](../deck.html). (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
 - The generated PowerPoint SHALL match the existing visual system closely using native slide background, typography targets, accent colors, cards, badges, and diagram shapes, with font fallback when the requested fonts are unavailable. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
 - The live-product slide SHALL embed the three existing Cypress screenshots already referenced by the reveal.js presentation. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801))
-- Verification SHALL run the generator and inspect the resulting `.pptx` for slide count, representative text, and embedded media. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [D-20260321-0801](decisions.md#d-20260321-0801))
+- Verification SHALL run non-destructive checks that confirm the canonical `.pptx` artifact path, script targets, and representative deck contents remain aligned. (Sources: [CR-20260321-0801](requests.md#cr-20260321-0801); [CR-20260321-0836](requests.md#cr-20260321-0836); [D-20260321-0801](decisions.md#d-20260321-0801); [D-20260321-0836](decisions.md#d-20260321-0836))
 
 ## Global Codex PPTX Skill (Sources: [CR-20260321-0815](requests.md#cr-20260321-0815); [D-20260321-0815](decisions.md#d-20260321-0815))
 - A reusable global Codex skill SHALL be installed at `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md` for future PowerPoint-generation work. (Sources: [CR-20260321-0815](requests.md#cr-20260321-0815); [D-20260321-0815](decisions.md#d-20260321-0815))
