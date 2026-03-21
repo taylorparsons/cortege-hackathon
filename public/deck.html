@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CORTEGE — AI Security Companions</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --r-background-color: #111009;
+    --r-main-font: 'Outfit', sans-serif;
+    --r-main-font-size: 32px;
+    --r-main-color: #F0EAD8;
+    --r-heading-font: 'Cormorant Garamond', serif;
+    --r-heading-color: #F0EAD8;
+    --r-heading-text-transform: none;
+    --r-heading-letter-spacing: -0.02em;
+    --r-link-color: #E8A838;
+    --r-link-color-hover: #4ECDC4;
+    --r-selection-background-color: rgba(232,168,56,0.3);
+  }
+
+  .reveal { font-weight: 300; }
+  .reveal h1, .reveal h2, .reveal h3 { font-weight: 400; }
+  .reveal h1 { font-size: 2.8em; line-height: 1.1; }
+  .reveal h2 { font-size: 1.8em; margin-bottom: 0.6em; }
+  .reveal h3 { font-size: 1.2em; color: #8C8272; font-family: 'Outfit', sans-serif; font-weight: 300; }
+
+  .amber { color: #E8A838; }
+  .teal { color: #4ECDC4; }
+  .slate { color: #7B9EC9; }
+  .muted { color: #8C8272; }
+  .cream { color: #F7F0DC; }
+  .red { color: #E85D5D; }
+
+  .reveal .slide-number { font-family: 'Outfit', sans-serif; font-size: 14px; color: #6A5F50; }
+
+  /* Stat callout */
+  .stat { font-family: 'Cormorant Garamond', serif; font-size: 3.2em; font-weight: 600; color: #E8A838; line-height: 1.1; }
+  .stat-label { font-size: 0.55em; color: #8C8272; display: block; margin-top: 0.2em; font-family: 'Outfit', sans-serif; font-weight: 300; }
+
+  /* Subtle divider */
+  .divider { width: 60px; height: 2px; background: linear-gradient(90deg, #E8A838, transparent); margin: 1.2em auto; }
+
+  /* Agent cards */
+  .agent-grid { display: flex; gap: 24px; justify-content: center; margin-top: 1em; }
+  .agent-card {
+    background: rgba(255,245,225,0.04);
+    border: 1px solid rgba(255,245,225,0.08);
+    border-radius: 12px;
+    padding: 28px 24px;
+    width: 240px;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+  .agent-card:hover { border-color: rgba(232,168,56,0.3); }
+  .agent-icon { font-size: 2.2em; margin-bottom: 0.3em; }
+  .agent-name { font-family: 'Cormorant Garamond', serif; font-size: 1.3em; font-weight: 500; margin-bottom: 0.3em; }
+  .agent-role { font-size: 0.65em; color: #8C8272; }
+
+  /* Stage pipeline */
+  .pipeline { display: flex; align-items: center; justify-content: center; gap: 0; margin: 1.2em auto; }
+  .pipeline-stage {
+    padding: 14px 22px;
+    font-size: 0.6em;
+    font-weight: 400;
+    border: 1px solid rgba(255,245,225,0.1);
+    background: rgba(255,245,225,0.03);
+    position: relative;
+    white-space: nowrap;
+  }
+  .pipeline-stage:first-child { border-radius: 8px 0 0 8px; }
+  .pipeline-stage:last-child { border-radius: 0 8px 8px 0; }
+  .pipeline-stage.active {
+    background: rgba(232,168,56,0.15);
+    border-color: rgba(232,168,56,0.4);
+    color: #E8A838;
+    font-weight: 500;
+  }
+  .pipeline-arrow { color: #6A5F50; font-size: 0.7em; margin: 0 -1px; z-index: 1; }
+
+  /* Screenshot grid */
+  .screenshot-grid { display: flex; gap: 16px; justify-content: center; align-items: flex-start; margin-top: 0.8em; flex-wrap: wrap; }
+  .screenshot-item { text-align: center; max-width: 320px; }
+  .screenshot-item img {
+    border-radius: 8px;
+    border: 1px solid rgba(255,245,225,0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    width: 100%;
+    height: auto;
+  }
+  .screenshot-label { font-size: 0.5em; color: #8C8272; margin-top: 0.5em; }
+
+  /* Architecture diagram */
+  .arch-diagram { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 0.8em; }
+  .arch-row { display: flex; gap: 16px; justify-content: center; align-items: center; }
+  .arch-box {
+    background: rgba(255,245,225,0.04);
+    border: 1px solid rgba(255,245,225,0.1);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 0.55em;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .arch-box.highlight {
+    border-color: rgba(232,168,56,0.4);
+    background: rgba(232,168,56,0.08);
+  }
+  .arch-box.teal-highlight {
+    border-color: rgba(78,205,196,0.4);
+    background: rgba(78,205,196,0.08);
+  }
+  .arch-arrow { color: #6A5F50; font-size: 0.6em; }
+  .arch-label { font-size: 0.45em; color: #6A5F50; }
+
+  /* Signal badges */
+  .signal-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 0.8em; }
+  .signal-badge {
+    background: rgba(255,245,225,0.04);
+    border: 1px solid rgba(255,245,225,0.08);
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-size: 0.55em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .signal-badge .icon { font-size: 1.2em; }
+
+  /* Market slide */
+  .market-grid { display: flex; gap: 32px; justify-content: center; margin-top: 1em; }
+  .market-col { text-align: center; }
+  .market-col .stat { font-size: 2.4em; }
+
+  /* Footer bar */
+  .slide-footer {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.4em;
+    color: #6A5F50;
+    font-family: 'Outfit', sans-serif;
+  }
+  .slide-footer a { color: #8C8272; text-decoration: none; }
+
+  /* Quote styling */
+  .reveal blockquote {
+    background: rgba(232,168,56,0.06);
+    border-left: 3px solid #E8A838;
+    padding: 20px 28px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1em;
+    font-style: italic;
+    color: #F0EAD8;
+    margin: 0.8em auto;
+    width: 80%;
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* Escalation levels */
+  .escalation-bar { display: flex; justify-content: center; gap: 0; margin: 0.8em auto; max-width: 700px; }
+  .esc-level {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 0.5em;
+    text-align: center;
+    border: 1px solid rgba(255,245,225,0.06);
+  }
+  .esc-level:first-child { border-radius: 8px 0 0 8px; }
+  .esc-level:last-child { border-radius: 0 8px 8px 0; }
+  .esc-l0 { background: rgba(78,205,196,0.06); }
+  .esc-l1 { background: rgba(78,205,196,0.1); }
+  .esc-l2 { background: rgba(232,168,56,0.08); }
+  .esc-l3 { background: rgba(232,168,56,0.18); }
+  .esc-l4 { background: rgba(232,93,93,0.18); border-color: rgba(232,93,93,0.3); }
+
+  /* Tight list */
+  .reveal ul.tight { list-style: none; padding: 0; }
+  .reveal ul.tight li { padding: 0.3em 0; font-size: 0.75em; }
+  .reveal ul.tight li::before { content: "→ "; color: #E8A838; }
+
+  /* Horizontal rule */
+  .reveal hr { border: none; height: 1px; background: rgba(255,245,225,0.08); margin: 1em 0; }
+
+  /* Two-column */
+  .two-col { display: flex; gap: 40px; align-items: flex-start; }
+  .two-col > * { flex: 1; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1 — TITLE                                                       -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h1 style="margin-bottom: 0.1em;">CORT<span class="amber">E</span>GE</h1>
+  <h3>AI Security Companions for Every Household</h3>
+  <div class="divider"></div>
+  <p style="font-size: 0.6em; color: #8C8272;">
+    Taylor Parsons &nbsp;&middot;&nbsp; Rich Rosenthal &nbsp;&middot;&nbsp; Jennifer McKinney &nbsp;&middot;&nbsp; March 2026 AI Agents Hackathon
+  </p>
+  <p style="font-size: 0.5em; margin-top: 1.5em;">
+    <a href="https://github.com/taylorparsons/cortege-hackathon" target="_blank">github.com/taylorparsons/cortege-hackathon</a>
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2 — THE PROBLEM                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2>The Problem</h2>
+  <div class="stat">$64B<span class="stat-label">lost to scams in the US in 2025</span></div>
+  <div class="divider"></div>
+  <blockquote>
+    "Grandma, it's me — I'm in trouble and I need money right now."
+  </blockquote>
+  <p style="font-size: 0.65em; color: #8C8272; margin-top: 0.8em;">
+    <span class="amber">77%</span> of Americans encounter scams daily. <span class="amber">7 in 10</span> were scammed last year.<br>
+    Only <span class="red">44%</span> recover any money. One call. Life savings gone.
+  </p>
+  <p style="font-size: 0.55em; color: #6A5F50; margin-top: 1em;">
+    Fraud filters catch known patterns. They don't know <em>your family</em>.
+  </p>
+  <p style="font-size: 0.4em; color: #6A5F50; margin-top: 0.5em;">
+    Source: State of Scams USA 2025 — GASA / Iris Powered by Generali
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3 — THE SOLUTION                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2>The Solution</h2>
+  <p style="font-size: 0.7em; margin-bottom: 0.3em;">
+    Every household member gets a <span class="amber">dedicated AI companion</span><br>
+    that learns their patterns and silently protects them.
+  </p>
+  <div class="agent-grid">
+    <div class="agent-card">
+      <div class="agent-icon">🛡️</div>
+      <div class="agent-name amber">ANCHOR</div>
+      <div class="agent-role">Senior Protection<br>Patience-first, scam interception,<br>trusted contact verification</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">⚔️</div>
+      <div class="agent-name teal">SENTINEL</div>
+      <div class="agent-role">Adult Protection<br>Primary coordinator, household<br>orchestration, threat relay</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">🔭</div>
+      <div class="agent-name slate">SCOUT</div>
+      <div class="agent-role">Teen Protection<br>Age-appropriate, social<br>engineering defense</div>
+    </div>
+  </div>
+  <p style="font-size: 0.5em; color: #6A5F50; margin-top: 1em;">
+    Not a chatbot. Not a filter. A <em>companion</em> that knows you.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4 — HOW IT LEARNS                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2>How It Learns</h2>
+  <p style="font-size: 0.65em; color: #8C8272; margin-bottom: 0.6em;">
+    Each companion deepens its understanding over time
+  </p>
+  <div class="pipeline">
+    <div class="pipeline-stage">Baseline</div>
+    <span class="pipeline-arrow">›</span>
+    <div class="pipeline-stage">Pattern Recognition</div>
+    <span class="pipeline-arrow">›</span>
+    <div class="pipeline-stage active">Predictive</div>
+    <span class="pipeline-arrow">›</span>
+    <div class="pipeline-stage" style="border-color: rgba(232,168,56,0.25);">Cortege Mode</div>
+  </div>
+  <div class="divider"></div>
+  <p style="font-size: 0.7em;">
+    <span class="muted">Day 1</span> — it listens.<br>
+    <span class="muted">Week 1</span> — it recognizes who usually calls.<br>
+    <span class="amber">Week 2</span> — it blocks the scam before Grandma picks up.
+  </p>
+
+  <div class="escalation-bar" style="margin-top: 1.2em;">
+    <div class="esc-level esc-l0">L0<br><span style="font-size:0.8em">Log</span></div>
+    <div class="esc-level esc-l1">L1<br><span style="font-size:0.8em">Low</span></div>
+    <div class="esc-level esc-l2">L2<br><span style="font-size:0.8em">Monitor</span></div>
+    <div class="esc-level esc-l3">L3<br><span style="font-size:0.8em">Notify</span></div>
+    <div class="esc-level esc-l4">L4<br><span style="font-size:0.8em; color: #E85D5D;">Block + Alert</span></div>
+  </div>
+  <p style="font-size: 0.45em; color: #6A5F50; margin-top: 0.5em;">
+    5-tier escalation: from silent logging to hard-blocking the call and alerting the family
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5 — LIVE PRODUCT                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2>Live Product</h2>
+  <div class="screenshot-grid">
+    <div class="screenshot-item">
+      <img src="cypress/screenshots/household-crud.cy.js/Household CRUD -- saves Twilio routing numbers and primary member from the household editor.png" alt="Household Editor">
+      <div class="screenshot-label">Household Editor + Twilio Routing</div>
+    </div>
+    <div class="screenshot-item">
+      <img src="cypress/screenshots/fraud-case-demo.cy.js/Fraud Case Demo -- creates a household fraud case from a recent Twilio call and one evidence item.png" alt="Fraud Case">
+      <div class="screenshot-label">Fraud Case Creation</div>
+    </div>
+    <div class="screenshot-item">
+      <img src="cypress/screenshots/companion-cards.cy.js/Companion Cards -- shows companion cards for the selected household members.png" alt="Companion Cards">
+      <div class="screenshot-label">Companion Status Dashboard</div>
+    </div>
+  </div>
+  <p style="font-size: 0.5em; color: #6A5F50; margin-top: 0.8em;">
+    Demo videos:
+    <a href="https://github.com/taylorparsons/cortege-hackathon/blob/main/cypress/videos/household-crud.cy.js.mp4">Household CRUD</a> &middot;
+    <a href="https://github.com/taylorparsons/cortege-hackathon/blob/main/cypress/videos/fraud-case-demo.cy.js.mp4">Fraud Case</a> &middot;
+    <a href="https://github.com/taylorparsons/cortege-hackathon/blob/main/cypress/videos/live-feed.cy.js.mp4">Live Feed</a>
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6 — PLATFORM, NOT JUST AN APP                                   -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2>Platform, Not Just an App</h2>
+  <p style="font-size: 0.6em; color: #8C8272; margin-bottom: 0.6em;">
+    Agent templates are <span class="amber">Markdown + YAML</span>. Create a new agent type in minutes.
+  </p>
+
+  <div class="arch-diagram">
+    <div class="arch-row">
+      <div class="arch-box teal-highlight">Twilio Webhook</div>
+      <div class="arch-box">Manual API</div>
+      <div class="arch-box">Scenario Simulator</div>
+    </div>
+    <div class="arch-arrow">▼</div>
+    <div class="arch-row">
+      <div class="arch-box highlight" style="padding: 14px 40px;">
+        Event Bus &nbsp;→&nbsp; Orchestrator &nbsp;→&nbsp; Agent Instances
+      </div>
+    </div>
+    <div class="arch-arrow">▼</div>
+    <div class="arch-row">
+      <div class="arch-box">Claude API<br><span style="font-size:0.8em; color: #6A5F50;">Haiku 4.5 + caching</span></div>
+      <div class="arch-box">Memory Store<br><span style="font-size:0.8em; color: #6A5F50;">per-instance depth</span></div>
+      <div class="arch-box">Escalation Engine<br><span style="font-size:0.8em; color: #6A5F50;">L0–L4 routing</span></div>
+    </div>
+    <div class="arch-arrow">▼</div>
+    <div class="arch-row">
+      <div class="arch-box" style="width: 100%;">
+        SQLite &nbsp;·&nbsp; Append-only event log &nbsp;·&nbsp; SHA-256 hash chain &nbsp;·&nbsp; PII encryption at rest
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size: 0.5em; color: #6A5F50; margin-top: 0.6em;">
+    Multi-household orchestration &nbsp;·&nbsp; WebSocket real-time push &nbsp;·&nbsp; Hot-reload agent templates
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7 — PRODUCTION SIGNALS                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2>This Isn't a Demo — It's Infrastructure</h2>
+  <div class="signal-grid">
+    <div class="signal-badge"><span class="icon">🔒</span> PII encryption at rest</div>
+    <div class="signal-badge"><span class="icon">🔗</span> Append-only SHA-256 hash chain</div>
+    <div class="signal-badge"><span class="icon">🚨</span> L0–L4 escalation tiers</div>
+    <div class="signal-badge"><span class="icon">✅</span> 174 passing tests</div>
+    <div class="signal-badge"><span class="icon">💰</span> 64% cost reduction via prompt caching</div>
+    <div class="signal-badge"><span class="icon">📞</span> Twilio voice webhook integration</div>
+    <div class="signal-badge"><span class="icon">🏠</span> Multi-household data isolation</div>
+    <div class="signal-badge"><span class="icon">📝</span> Tamper-evident audit log</div>
+  </div>
+  <div class="divider"></div>
+  <p style="font-size: 0.6em; color: #8C8272;">
+    Solo developer &nbsp;·&nbsp; One week &nbsp;·&nbsp; Full-stack agent orchestration system
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8 — THE BUSINESS                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2>The Business</h2>
+  <div class="market-grid">
+    <div class="market-col">
+      <div class="stat">130M<span class="stat-label">US households</span></div>
+    </div>
+    <div class="market-col">
+      <div class="stat" style="color: #4ECDC4;">$64B<span class="stat-label">annual scam losses</span></div>
+    </div>
+    <div class="market-col">
+      <div class="stat" style="color: #7B9EC9;">3→N<span class="stat-label">agent types scale</span></div>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="font-size: 0.7em; text-align: left; max-width: 600px; margin: 0 auto;">
+    <p><span class="amber">Start:</span> Elder care + family safety</p>
+    <p style="margin-top: 0.4em;"><span class="teal">Expand:</span> Any per-person behavioral agent</p>
+    <p style="margin-top: 0.2em; font-size: 0.8em; color: #8C8272; padding-left: 1.2em;">
+      Health monitoring &nbsp;·&nbsp; Financial guardianship &nbsp;·&nbsp; Education
+    </p>
+    <p style="margin-top: 0.4em;"><span class="slate">Moat:</span> Behavioral depth compounds over time</p>
+    <p style="font-size: 0.75em; color: #6A5F50; padding-left: 1.2em;">
+      The longer a companion runs, the harder it is to replace
+    </p>
+  </div>
+  <hr style="margin-top: 1.2em;">
+  <p style="font-size: 0.55em;">
+    <a href="https://github.com/taylorparsons/cortege-hackathon" target="_blank">github.com/taylorparsons/cortege-hackathon</a>
+    &nbsp;&middot;&nbsp; Taylor Parsons &nbsp;&middot;&nbsp; Rich Rosenthal &nbsp;&middot;&nbsp; Jennifer McKinney
+  </p>
+</section>
+
+</div><!-- /.slides -->
+</div><!-- /.reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: 'c/t',
+  transition: 'fade',
+  transitionSpeed: 'fast',
+  controls: true,
+  controlsTutorial: false,
+  progress: true,
+  center: true,
+  width: 1280,
+  height: 720,
+});
+</script>
+</body>
+</html>
