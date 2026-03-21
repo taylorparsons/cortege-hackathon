@@ -1111,3 +1111,26 @@ Acceptance / test:
 - `LICENSE` states the project is proprietary, not open source, and all rights are reserved
 - `package.json` contains `"license": "UNLICENSED"`
 - `README.md` license section matches the proprietary status
+
+## D-20260321-0831
+Date: 2026-03-21 08:31
+Inputs: [CR-20260321-0831](requests.md#cr-20260321-0831)
+PRD: [Main Publication](PRD.md#main-publication-sources-cr-20260321-0831-d-20260321-0831)
+Spec: [`specs/20260321-main-publication/spec.md`](specs/20260321-main-publication/spec.md)
+
+Decision:
+Publish the current repo-scoped March 21 work by committing the tracked deck-export, licensing, and ATHENA-doc changes on `main`, pushing them to `origin/main`, and excluding the duplicate renamed PPTX and Office lock file from the commit.
+
+Rationale:
+- The repo requirements and scripts consistently target `deck.pptx`; the duplicate `cortege-AI-Agents-Week-long-Hack.pptx` is not referenced by the repo and would be redundant in source control.
+- The `~$...pptx` file is a transient Office lock artifact and should never be checked in.
+- The requested outcome is a clean publication of the current real work to the remote default branch.
+
+Alternatives considered:
+- Commit every untracked file in the repo root indiscriminately (rejected: would publish temp/redundant local artifacts)
+- Push without a local commit (rejected: there is no local commit to publish yet)
+
+Acceptance / test:
+- A local commit records the intended March 21 repo changes with ATHENA traceability
+- `origin/main` advances to that commit
+- The pushed commit excludes `cortege-AI-Agents-Week-long-Hack.pptx` and `~$cortege-AI-Agents-Week-long-Hack.pptx`

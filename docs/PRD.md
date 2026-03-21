@@ -330,3 +330,8 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - The repository SHALL include a top-level `LICENSE` file stating that the project is proprietary, not open source, and all rights are reserved. (Sources: [CR-20260321-0826](requests.md#cr-20260321-0826); [D-20260321-0826](decisions.md#d-20260321-0826))
 - `package.json` SHALL declare `"license": "UNLICENSED"` to keep package metadata aligned with the proprietary repository status. (Sources: [CR-20260321-0826](requests.md#cr-20260321-0826); [D-20260321-0826](decisions.md#d-20260321-0826))
 - `README.md` SHALL explicitly state that the project is not open source and that all rights are reserved. (Sources: [CR-20260321-0826](requests.md#cr-20260321-0826); [D-20260321-0826](decisions.md#d-20260321-0826))
+
+## Main Publication (Sources: [CR-20260321-0831](requests.md#cr-20260321-0831); [D-20260321-0831](decisions.md#d-20260321-0831))
+- The current March 21 repo-scoped work SHALL be committed locally on `main` before publication. (Sources: [CR-20260321-0831](requests.md#cr-20260321-0831); [D-20260321-0831](decisions.md#d-20260321-0831))
+- `origin/main` SHALL be updated by pushing the resulting local `main` commit. (Sources: [CR-20260321-0831](requests.md#cr-20260321-0831); [D-20260321-0831](decisions.md#d-20260321-0831))
+- Publication SHALL include the repo-targeted `deck.pptx` artifact and exclude the duplicate renamed PPTX and Office lock artifact from source control. (Sources: [CR-20260321-0831](requests.md#cr-20260321-0831); [D-20260321-0831](decisions.md#d-20260321-0831))

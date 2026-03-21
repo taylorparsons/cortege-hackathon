@@ -765,3 +765,16 @@ for the git project add a liscense that this is not open source, and all rights 
 Notes:
 - The repository is already marked `"private": true` in `package.json` but does not yet declare an explicit proprietary license notice.
 - The request is to make the non-open-source status explicit in repo files.
+
+## CR-20260321-0831
+Date: 2026-03-21 08:31
+Source: chat
+Decision: [D-20260321-0831](decisions.md#d-20260321-0831)
+Spec: [`specs/20260321-main-publication/spec.md`](specs/20260321-main-publication/spec.md)
+
+Request (verbatim):
+check in a push to remote
+
+Notes:
+- Current local work includes the deck-export workflow, proprietary-license updates, and ATHENA docs for the March 21 changes.
+- The repo root also contains a duplicate renamed PPTX export and an Office lock file that are not referenced by the repo specs.

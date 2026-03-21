@@ -45,3 +45,4 @@ Start here:
 | PowerPoint Deck Export | [`specs/20260321-deck-pptx-export/spec.md`](specs/20260321-deck-pptx-export/spec.md) | Generate a native PowerPoint deck from `deck.html` with the shipped screenshots embedded |
 | Global Codex PPTX Skill | [`specs/20260321-pptx-codex-skill/spec.md`](specs/20260321-pptx-codex-skill/spec.md) | Install a reusable global Codex skill for future PPTX generation work |
 | Repository Licensing | [`specs/20260321-proprietary-license/spec.md`](specs/20260321-proprietary-license/spec.md) | Declare the repo as proprietary, not open source, and all rights reserved |
+| Main Publication | [`specs/20260321-main-publication/spec.md`](specs/20260321-main-publication/spec.md) | Commit the March 21 repo work on `main` and push it to `origin/main` |

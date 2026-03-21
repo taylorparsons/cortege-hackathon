@@ -1630,6 +1630,36 @@ NOTES
 
 ---
 
+Session: 2026-03-21 08:31
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, verification-before-completion
+Feature: 20260321-main-publication
+Input: CR-20260321-0831
+Decisions: D-20260321-0831
+Spec: docs/specs/20260321-main-publication/spec.md
+Tasks: docs/specs/20260321-main-publication/tasks.md
+Goal: Check in the current March 21 repo work on `main` and push it to `origin/main` without publishing redundant local PPTX artifacts.
+
+DONE
+- [2026-03-21 08:31] T-001: Capture the publication request in ATHENA docs, commit the intended March 21 repo changes on `main`, and push to `origin/main`. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+None.
+
+NEXT
+
+NOTES
+- Publication scope:
+  - `HEAD` already contained the repo-targeted `deck.pptx`, proprietary-license changes, and the March 21 deck/licensing specs.
+  - This publication commit records the new ATHENA request/decision/spec trail for the push itself.
+  - Excluded from source control: `cortege-AI-Agents-Week-long-Hack.pptx` (duplicate renamed export) and `~$cortege-AI-Agents-Week-long-Hack.pptx` (Office lock artifact).
+- Verification:
+  - `git status --short --branch` -> PASS (only the publication-doc files differed from `HEAD`, plus the excluded temp file remained untracked)
+  - `git diff --cached --name-only` -> PASS (publication-doc files staged)
+
+---
+
 Session: 2026-03-21 08:20
 Agent: Codex CLI
 Model: GPT-5
