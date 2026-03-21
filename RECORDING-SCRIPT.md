@@ -15,7 +15,7 @@
 
 ### [0:15–0:45] THE PROBLEM + SOLUTION — Stay on dashboard, gesture at companion cards
 
-> "Americans lost 12 and a half billion dollars to fraud last year. The most targeted are seniors and teens — people who trust easily. Current fraud filters catch known patterns, but they don't know your family. CORTEGE does."
+> "Americans lost 64 billion dollars to scams last year. 77 percent encounter fraud daily, 7 in 10 were scammed, and less than half ever recover a dime. Current fraud filters catch known patterns, but they don't know your family. CORTEGE does."
 
 > "Each family member is paired with a specialized agent. ANCHOR protects seniors with patience-first scam interception. SENTINEL coordinates household-wide threat response for adults. SCOUT defends teens from social engineering."
 
