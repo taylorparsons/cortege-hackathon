@@ -78,7 +78,7 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Template expansion: Worked Examples section pushes body past Haiku's 2048-token cache minimum (Sources: [D-20260318-1200](decisions.md#d-20260318-1200))
 - Target: ~64% cost reduction per event with cache hits
 
-## Working Demo with Twilio (Sources: [CR-20260318-1640](requests.md#cr-20260318-1640); [D-20260318-1640](decisions.md#d-20260318-1640); [CR-20260320-1550](requests.md#cr-20260320-1550); [D-20260320-1550](decisions.md#d-20260320-1550); [CR-20260320-1559](requests.md#cr-20260320-1559); [D-20260320-1559](decisions.md#d-20260320-1559); [CR-20260320-1607](requests.md#cr-20260320-1607); [D-20260320-1607](decisions.md#d-20260320-1607))
+## Working Demo with Twilio (Sources: [CR-20260318-1640](requests.md#cr-20260318-1640); [D-20260318-1640](decisions.md#d-20260318-1640); [CR-20260320-1550](requests.md#cr-20260320-1550); [D-20260320-1550](decisions.md#d-20260320-1550); [CR-20260320-1559](requests.md#cr-20260320-1559); [D-20260320-1559](decisions.md#d-20260320-1559); [CR-20260320-1607](requests.md#cr-20260320-1607); [D-20260320-1607](decisions.md#d-20260320-1607); [CR-20260320-1619](requests.md#cr-20260320-1619); [D-20260320-1619](decisions.md#d-20260320-1619); [CR-20260320-1646](requests.md#cr-20260320-1646); [D-20260320-1646](decisions.md#d-20260320-1646); [CR-20260320-1655](requests.md#cr-20260320-1655); [D-20260320-1655](decisions.md#d-20260320-1655))
 - Working demo guide created: [`PRODUCTION_DEPLOYMENT.md`](PRODUCTION_DEPLOYMENT.md)
 - Spec created: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
 - Tasks created: [`specs/working-demo-with-twilio/tasks.md`](specs/working-demo-with-twilio/tasks.md)
@@ -88,8 +88,21 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - Twilio docs require redacted phone logging and preserved signature validation guidance
 - Deployment guide includes Mermaid sequence diagrams for the allowed-call and blocked-call outcomes
 - Deployment guide now separates Twilio platform, CORTEGE webhook, CORTEGE agent pipeline, and LLM lanes in those diagrams
+- Current runtime slice: add unique household `twilio_number` support and make `POST /ingest/twilio/voice` resolve `household_id` from `To` before `eventBus.emit()`
+- Next runtime slice: make `/api/events` show storage-backed live Twilio calls and target each inbound household call to one member (primary member when configured, otherwise first household member)
+- Household setup for the live demo now requires two numbers: `twilio_number` for ingress and `pass_through_number` for the real number that should ring when a call is allowed
+- The existing household editor modal SHALL expose both routing numbers and primary-member selection so live Twilio setup can be done without curl
 - UI should stay focused on real working household-scoped features only
 - Spec and task list updated around the household-number model
+
+## Household Fraud Case Demo (Sources: [CR-20260320-1720](requests.md#cr-20260320-1720); [D-20260320-1720](decisions.md#d-20260320-1720))
+- The judge demo SHALL pivot from Twilio-only call routing to a household-scoped fraud case built from one real call plus one manual evidence item
+- Twilio ingress SHALL remain the proof of real-world input, but the headline outcome SHALL be a linked fraud case with severity, signals, rationale, and recommendation
+- Supported manual evidence inputs for the first pass SHALL be text-first: `message_excerpt`, `suspicious_url`, and `screenshot_note`
+- The demo SHALL use conservative, explainable risk heuristics and SHALL NOT claim definitive AI-generated-media detection
+- The Live Feed tab SHALL provide the narrowest usable operator flow: select a recent household call, attach one evidence item, and render the created case
+- Spec: [specs/20260320-household-fraud-case-demo/spec.md](specs/20260320-household-fraud-case-demo/spec.md)
+- Tasks: [specs/20260320-household-fraud-case-demo/tasks.md](specs/20260320-household-fraud-case-demo/tasks.md)
 
 ## API Documentation (Sources: [CR-20260318-1700](requests.md#cr-20260318-1700); [D-20260318-1700](decisions.md#d-20260318-1700))
 - Comprehensive API documentation created: [`API.md`](API.md)

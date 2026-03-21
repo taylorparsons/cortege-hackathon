@@ -614,3 +614,81 @@ commit these changes and on the documentation and push to remote as a doc update
 Notes:
 - User wants the current Twilio documentation rewrite and diagram clarification committed now
 - User explicitly wants the docs update pushed to the remote on top of the last published change
+
+## CR-20260320-1619
+Date: 2026-03-20 16:19
+Source: chat
+Decision: [D-20260320-1619](decisions.md#d-20260320-1619)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Request (verbatim):
+ok make it happen
+
+Notes:
+- Continuation of the active Twilio runtime thread after the docs publication
+- The approved first runtime slice is:
+  - add `twilio_number` to the household model
+  - resolve `household_id` from webhook `To`
+  - wire the webhook to `eventBus.emit()`
+
+## CR-20260320-1646
+Date: 2026-03-20 16:46
+Source: chat
+Decision: [D-20260320-1646](decisions.md#d-20260320-1646)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Request (verbatim):
+yes do it
+
+Notes:
+- Continuation of the live Twilio validation thread after confirming that Twilio ingress reaches the local webhook
+- User approved the next runtime slice:
+  - make `/api/events` read from the active storage backend so Twilio calls are visible
+  - add household-primary-member targeting so Twilio household ingress does not fan out to every companion
+
+## CR-20260320-1655
+Date: 2026-03-20 16:55
+Source: chat
+Decision: [D-20260320-1655](decisions.md#d-20260320-1655)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Request (verbatim):
+ok - If you want, I’ll implement 1 and 2 first, and include primary member editing in the same household UI pass.
+
+Notes:
+- Continuation of the live Twilio demo setup thread
+- User approved:
+  - a separate household `pass_through_number` for the real ringing number
+  - UI editing for both `twilio_number` and `pass_through_number`
+  - primary-member editing in the current household editor UI
+
+## CR-20260320-1720
+Date: 2026-03-20 17:20
+Source: chat
+Decision: [D-20260320-1720](decisions.md#d-20260320-1720)
+Spec: [`specs/20260320-household-fraud-case-demo/spec.md`](specs/20260320-household-fraud-case-demo/spec.md)
+
+Request (verbatim):
+yes that works
+
+Notes:
+- Continuation of the hackathon-scope pivot after the user rejected a Twilio-only call-screening demo as too limited
+- Approved narrowed scope:
+  - keep real Twilio ingress as proof
+  - add one manual evidence item to a live household call
+  - show one household-scoped fraud case with rationale and recommendation
+- Optimize for the judge demo due in less than 12 hours
+
+## CR-20260320-1739
+Date: 2026-03-20 17:39
+Source: chat
+Decision: [D-20260320-1739](decisions.md#d-20260320-1739)
+Spec: [`specs/20260320-household-fraud-case-demo/spec.md`](specs/20260320-household-fraud-case-demo/spec.md)
+
+Request (verbatim):
+- commit the current work cleanly
+  - update README one more time to point to these exact artifacts
+
+Notes:
+- Continuation of the household fraud-case demo feature
+- User explicitly wants a clean local commit plus README links to the current captured videos and screenshots

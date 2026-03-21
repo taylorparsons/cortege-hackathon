@@ -86,12 +86,19 @@ describe('Household + Location API', () => {
     const location = await createLocation();
     const response = await request(app)
       .post('/api/households')
-      .send({ name: 'Smith Family', location_id: location.location_id })
+      .send({
+        name: 'Smith Family',
+        location_id: location.location_id,
+        twilio_number: '+12065550111',
+        pass_through_number: '+19147634039',
+      })
       .expect(201);
 
     assert.ok(response.body.household_id);
     assert.equal(response.body.name, 'Smith Family');
     assert.equal(response.body.location_id, location.location_id);
+    assert.equal(response.body.twilio_number, '+12065550111');
+    assert.equal(response.body.pass_through_number, '+19147634039');
     assert.equal(response.body.location_name, 'Home');
     assert.equal(response.body.address_summary, 'Austin, TX, US');
     assert.equal(response.body.location_details.location_id, location.location_id);
@@ -113,16 +120,58 @@ describe('Household + Location API', () => {
     const household = await householdStore.createHousehold({
       name: 'Smith Family',
       location_id: locationA.location_id,
+      twilio_number: '+12065550112',
     });
 
     const response = await request(app)
       .put(`/api/households/${household.household_id}`)
-      .send({ location_id: locationB.location_id })
+      .send({
+        location_id: locationB.location_id,
+        twilio_number: '+12065550113',
+        pass_through_number: '+19147634753',
+      })
       .expect(200);
 
     assert.equal(response.body.location_id, locationB.location_id);
     assert.equal(response.body.location_name, 'Cabin');
     assert.equal(response.body.address_summary, 'Bend, OR, US');
+    assert.equal(response.body.twilio_number, '+12065550113');
+    assert.equal(response.body.pass_through_number, '+19147634753');
+  });
+
+  test('household routes validate pass_through_number as E.164 when provided', async () => {
+    const location = await createLocation();
+
+    await request(app)
+      .post('/api/households')
+      .send({
+        name: 'Invalid Pass Through Family',
+        location_id: location.location_id,
+        pass_through_number: '914-764-4039',
+      })
+      .expect(400);
+  });
+
+  test('household routes reject duplicate twilio_number values', async () => {
+    const location = await createLocation();
+
+    await request(app)
+      .post('/api/households')
+      .send({
+        name: 'Family A',
+        location_id: location.location_id,
+        twilio_number: '+12065550114',
+      })
+      .expect(201);
+
+    await request(app)
+      .post('/api/households')
+      .send({
+        name: 'Family B',
+        location_id: location.location_id,
+        twilio_number: '+12065550114',
+      })
+      .expect(409);
   });
 
   test('DELETE /api/locations/:id rejects referenced locations with blocking households', async () => {

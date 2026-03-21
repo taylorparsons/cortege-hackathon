@@ -98,6 +98,24 @@ Agents evolve through four maturity stages:
 - **Manual API** - POST /api/events for testing
 - **Twilio Webhook** - Real phone call integration (see [Production Deployment](docs/PRODUCTION_DEPLOYMENT.md))
 - **Live Feed event injector** - Targets the currently selected household members instead of the legacy hard-coded demo defaults
+- **Household fraud case panel** - Links one recent household call with one manual evidence item and generates an explainable risk case
+
+### Hackathon Demo Story
+
+The strongest current demo is a **household-aware fraud case**, not generic phone spam blocking:
+
+1. A real inbound call hits the household Twilio number
+2. CORTEGE resolves the household and target member
+3. The operator adds one manual evidence item in Live Feed
+4. CORTEGE creates one case with severity, signals, rationale, and recommended action
+
+Supported first-pass evidence inputs are intentionally text-first and conservative:
+
+- `message_excerpt`
+- `suspicious_url`
+- `screenshot_note`
+
+This flow does **not** claim definitive AI-image or AI-video detection. It uses explainable risk heuristics so the demo remains believable under hackathon time pressure.
 
 ## 🏠 Household Management
 
@@ -419,32 +437,35 @@ npm run test:integration
 With the backend on `http://localhost:3001` and the frontend on `http://localhost:5173`, rerun the current household/member demo review path with:
 
 ```bash
-npx cypress run --spec cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js,cypress/e2e/live-feed.cy.js
+npx cypress run --spec cypress/e2e/navigation.cy.js,cypress/e2e/household-crud.cy.js,cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js,cypress/e2e/live-feed.cy.js,cypress/e2e/fraud-case-demo.cy.js
 ```
 
-That run writes reviewer-friendly artifacts to `cypress/screenshots/` and `cypress/videos/`.
+The latest recorded localhost review suite passed with `24` tests across `6` specs and writes reviewer-friendly artifacts to `cypress/screenshots/` and `cypress/videos/`.
 
-Representative screenshots from the current localhost run:
+Core screenshots from the exact recorded suite:
 
+- [Navigation screenshot](cypress/screenshots/navigation.cy.js/Navigation%20--%20renders%20all%204%20nav%20tabs.png)
+- [Household routing editor screenshot](cypress/screenshots/household-crud.cy.js/Household%20CRUD%20--%20saves%20Twilio%20routing%20numbers%20and%20primary%20member%20from%20the%20household%20editor.png)
 - [Member CRUD screenshot](cypress/screenshots/member-crud.cy.js/Member%20CRUD%20--%20adds%20a%20member%20and%20the%20member%20row%20appears.png)
 - [Selected-household companion screenshot](cypress/screenshots/companion-cards.cy.js/Companion%20Cards%20--%20shows%20companion%20cards%20for%20the%20selected%20household%20members.png)
+- [Live Feed screenshot](cypress/screenshots/live-feed.cy.js/Live%20Feed%20--%20event%20injector%20target%20list%20uses%20the%20selected%20household%20members.png)
+- [Fraud case demo screenshot](cypress/screenshots/fraud-case-demo.cy.js/Fraud%20Case%20Demo%20--%20creates%20a%20household%20fraud%20case%20from%20a%20recent%20Twilio%20call%20and%20one%20evidence%20item.png)
 
+![Navigation localhost screenshot](cypress/screenshots/navigation.cy.js/Navigation%20--%20renders%20all%204%20nav%20tabs.png)
+![Household routing localhost screenshot](cypress/screenshots/household-crud.cy.js/Household%20CRUD%20--%20saves%20Twilio%20routing%20numbers%20and%20primary%20member%20from%20the%20household%20editor.png)
 ![Member CRUD localhost screenshot](cypress/screenshots/member-crud.cy.js/Member%20CRUD%20--%20adds%20a%20member%20and%20the%20member%20row%20appears.png)
-
 ![Selected household companion localhost screenshot](cypress/screenshots/companion-cards.cy.js/Companion%20Cards%20--%20shows%20companion%20cards%20for%20the%20selected%20household%20members.png)
+![Live Feed localhost screenshot](cypress/screenshots/live-feed.cy.js/Live%20Feed%20--%20event%20injector%20target%20list%20uses%20the%20selected%20household%20members.png)
+![Fraud case localhost screenshot](cypress/screenshots/fraud-case-demo.cy.js/Fraud%20Case%20Demo%20--%20creates%20a%20household%20fraud%20case%20from%20a%20recent%20Twilio%20call%20and%20one%20evidence%20item.png)
 
-Representative videos from the same run:
+Recorded videos from the same suite:
 
+- [Navigation run video](cypress/videos/navigation.cy.js.mp4)
+- [Household CRUD run video](cypress/videos/household-crud.cy.js.mp4)
 - [Member CRUD run video](cypress/videos/member-crud.cy.js.mp4)
 - [Companion cards run video](cypress/videos/companion-cards.cy.js.mp4)
 - [Live Feed run video](cypress/videos/live-feed.cy.js.mp4)
-
-Latest live-feed proof points from the current localhost run:
-
-- [Live Feed screenshot](cypress/screenshots/live-feed.cy.js/Live%20Feed%20--%20event%20injector%20target%20list%20uses%20the%20selected%20household%20members.png)
-- [Live Feed activity API screenshot](cypress/screenshots/live-feed.cy.js/Live%20Feed%20--%20newly%20created%20companions%20start%20with%20an%20empty%20activity%20API%20response.png)
-
-![Live Feed localhost screenshot](cypress/screenshots/live-feed.cy.js/Live%20Feed%20--%20event%20injector%20target%20list%20uses%20the%20selected%20household%20members.png)
+- [Fraud case demo run video](cypress/videos/fraud-case-demo.cy.js.mp4)
 
 ### Creating New Agents
 
@@ -529,6 +550,8 @@ CLAUDE_DEBUG=1                           # Enable API debug logging
 
 - `GET /api/events` - Get recent events
 - `POST /api/events` - Submit manual event
+- `GET /api/fraud-cases?household_id=...` - List recent fraud cases for a household
+- `POST /api/fraud-cases` - Create a household fraud case from one linked event and one evidence item
 - `POST /api/scenarios/:name/run` - Run demo scenario
 
 ### Agents

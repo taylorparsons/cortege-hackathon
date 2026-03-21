@@ -1319,3 +1319,205 @@ NOTES
   - `rg -n "Twilio Docs Publication|Twilio Platform|CORTEGE Webhook|CORTEGE Agent Pipeline|LLM|one Twilio number per household" ...` -> PASS
   - `git commit -m "docs: clarify Twilio household demo routing"` -> PASS (`c8fdefd`)
   - `git push origin main` -> PASS (`4de407d..c8fdefd`)
+
+---
+
+Session: 2026-03-20 16:19
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, brainstorming, writing-plans, test-driven-development
+Feature: working-demo-with-twilio
+Input: CR-20260320-1619
+Decisions: D-20260320-1619
+Spec: docs/specs/working-demo-with-twilio/spec.md
+Tasks: docs/specs/working-demo-with-twilio/tasks.md
+Goal: Implement the first Twilio runtime slice: household `twilio_number`, webhook `To -> household_id` routing, and event-bus emission.
+
+DONE
+- [2026-03-20 16:19] T-001: Capture the runtime implementation request, scope decision, and current execution slice in the ATHENA docs. (Skills: athena, brainstorming, writing-plans)
+- [2026-03-20 16:19] T-002: Write the execution plan for the first Twilio runtime slice. (Skills: athena, brainstorming, writing-plans)
+- [2026-03-20 16:22] T-003: Add failing tests for household `twilio_number` support and webhook `To -> household_id` routing, verify RED, and then implement the minimal store/API/webhook support to satisfy them. (Skills: athena, test-driven-development)
+- [2026-03-20 16:25] T-004: Run targeted and broader verification for the first Twilio runtime slice. (Skills: athena, test-driven-development)
+
+IN PROGRESS
+- T-005: Implement Twilio signature validation for protected environments. (Skills: athena, test-driven-development)
+
+NEXT
+- Run localhost webhook testing through ngrok with a household-mapped Twilio number. (Skills: athena)
+- Verify the call appears on the correct household runtime path. (Skills: athena)
+
+NOTES
+- Plan saved to `docs/superpowers/plans/2026-03-20-twilio-household-routing.md`.
+- This slice is intentionally backend-only; Twilio console configuration and signature validation stay deferred until the local ingress path exists.
+- RED verification:
+  - `node --test server/tests/household-store.test.js server/tests/household-api.test.js server/tests/twilio-webhook.test.js` -> FAIL (`twilio_number` missing from store/API responses, duplicate numbers accepted, webhook emitted nothing, unknown `To` returned 200)
+- GREEN verification:
+  - `node --test server/tests/household-store.test.js server/tests/household-api.test.js server/tests/twilio-webhook.test.js` -> PASS (`15` passing)
+  - `npm test` -> PASS (`167` passing, `3` skipped)
+  - `npm run build` -> PASS
+- Implementation details:
+  - `server/storage/household-store.js` now round-trips `twilio_number` and exposes a `findHouseholdByTwilioNumber()` helper.
+  - `server/api/routes.js` now accepts normalized household `twilio_number`, rejects duplicates with `409`, and returns the field in trusted household responses.
+- `server/ingestion/twilio-webhook.js` now resolves the household from webhook `To`, emits a normalized `inbound_call` event, and rejects unknown household numbers with `404`.
+- `server/index.js` now enables `express.urlencoded()` so real Twilio form posts can be parsed.
+
+---
+
+Session: 2026-03-20 16:46
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, brainstorming, writing-plans, systematic-debugging, test-driven-development
+Feature: working-demo-with-twilio
+Input: CR-20260320-1646
+Decisions: D-20260320-1646
+Spec: docs/specs/working-demo-with-twilio/spec.md
+Tasks: docs/specs/working-demo-with-twilio/tasks.md
+Goal: Surface live Twilio events through `/api/events` and route each inbound household call to one deterministic member.
+
+DONE
+- [2026-03-20 16:46] T-001: Capture the follow-up Twilio runtime request, record the single-target routing decision, and update the PRD/spec/tasks. (Skills: athena, brainstorming, writing-plans, systematic-debugging)
+- [2026-03-20 16:50] T-005: Make `/api/events` storage-backed and route Twilio household calls to one deterministic member. (Skills: athena, test-driven-development, systematic-debugging)
+
+IN PROGRESS
+- T-006: Implement Twilio signature validation for protected environments. (Skills: athena, test-driven-development)
+
+NEXT
+- Run localhost webhook testing through ngrok with a household-mapped Twilio number and verify the call appears on the correct runtime path. (Skills: athena)
+
+NOTES
+- Root causes confirmed from live validation:
+  - ngrok showed Twilio was posting successfully to `/ingest/twilio/voice`.
+  - Backend logs showed the Twilio call was ingested and processed, but `/api/events` still returned only stale JSONL simulator history.
+  - `POST /ingest/twilio/voice` still emitted `target_member: null`, so both household companions processed the same inbound call.
+- RED verification:
+  - `node --test server/tests/events-api.test.js server/tests/twilio-webhook.test.js` -> FAIL (`/api/events` returned stale JSONL rows; Twilio webhook emitted `target_member: null`)
+- GREEN verification:
+  - `node --test server/tests/events-api.test.js server/tests/twilio-webhook.test.js` -> PASS (`4` passing)
+  - `npm test` -> PASS (`169` passing, `3` skipped)
+  - `npm run build` -> PASS
+- Implementation details:
+  - `server/storage/db.js` and `server/storage/storage-adapter.js` now expose recent-event reads from the active storage backend.
+  - `server/api/routes.js` now serves `/api/events` from the storage adapter instead of JSONL-only helpers.
+  - `server/ingestion/twilio-webhook.js` now sets `target_member` to the household primary member, or the first household member if no primary exists.
+
+---
+
+Session: 2026-03-20 16:55
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, brainstorming, writing-plans, test-driven-development
+Feature: working-demo-with-twilio
+Input: CR-20260320-1655
+Decisions: D-20260320-1655
+Spec: docs/specs/working-demo-with-twilio/spec.md
+Tasks: docs/specs/working-demo-with-twilio/tasks.md
+Goal: Add household pass-through number support and primary-member controls to the existing household editor UI.
+
+DONE
+- [2026-03-20 16:55] T-001: Capture the pass-through-number/primary-member request and extend the Twilio PRD/spec/tasks. (Skills: athena, brainstorming, writing-plans)
+- [2026-03-20 17:02] T-008: Add household `pass_through_number` support and routing controls to the existing editor UI. (Skills: athena, test-driven-development)
+
+IN PROGRESS
+- T-006: Implement Twilio signature validation for protected environments. (Skills: athena, test-driven-development)
+
+NEXT
+- Run localhost webhook testing through ngrok with a household-mapped Twilio number. (Skills: athena)
+
+NOTES
+- UI decision: preserve the existing household editor modal instead of creating a new Twilio settings screen.
+- Routing-number decision: `twilio_number` remains the ingress key; `pass_through_number` is the real number that should ring when a call is allowed.
+- RED verification:
+  - `node --test server/tests/household-store.test.js server/tests/household-api.test.js` -> PASS after the new failing assertions were added and implemented.
+  - `npx cypress run --spec cypress/e2e/household-crud.cy.js` -> FAIL first on empty primary-member options, then on missing `pass_through_number` from the stale localhost backend response.
+- GREEN verification:
+  - `node --test server/tests/household-store.test.js server/tests/household-api.test.js` -> PASS (`14` passing)
+  - `npx cypress run --spec cypress/e2e/household-crud.cy.js` -> PASS (`7` passing)
+  - `npm run build` -> PASS
+- Implementation details:
+  - `server/storage/household-store.js` now persists and returns optional household `pass_through_number`.
+  - `server/api/routes.js` now validates and updates `pass_through_number` alongside `twilio_number`.
+  - `src/components/HouseholdSelector.jsx` now loads full selected-household details, exposes Twilio/pass-through fields, and saves one explicit primary member through the existing member update API.
+  - `src/hooks/useHouseholds.js` now exposes a stable `getHousehold()` callback so the selected-household editor can refresh from the trusted full-detail endpoint.
+  - `cypress/e2e/household-crud.cy.js` now verifies the routing-number save flow and primary-member selection.
+- Localhost note:
+  - The long-running backend on `localhost:3001` was stale during the first E2E run and dropped `pass_through_number` even though the file-backed tests were green.
+  - Restarted the backend and re-ran the same Cypress spec against the live server before closing the task.
+
+---
+
+Session: 2026-03-20 17:20
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, brainstorming, writing-plans, test-driven-development
+Feature: 20260320-household-fraud-case-demo
+Input: CR-20260320-1720
+Decisions: D-20260320-1720
+Spec: docs/specs/20260320-household-fraud-case-demo/spec.md
+Tasks: docs/specs/20260320-household-fraud-case-demo/tasks.md
+Goal: Pivot the hackathon demo to one household-scoped fraud case built from a live call plus one manual evidence item.
+
+DONE
+- [2026-03-20 17:20] T-001: Capture the pivot in docs and write the executable implementation plan. (Skills: athena, brainstorming, writing-plans)
+- [2026-03-20 17:31] T-002: Add backend fraud-case storage, analysis, and API support. (Skills: athena, test-driven-development)
+- [2026-03-20 17:31] T-003: Expose fraud-case API routes. (Skills: athena, test-driven-development)
+- [2026-03-20 17:31] T-004: Add the Live Feed case panel and end-to-end case creation flow. (Skills: athena, test-driven-development)
+- [2026-03-20 17:31] T-005: Align README wording with the narrowed household fraud-case demo. (Skills: athena)
+
+IN PROGRESS
+None.
+
+NEXT
+- Return to the remaining Twilio security and call-control work only if it improves the final judge demo. (Skills: athena)
+
+NOTES
+- Plan saved to `docs/superpowers/plans/2026-03-20-household-fraud-case-demo.md`.
+- Scope is intentionally narrow: real Twilio ingress stays, but the headline demo becomes one linked fraud case with explainable signals.
+- The first pass will stay text-first (`message_excerpt`, `suspicious_url`, `screenshot_note`) and avoid overclaiming AI-media detection.
+- RED verification:
+  - `node --test server/tests/fraud-case-store.test.js server/tests/fraud-case-api.test.js` -> FAIL (`fraud-case-store.js` missing and `/api/fraud-cases` returned `404`)
+  - `npx cypress run --spec cypress/e2e/fraud-case-demo.cy.js` -> FAIL first on a duplicate Twilio-number test collision, then on missing `[data-testid="fraud-case-panel"]`
+- GREEN verification:
+  - `node --test server/tests/fraud-case-store.test.js server/tests/fraud-case-api.test.js` -> PASS (`4` passing)
+  - `npx cypress run --spec cypress/e2e/fraud-case-demo.cy.js` -> PASS (`1` passing)
+  - `npm run build` -> PASS
+- Implementation details:
+  - Added `server/storage/fraud-case-store.js` for a file-backed household case log.
+  - Added `server/risk/fraud-case-analyzer.js` for deterministic, conservative risk heuristics.
+  - Added `GET /api/fraud-cases` and `POST /api/fraud-cases` in `server/api/routes.js`.
+  - Added `getEventById()` helpers to `server/storage/db.js` and `server/storage/storage-adapter.js`.
+  - Added `src/components/FraudCasePanel.jsx` and mounted it in the Live Feed tab from `src/Cortege.jsx`.
+  - Added backend and end-to-end coverage in `server/tests/fraud-case-store.test.js`, `server/tests/fraud-case-api.test.js`, and `cypress/e2e/fraud-case-demo.cy.js`.
+- Demo-claim boundary:
+  - README and spec now describe the feature as household-aware fraud correlation, not definitive AI-image or AI-video detection.
+
+---
+
+Session: 2026-03-20 17:39
+Agent: Codex CLI
+Model: GPT-5
+Skills: athena, verification-before-completion
+Feature: 20260320-household-fraud-case-demo
+Input: CR-20260320-1739
+Decisions: D-20260320-1739
+Spec: docs/specs/20260320-household-fraud-case-demo/spec.md
+Tasks: docs/specs/20260320-household-fraud-case-demo/tasks.md
+Goal: Finalize the current demo work as one clean local commit and align the README with the exact recorded localhost review artifacts.
+
+DONE
+- [2026-03-20 17:41] T-006: Update README to point to the exact recorded six-spec localhost screenshots and videos. (Skills: athena)
+- [2026-03-20 17:41] T-007: Keep runtime fraud-case output out of Git and prepare the working tree for a clean commit. (Skills: athena)
+- [2026-03-20 17:48] T-008: Run final verification across the current demo slice before local publication. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+- Create the clean local commit for the verified demo slice. (Skills: athena)
+
+NEXT
+- Return the local commit hash and the exact artifact paths to the user. (Skills: athena)
+
+NOTES
+- Publication choice: commit the full current demo slice together instead of splitting by subsystem.
+- Runtime data choice: `data/fraud-cases/` is now gitignored alongside other mutable data directories.
+- Verification:
+  - `npm test` -> PASS (`174` passing, `3` skipped)
+  - `npm run build` -> PASS
+  - `npx cypress run --spec cypress/e2e/navigation.cy.js,cypress/e2e/household-crud.cy.js,cypress/e2e/member-crud.cy.js,cypress/e2e/companion-cards.cy.js,cypress/e2e/live-feed.cy.js,cypress/e2e/fraud-case-demo.cy.js` -> PASS (`24` passing across `6` specs)

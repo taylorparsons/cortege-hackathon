@@ -24,6 +24,12 @@ const inputStyle = {
   outline: 'none',
 };
 
+function normalizeRoutingPhoneInput(phone) {
+  if (!phone) return null;
+  const trimmed = phone.trim();
+  return trimmed ? trimmed : null;
+}
+
 export function HouseholdSelector({ currentHouseholdId, onSelect }) {
   const {
     households,
@@ -36,6 +42,9 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
     updateLocation,
     deleteLocation,
     updateHousehold,
+    updateMember,
+    getHousehold,
+    refresh,
   } = useHouseholds();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
@@ -50,18 +59,60 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
   const [selectedLocationId, setSelectedLocationId] = useState('');
   const [reassignError, setReassignError] = useState('');
   const [editHouseholdName, setEditHouseholdName] = useState('');
+  const [editTwilioNumber, setEditTwilioNumber] = useState('');
+  const [editPassThroughNumber, setEditPassThroughNumber] = useState('');
+  const [selectedPrimaryMemberId, setSelectedPrimaryMemberId] = useState('');
   const [editHouseholdError, setEditHouseholdError] = useState('');
   const [householdSaved, setHouseholdSaved] = useState(false);
+  const [currentHouseholdDetails, setCurrentHouseholdDetails] = useState(null);
 
-  const currentHousehold = households.find((household) => household.household_id === currentHouseholdId) ?? null;
+  const currentHouseholdSummary = households.find((household) => household.household_id === currentHouseholdId) ?? null;
+  const currentHousehold = currentHouseholdDetails ?? currentHouseholdSummary;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadHouseholdDetails() {
+      if (!currentHouseholdId) {
+        setCurrentHouseholdDetails(null);
+        return;
+      }
+
+      try {
+        const household = await getHousehold(currentHouseholdId);
+        if (!cancelled) {
+          setCurrentHouseholdDetails(household);
+        }
+      } catch {
+        if (!cancelled) {
+          setCurrentHouseholdDetails(currentHouseholdSummary);
+        }
+      }
+    }
+
+    loadHouseholdDetails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentHouseholdId, currentHouseholdSummary, getHousehold, households]);
 
   useEffect(() => {
     setSelectedLocationId(currentHousehold?.location_id ?? '');
     setReassignError('');
     setEditHouseholdName(currentHousehold?.name ?? '');
+    setEditTwilioNumber(currentHousehold?.twilio_number ?? '');
+    setEditPassThroughNumber(currentHousehold?.pass_through_number ?? '');
+    setSelectedPrimaryMemberId(currentHousehold?.members?.find((member) => member.is_primary)?.id ?? '');
     setEditHouseholdError('');
     setHouseholdSaved(false);
-  }, [currentHousehold?.location_id, currentHousehold?.name]);
+  }, [
+    currentHousehold?.location_id,
+    currentHousehold?.name,
+    currentHousehold?.twilio_number,
+    currentHousehold?.pass_through_number,
+    currentHousehold?.members,
+  ]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -111,14 +162,50 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
     if (!currentHouseholdId) return;
 
     const trimmedName = editHouseholdName.trim();
-    if (!trimmedName || trimmedName === currentHousehold?.name) {
+    const trimmedTwilio = normalizeRoutingPhoneInput(editTwilioNumber);
+    const trimmedPassThrough = normalizeRoutingPhoneInput(editPassThroughNumber);
+    const currentPrimaryMemberId = currentHousehold?.members?.find((member) => member.is_primary)?.id ?? '';
+
+    const householdUpdates = {};
+    if (trimmedName && trimmedName !== currentHousehold?.name) {
+      householdUpdates.name = trimmedName;
+    }
+    if ((currentHousehold?.twilio_number ?? null) !== trimmedTwilio) {
+      householdUpdates.twilio_number = trimmedTwilio;
+    }
+    if ((currentHousehold?.pass_through_number ?? null) !== trimmedPassThrough) {
+      householdUpdates.pass_through_number = trimmedPassThrough;
+    }
+
+    const primaryMemberUpdates = (currentHousehold?.members ?? [])
+      .filter((member) => {
+        const shouldBePrimary = selectedPrimaryMemberId ? member.id === selectedPrimaryMemberId : false;
+        return (member.is_primary ?? false) !== shouldBePrimary;
+      })
+      .map((member) => ({
+        memberId: member.id,
+        updates: { is_primary: selectedPrimaryMemberId ? member.id === selectedPrimaryMemberId : false },
+      }));
+
+    if (
+      Object.keys(householdUpdates).length === 0 &&
+      primaryMemberUpdates.length === 0
+    ) {
       return;
     }
 
     setEditHouseholdError('');
     setHouseholdSaved(false);
     try {
-      await updateHousehold(currentHouseholdId, { name: trimmedName });
+      if (Object.keys(householdUpdates).length > 0) {
+        await updateHousehold(currentHouseholdId, householdUpdates);
+      }
+      if (primaryMemberUpdates.length > 0) {
+        await Promise.all(primaryMemberUpdates.map(({ memberId, updates }) => (
+          updateMember(currentHouseholdId, memberId, updates)
+        )));
+      }
+      await refresh();
       setHouseholdSaved(true);
     } catch (err) {
       setEditHouseholdError(err.message);
@@ -339,15 +426,51 @@ export function HouseholdSelector({ currentHouseholdId, onSelect }) {
                   style={inputStyle}
                 />
               </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 6, color: 'var(--muted)', fontSize: 11, letterSpacing: 1 }}>
+                TWILIO NUMBER
+                <input
+                  data-testid="input-edit-household-twilio-number"
+                  type="tel"
+                  value={editTwilioNumber}
+                  onChange={(event) => setEditTwilioNumber(event.target.value)}
+                  placeholder="+12066664210"
+                  style={inputStyle}
+                />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 6, color: 'var(--muted)', fontSize: 11, letterSpacing: 1 }}>
+                PASS-THROUGH NUMBER
+                <input
+                  data-testid="input-edit-household-pass-through-number"
+                  type="tel"
+                  value={editPassThroughNumber}
+                  onChange={(event) => setEditPassThroughNumber(event.target.value)}
+                  placeholder="+19147634039"
+                  style={inputStyle}
+                />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 6, color: 'var(--muted)', fontSize: 11, letterSpacing: 1 }}>
+                PRIMARY HOUSEHOLD MEMBER
+                <select
+                  data-testid="select-household-primary-member"
+                  value={selectedPrimaryMemberId}
+                  onChange={(event) => setSelectedPrimaryMemberId(event.target.value)}
+                  style={inputStyle}
+                >
+                  <option value="">Automatic (first household member)</option>
+                  {(currentHousehold?.members ?? []).map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <button
                 data-testid="btn-save-household"
                 type="submit"
-                disabled={!editHouseholdName.trim() || editHouseholdName.trim() === currentHousehold?.name}
                 style={{
                   padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(78,205,196,0.3)',
                   background: 'rgba(78,205,196,0.08)', color: 'var(--teal)', cursor: 'pointer',
                   fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 500, letterSpacing: 0.5,
-                  opacity: !editHouseholdName.trim() || editHouseholdName.trim() === currentHousehold?.name ? 0.6 : 1,
                 }}
               >
                 Save Household

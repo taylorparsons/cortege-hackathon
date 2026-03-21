@@ -83,6 +83,65 @@ class StorageAdapter {
     }
   }
 
+  getRecentEvents(limit = 50, dateStr = null) {
+    if (this.mode === 'json') {
+      return this._readRecentEventsJSON(limit, dateStr);
+    }
+
+    try {
+      const rows = this.sqliteDb.getRecentEvents(limit, dateStr);
+      return rows.map((row) => ({
+        id: row.event_id,
+        type: row.type,
+        source: row.source,
+        target_member: row.target_member,
+        timestamp: row.timestamp,
+        payload: typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload,
+        metadata: {},
+      }));
+    } catch (err) {
+      if (this.enableFallback) {
+        console.warn('SQLite recent-event read failed, falling back to JSON', err);
+        return this._readRecentEventsJSON(limit, dateStr);
+      }
+      throw err;
+    }
+  }
+
+  getEventById(eventId) {
+    if (!eventId) return null;
+
+    if (this.mode === 'json') {
+      return this._readEventByIdJSON(eventId);
+    }
+
+    try {
+      const row = this.sqliteDb.getEventById(eventId);
+      if (row) {
+        return {
+          id: row.event_id,
+          type: row.type,
+          source: row.source,
+          target_member: row.target_member,
+          timestamp: row.timestamp,
+          payload: typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload,
+          metadata: {},
+        };
+      }
+
+      if (this.enableFallback) {
+        return this._readEventByIdJSON(eventId);
+      }
+      return null;
+    } catch (err) {
+      if (this.enableFallback) {
+        console.warn('SQLite event lookup failed, falling back to JSON', err);
+        return this._readEventByIdJSON(eventId);
+      }
+      throw err;
+    }
+  }
+
   _writeEventJSON(eventData) {
     const date = new Date(eventData.timestamp).toISOString().split('T')[0];
     const filePath = path.join('data', 'events', `${date}.jsonl`);
@@ -117,6 +176,56 @@ class StorageAdapter {
     
     const data = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(data);
+  }
+
+  _readRecentEventsJSON(limit, dateStr = null) {
+    const eventsDir = path.join('data', 'events');
+    if (!fs.existsSync(eventsDir)) return [];
+
+    let files;
+    try {
+      files = fs.readdirSync(eventsDir)
+        .filter((f) => f.endsWith('.jsonl'))
+        .sort()
+        .reverse();
+    } catch {
+      return [];
+    }
+
+    if (dateStr) {
+      files = files.filter((filename) => filename === `${dateStr}.jsonl`);
+    }
+
+    const events = [];
+
+    for (const filename of files) {
+      if (events.length >= limit) break;
+
+      const filePath = path.join(eventsDir, filename);
+      let content = '';
+      try {
+        content = fs.readFileSync(filePath, 'utf8');
+      } catch {
+        continue;
+      }
+
+      const lines = content.split('\n').filter((line) => line.trim()).reverse();
+      for (const line of lines) {
+        if (events.length >= limit) break;
+        try {
+          events.push(JSON.parse(line));
+        } catch {
+          // skip malformed JSON lines
+        }
+      }
+    }
+
+    return events;
+  }
+
+  _readEventByIdJSON(eventId) {
+    const events = this._readRecentEventsJSON(500);
+    return events.find((event) => event.id === eventId || event.event_id === eventId) ?? null;
   }
 }
 

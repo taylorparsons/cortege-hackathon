@@ -902,3 +902,123 @@ Rationale:
 Acceptance / test:
 - The current Twilio documentation changes are committed on `main`
 - `origin/main` contains the new docs-only commit
+
+## D-20260320-1619
+Date: 2026-03-20 16:19
+Inputs: [CR-20260320-1619](requests.md#cr-20260320-1619)
+PRD: [Working Demo with Twilio](PRD.md#working-demo-with-twilio-sources-cr-20260318-1640-d-20260318-1640-cr-20260320-1550-d-20260320-1550-cr-20260320-1559-d-20260320-1559-cr-20260320-1607-d-20260320-1607-cr-20260320-1619-d-20260320-1619)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Decision:
+Implement the first Twilio runtime slice as backend-only household ingress wiring: add a unique household `twilio_number`, resolve `household_id` from the webhook `To` number, and emit a normalized inbound-call event onto the existing event bus. Defer signature validation and Twilio-console configuration until after this local runtime slice passes.
+
+Rationale:
+- This is the smallest slice that converts the Twilio work from documentation into running code.
+- The repo already has the household store, event bus, and household-aware orchestrator runtime needed for this step.
+- Keeping the first slice backend-only avoids mixing ingress plumbing with Twilio account setup or call-control behavior.
+
+Alternatives considered:
+- Start with Twilio account configuration or TwiML call bridging (rejected — local runtime routing is not implemented yet)
+- Include signature validation in the same slice (deferred — important, but not required to prove `To -> household_id` routing locally)
+- Add member-level targeting in the first slice (rejected — household resolution is the required first routing decision)
+
+Acceptance / test:
+- Household create/update/read flows expose `twilio_number` and reject duplicates
+- `POST /ingest/twilio/voice` resolves `household_id` from `To` and emits an inbound-call event
+- Unknown `To` numbers are rejected instead of falling back to a default household
+
+## D-20260320-1646
+Date: 2026-03-20 16:46
+Inputs: [CR-20260320-1646](requests.md#cr-20260320-1646)
+PRD: [Working Demo with Twilio](PRD.md#working-demo-with-twilio-sources-cr-20260318-1640-d-20260318-1640-cr-20260320-1550-d-20260320-1550-cr-20260320-1559-d-20260320-1559-cr-20260320-1607-d-20260320-1607-cr-20260320-1619-d-20260320-1619-cr-20260320-1646-d-20260320-1646)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Decision:
+Implement the next Twilio runtime slice in two parts: make `/api/events` read recent events from the active storage backend instead of only JSONL, and target inbound Twilio household calls to a single member. Use the household primary member when present; if no primary is configured, fall back to the first household member to avoid broadcast fanout in the hackathon demo.
+
+Rationale:
+- Live validation proved the Twilio webhook is working, but the UI-facing events API still shows stale simulator JSONL data instead of the newly ingested SQLite-backed call events.
+- The current `target_member: null` Twilio event shape causes every household companion to process the same inbound call, which is not the intended demo behavior.
+- Choosing the first household member when no explicit primary exists keeps the demo deterministic without requiring an immediate household-data migration.
+
+Alternatives considered:
+- Leave `/api/events` on JSONL until a later storage cleanup (rejected — it hides the live Twilio call the user just triggered)
+- Require every household to mark an `is_primary` member before Twilio routing works (rejected — too much setup friction for the demo)
+- Keep Twilio calls as household broadcasts (rejected — duplicates companion processing and confuses the demo)
+
+Acceptance / test:
+- `/api/events` returns the recent live Twilio call when the runtime is using SQLite storage
+- The Twilio webhook emits `target_member` for one household member instead of broadcasting to all agents
+- A household with no explicit primary still routes to exactly one deterministic member
+
+## D-20260320-1655
+Date: 2026-03-20 16:55
+Inputs: [CR-20260320-1655](requests.md#cr-20260320-1655)
+PRD: [Working Demo with Twilio](PRD.md#working-demo-with-twilio-sources-cr-20260318-1640-d-20260318-1640-cr-20260320-1550-d-20260320-1550-cr-20260320-1559-d-20260320-1559-cr-20260320-1607-d-20260320-1607-cr-20260320-1619-d-20260320-1619-cr-20260320-1646-d-20260320-1646-cr-20260320-1655-d-20260320-1655)
+Spec: [`specs/working-demo-with-twilio/spec.md`](specs/working-demo-with-twilio/spec.md)
+
+Decision:
+Add a second household phone field named `pass_through_number` for the real number that should ring when a Twilio call is allowed. Keep `twilio_number` as the ingress routing number. Expose both fields in the existing household editor modal and allow the same UI pass to select the household primary member. Primary-member selection should support one chosen member or no explicit primary, in which case routing continues to fall back to the first household member.
+
+Rationale:
+- The user’s real cell number should not be overloaded as the Twilio ingress key; the demo needs one number to receive the call and a different number to ring on allow.
+- The current household editor is already the management surface for household details, so extending it is lower-risk than creating a new Twilio settings screen.
+- Primary-member control belongs in the same household routing section because it affects how live Twilio calls are targeted.
+
+Alternatives considered:
+- Reuse `twilio_number` as the ringing number (rejected — it collapses ingress routing and pass-through behavior into one field)
+- Put `pass_through_number` on each member (rejected for the hackathon — household-level is the simplest model)
+- Add primary-member editing only through member edit forms (rejected — less discoverable for Twilio routing setup)
+
+Acceptance / test:
+- Household create/read/update flows expose optional `pass_through_number`
+- The household editor UI can save `twilio_number`, `pass_through_number`, and a selected primary member
+- The updated UI persists a single primary member and the new household routing numbers
+
+## D-20260320-1720
+Date: 2026-03-20 17:20
+Inputs: [CR-20260320-1720](requests.md#cr-20260320-1720)
+PRD: [Household Fraud Case Demo](PRD.md#household-fraud-case-demo-sources-cr-20260320-1720-d-20260320-1720)
+Spec: [`specs/20260320-household-fraud-case-demo/spec.md`](specs/20260320-household-fraud-case-demo/spec.md)
+
+Decision:
+Pivot the remaining hackathon implementation to one believable judge demo: keep real Twilio household ingress, then let the operator attach one manual evidence item to that live call and produce a household-scoped fraud case with explainable signals and a recommended action. Use deterministic heuristics and conservative language instead of broad AI-detection claims. Support text-first evidence types (`message_excerpt`, `suspicious_url`, `screenshot_note`) instead of building full OCR or image-forensics in the remaining time.
+
+Rationale:
+- A Twilio-only route-or-block demo is not differentiated enough from built-in phone spam tools.
+- The repo already has live Twilio ingress, household routing, live-feed UI, and event persistence, so a thin case layer can create a stronger story without a rewrite.
+- The remaining time is too short for credible AI-image/video detection or production-grade multimodal analysis.
+- Deterministic, explainable risk signals are safer for a hackathon demo than overclaiming synthetic-media detection.
+
+Alternatives considered:
+- Finish Twilio call-control first and keep the demo phone-centric (rejected — not differentiated enough)
+- Attempt AI-generated image/video detection (rejected — not credible enough in the remaining time)
+- Build a full cross-channel case-management system (rejected — too large for the deadline)
+
+Acceptance / test:
+- A recent household call plus one manual evidence item can be turned into a persisted fraud case
+- The UI shows the created case with severity, signals, and recommendation
+- The implementation avoids claims of definitive AI-generated-media detection
+
+## D-20260320-1739
+Date: 2026-03-20 17:39
+Inputs: [CR-20260320-1739](requests.md#cr-20260320-1739)
+PRD: [Household Fraud Case Demo](PRD.md#household-fraud-case-demo-sources-cr-20260320-1720-d-20260320-1720)
+Spec: [`specs/20260320-household-fraud-case-demo/spec.md`](specs/20260320-household-fraud-case-demo/spec.md)
+
+Decision:
+Publish the current demo state as one clean local commit that includes the household Twilio runtime work, the fraud-case demo flow, and the recorded Cypress review artifacts. Update `README.md` to point at the exact six-spec localhost capture run, and keep `data/fraud-cases/` out of Git as runtime output.
+
+Rationale:
+- The user explicitly asked for a clean local check-in and README links to the exact generated artifacts.
+- The current working tree spans one coherent demo narrative: household setup, household-scoped routing, live feed behavior, and fraud-case creation.
+- Fraud-case JSON files are runtime state, not source, and should follow the same gitignore treatment as other mutable data directories.
+
+Alternatives considered:
+- Split the work into multiple cleanup commits (rejected — the user asked for a clean single check-in)
+- Commit `data/fraud-cases/` example output (rejected — mutable runtime data should stay out of source control)
+
+Acceptance / test:
+- `README.md` documents the exact Cypress localhost suite and links to the generated screenshots/videos
+- `data/fraud-cases/` is gitignored
+- The working tree is committed cleanly after final verification

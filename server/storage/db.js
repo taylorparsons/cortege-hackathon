@@ -125,6 +125,33 @@ class SQLiteDatabase {
     return db.prepare(sql).all(...params);
   }
 
+  getRecentEvents(limit = 50, dateStr = null) {
+    const db = this.connect();
+
+    let sql = 'SELECT event_id, type, source, target_member, payload, timestamp FROM events';
+    const params = [];
+
+    if (dateStr) {
+      sql += ' WHERE date(timestamp) = date(?)';
+      params.push(dateStr);
+    }
+
+    sql += ' ORDER BY timestamp DESC, id DESC LIMIT ?';
+    params.push(limit);
+
+    return db.prepare(sql).all(...params);
+  }
+
+  getEventById(eventId) {
+    const db = this.connect();
+    return db.prepare(`
+      SELECT event_id, type, source, target_member, payload, timestamp
+      FROM events
+      WHERE event_id = ?
+      LIMIT 1
+    `).get(eventId);
+  }
+
   writeMemorySnapshot(instance_id, member_id, snapshot, event_id) {
     const db = this.connect();
     

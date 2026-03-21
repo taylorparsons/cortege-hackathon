@@ -2,16 +2,16 @@
 
 Status: Draft
 Created: 2026-03-18 16:40
-Updated: 2026-03-20 16:07
-Inputs: CR-20260318-1640, CR-20260320-1550, CR-20260320-1559, CR-20260320-1607
-Decisions: D-20260318-1640, D-20260320-1550, D-20260320-1559, D-20260320-1607
+Updated: 2026-03-20 16:55
+Inputs: CR-20260318-1640, CR-20260320-1550, CR-20260320-1559, CR-20260320-1607, CR-20260320-1619, CR-20260320-1646, CR-20260320-1655
+Decisions: D-20260318-1640, D-20260320-1550, D-20260320-1559, D-20260320-1607, D-20260320-1619, D-20260320-1646, D-20260320-1655
 Design: docs/superpowers/specs/2026-03-14-agent-orchestration-design.md
 
 ## Summary
 
 Build the next Twilio demo around **one Twilio number per household**. Inbound voice webhooks should resolve the household from the Twilio `To` number, normalize the call into a CORTEGE event, and route it into the existing household-scoped companion system running on localhost via ngrok.
 
-Sources: CR-20260318-1640; CR-20260320-1550; CR-20260320-1559; CR-20260320-1607; D-20260318-1640; D-20260320-1550; D-20260320-1559; D-20260320-1607
+Sources: CR-20260318-1640; CR-20260320-1550; CR-20260320-1559; CR-20260320-1607; CR-20260320-1619; CR-20260320-1646; CR-20260320-1655; D-20260318-1640; D-20260320-1550; D-20260320-1559; D-20260320-1607; D-20260320-1619; D-20260320-1646; D-20260320-1655
 
 ## User Stories & Acceptance
 
@@ -30,7 +30,17 @@ Narrative:
 
 Acceptance scenarios:
 1. Given ngrok and a configured Twilio number, When a call hits the Twilio number, Then the webhook is delivered to localhost and normalized into a CORTEGE inbound-call event. (Verifies: FR-003, FR-006, FR-007)
-2. Given a real inbound call for a mapped household, When the webhook is processed, Then the event appears on the correct household runtime path instead of a global or legacy default household. (Verifies: FR-004, FR-005, FR-007)
+2. Given a real inbound call for a mapped household, When the webhook is processed, Then the event appears on the correct household runtime path instead of a global or legacy default household. (Verifies: FR-004, FR-005, FR-007, FR-015)
+3. Given a household with no explicit target member in the Twilio webhook, When the event is emitted, Then CORTEGE routes it to one deterministic household member instead of broadcasting to every companion. (Verifies: FR-005, FR-016)
+
+### US6: Household Twilio Setup UI (Priority: P1)
+Narrative:
+- As a demo operator, I want to configure Twilio ingress and pass-through numbers plus the primary household member in the existing household editor, so that I can prepare the live call flow without using curl.
+
+Acceptance scenarios:
+1. Given the selected-household editor, When I enter a valid `twilio_number` and `pass_through_number` and save, Then the household stores both numbers. (Verifies: FR-017, FR-018)
+2. Given multiple household members, When I choose one as the primary member in the editor and save, Then exactly that member is marked `is_primary=true` and the others are false. (Verifies: FR-019)
+3. Given no selected primary member, When I save the household routing section, Then all members remain `is_primary=false` and the Twilio webhook continues to fall back to the first member. (Verifies: FR-016, FR-019)
 
 ### US3: Privacy-Safe Twilio Handling (Priority: P0)
 Narrative:
@@ -73,6 +83,11 @@ Acceptance scenarios:
 - FR-006: The Twilio webhook SHALL wire valid inbound voice calls to `eventBus.emit()` as normalized CORTEGE events. (Sources: CR-20260318-1640; D-20260318-1640)
 - FR-007: The normalized inbound-call event SHALL include the resolved `household_id` plus Twilio call metadata needed for downstream routing. (Sources: CR-20260318-1640; CR-20260320-1550; D-20260320-1550)
 - FR-008: The Twilio guide and tasks SHALL use the current household store model and SHALL NOT instruct operators to update legacy `household.json` for Twilio routing. (Sources: CR-20260320-1550; D-20260320-1550)
+- FR-015: The recent-events API SHALL read from the active storage backend so live Twilio calls are visible when SQLite is the runtime event store. (Sources: CR-20260320-1646; D-20260320-1646)
+- FR-016: When a Twilio call resolves to a household but no explicit member target exists, the webhook SHALL set `target_member` to the household primary member, or the first household member if no primary is configured. (Sources: CR-20260320-1646; D-20260320-1646)
+- FR-017: Household records SHALL support an optional `pass_through_number` separate from `twilio_number`, stored and validated as an E.164 phone number. (Sources: CR-20260320-1655; D-20260320-1655)
+- FR-018: The selected-household editor UI SHALL let the user view and update both `twilio_number` and `pass_through_number`. (Sources: CR-20260320-1655; D-20260320-1655)
+- FR-019: The selected-household editor UI SHALL let the user choose one household primary member, or none, and SHALL persist that choice through the existing member update flows. (Sources: CR-20260320-1655; D-20260320-1655)
 
 #### Privacy & Security
 - FR-009: Twilio logging guidance SHALL require redacted or aliased phone logging and SHALL NOT require cleartext `From` / `To` logging. (Sources: CR-20260320-1550; D-20260320-1550)
@@ -105,7 +120,7 @@ Acceptance scenarios:
 - Given two households are configured with the same Twilio number, When the system validates routing setup, Then the configuration is rejected or surfaced as invalid. (Verifies: FR-001, FR-004)
 
 ### EC3: No Explicit Target Member
-- Given a household resolves successfully but no member-level target can be inferred, When the event is routed, Then the household-primary-member fallback is used. (Verifies: FR-005)
+- Given a household resolves successfully but no member-level target can be inferred, When the event is routed, Then the household-primary-member fallback is used, or the first household member if no primary is configured. (Verifies: FR-005, FR-016)
 
 ### EC4: Signature Validation Disabled in Dev
 - Given localhost development without a configured Twilio auth token, When the webhook is exercised manually, Then the route can still be tested while the docs preserve signature validation as required for protected environments. (Verifies: FR-010)
@@ -139,3 +154,5 @@ Acceptance scenarios:
 - [ ] The Twilio docs no longer instruct operators to use legacy `household.json` for live routing
 - [ ] The Twilio guide visually explains the allowed and blocked call outcomes with Mermaid sequence diagrams
 - [ ] The Twilio guide makes it visually obvious which steps are Twilio, CORTEGE code, and optional LLM work
+- [ ] Household APIs expose a unique `twilio_number` field for household ingress routing
+- [ ] `POST /ingest/twilio/voice` emits a normalized inbound-call event with `household_id` resolved from `To`

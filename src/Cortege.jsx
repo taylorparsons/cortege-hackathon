@@ -4,6 +4,7 @@ import { AgentStatus } from "./components/AgentStatus.jsx";
 import { ScenarioRunner } from "./components/ScenarioRunner.jsx";
 import { EventInjector } from "./components/EventInjector.jsx";
 import { MemoryViewer } from "./components/MemoryViewer.jsx";
+import { FraudCasePanel } from "./components/FraudCasePanel.jsx";
 import { useCortegeData } from './hooks/useCortegeData.js';
 import { useCompanionDetail } from './hooks/useCompanionDetail.js';
 import { getAgentDisplay, getStageIndex, formatStageName, DEPTH_STAGES } from './lib/companion-display.js';
@@ -981,6 +982,11 @@ export default function Cortege() {
                   <div className="live-panel-title">Event Injector</div>
                   <EventInjector members={household?.members ?? []} />
                 </div>
+              </div>
+
+              <div className="live-panel" style={{ marginBottom: 24 }}>
+                <div className="live-panel-title">Household Fraud Case</div>
+                <FraudCasePanel household={household} />
               </div>
             </>
           )}

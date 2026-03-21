@@ -21,11 +21,20 @@ export class HouseholdStore {
     }
   }
 
-  async createHousehold({ name, location_id = null, location = null, address = null }) {
+  async createHousehold({
+    name,
+    location_id = null,
+    location = null,
+    address = null,
+    twilio_number = null,
+    pass_through_number = null,
+  }) {
     const household = {
       household_id: `hh_${randomUUID().slice(0, 8)}`,
       name,
       location_id,
+      twilio_number,
+      pass_through_number,
       location,
       address,
       created: new Date().toISOString(),
@@ -47,6 +56,8 @@ export class HouseholdStore {
         household_id: household.household_id,
         name: household.name,
         location_id: household.location_id ?? null,
+        twilio_number: household.twilio_number ?? null,
+        pass_through_number: household.pass_through_number ?? null,
         location: household.location ?? null,
         member_count: household.members?.length ?? 0
       };
@@ -65,6 +76,8 @@ export class HouseholdStore {
     const household = await this.getHousehold(householdId);
     if (updates.name !== undefined) household.name = updates.name;
     if (updates.location_id !== undefined) household.location_id = updates.location_id;
+    if (updates.twilio_number !== undefined) household.twilio_number = updates.twilio_number;
+    if (updates.pass_through_number !== undefined) household.pass_through_number = updates.pass_through_number;
     if (updates.location !== undefined) household.location = updates.location;
     if (updates.address !== undefined) household.address = updates.address;
     household.updated_at = new Date().toISOString();
@@ -86,6 +99,13 @@ export class HouseholdStore {
 
     const households = await this.listHouseholds();
     return households.filter((household) => household.location_id === locationId);
+  }
+
+  async findHouseholdByTwilioNumber(twilioNumber) {
+    if (!twilioNumber) return null;
+
+    const households = await this.listHouseholds();
+    return households.find((household) => household.twilio_number === twilioNumber) ?? null;
   }
 
   async addMember(householdId, memberData) {
@@ -156,6 +176,8 @@ export class HouseholdStore {
       household_id: raw.household_id,
       name: decryptHouseholdName(raw),
       location_id: raw.location_id ?? null,
+      twilio_number: raw.twilio_number ?? null,
+      pass_through_number: raw.pass_through_number ?? null,
       location: raw.location ?? null,
       address: raw.address ?? null,
       created: raw.created,
@@ -169,6 +191,8 @@ export class HouseholdStore {
       household_id: household.household_id,
       name_enc: encryptHouseholdName(household.name),
       location_id: household.location_id ?? null,
+      twilio_number: household.twilio_number ?? null,
+      pass_through_number: household.pass_through_number ?? null,
       location: household.location ?? null,
       address: household.address ?? null,
       created: household.created,

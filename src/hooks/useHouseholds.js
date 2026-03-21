@@ -154,11 +154,11 @@ export function useHouseholds() {
     bumpHouseholdVersion();
   };
 
-  const getHousehold = async (householdId) => {
+  const getHousehold = useCallback(async (householdId) => {
     const response = await fetch(apiUrl(`/api/households/${householdId}`));
     if (!response.ok) throw new Error('Failed to fetch household');
     return response.json();
-  };
+  }, []);
 
   const addMember = async (householdId, memberData) => {
     const response = await fetch(apiUrl(`/api/households/${householdId}/members`), {

@@ -19,6 +19,7 @@ async function main() {
   // 1. Create Express app
   const app = express();
   app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
 
   // 2. Create HTTP server
   const httpServer = http.createServer(app);
@@ -37,7 +38,10 @@ async function main() {
   // 6. Mount API routers
   app.use(createApiRouter(orchestrator));
   app.use('/api/events', createManualRouter(eventBus));
-  app.use('/ingest/twilio', createTwilioRouter());
+  app.use('/ingest/twilio', createTwilioRouter({
+    householdStore: orchestrator.householdStore,
+    eventBus,
+  }));
 
   // 7. Start HTTP server
   httpServer.listen(PORT, () => {

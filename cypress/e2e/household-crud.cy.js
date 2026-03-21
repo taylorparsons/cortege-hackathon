@@ -102,6 +102,51 @@ describe('Household CRUD', () => {
     });
   });
 
+  it('saves Twilio routing numbers and primary member from the household editor', () => {
+    const name = `E2E Test Routing ${Date.now()}`;
+    const twilioNumber = '+12065550121';
+    const passThroughNumber = '+19147634039';
+
+    cy.createHousehold(name, 'Routing City').then((household) => {
+      cy.addMember(household.household_id, {
+        name: 'Routing Adult A',
+        phone: '+19147634039',
+        date_of_birth: '1980-01-01',
+        profile_type: 'adult',
+        companion: 'sentinel',
+      }).then((firstMember) => {
+        cy.addMember(household.household_id, {
+          name: 'Routing Adult B',
+          phone: '+19147634753',
+          date_of_birth: '1981-01-01',
+          profile_type: 'adult',
+          companion: 'sentinel',
+        }).then((secondMember) => {
+          cy.visit('/');
+          cy.openHouseholdSelector();
+          cy.get(`[data-testid="household-row-${household.household_id}"]`).click();
+          cy.get('[data-testid="modal-household-selector"]').should('not.exist');
+
+          cy.openHouseholdSelector();
+          cy.get('[data-testid="household-details-editor"]').scrollIntoView().should('be.visible');
+          cy.get('[data-testid="input-edit-household-twilio-number"]').clear().type(twilioNumber);
+          cy.get('[data-testid="input-edit-household-pass-through-number"]').clear().type(passThroughNumber);
+          cy.get('[data-testid="select-household-primary-member"]').select(secondMember.id);
+          cy.get('[data-testid="btn-save-household"]').click();
+
+          cy.request('GET', `http://localhost:3001/api/households/${household.household_id}`).then((response) => {
+            expect(response.body.twilio_number).to.equal(twilioNumber);
+            expect(response.body.pass_through_number).to.equal(passThroughNumber);
+            const primaryMember = response.body.members.find((member) => member.is_primary);
+            expect(primaryMember.id).to.equal(secondMember.id);
+            const firstUpdated = response.body.members.find((member) => member.id === firstMember.id);
+            expect(firstUpdated.is_primary).to.equal(false);
+          });
+        });
+      });
+    });
+  });
+
   it('blocks deleting a referenced location until the household is reassigned', () => {
     const name = `E2E Test Location Block ${Date.now()}`;
 

@@ -41,3 +41,4 @@ Start here:
 | Live Feed Household Data | [`specs/20260320-live-feed-household-data/spec.md`](specs/20260320-live-feed-household-data/spec.md) | Fix hard-coded live-feed members and stale companion activity inherited from pre-creation history |
 | Live Feed Patch Release | [`specs/20260320-live-feed-patch-release/spec.md`](specs/20260320-live-feed-patch-release/spec.md) | Check in the live-feed bugfix, update `README.md`, and publish a new patch release |
 | Twilio Docs Publication | [`specs/20260320-twilio-docs-publication/spec.md`](specs/20260320-twilio-docs-publication/spec.md) | Commit and push the Twilio household-number doc rewrite and clarified diagrams |
+| Household Fraud Case Demo | [`specs/20260320-household-fraud-case-demo/spec.md`](specs/20260320-household-fraud-case-demo/spec.md) | Pivot the hackathon demo to a household-scoped fraud case built from a live call plus one manual evidence item |

@@ -6,6 +6,7 @@
  */
 
 import { Router } from 'express';
+import { getPrimaryMember } from '../agents/household.js';
 import { aliasFromValue, normalizePhone } from '../privacy/pii.js';
 
 // Required Twilio fields for an inbound voice call
@@ -23,7 +24,7 @@ const TWIML_EMPTY_RESPONSE =
  * Create and return an Express Router for the Twilio voice webhook.
  * @returns {Router}
  */
-export function createTwilioRouter() {
+export function createTwilioRouter({ householdStore = null, eventBus = null } = {}) {
   const router = Router();
 
   /**
@@ -44,31 +45,62 @@ export function createTwilioRouter() {
       });
     }
 
+    const normalizedFrom = normalizePhone(payload.From);
+    const normalizedTo = normalizePhone(payload.To);
+
     // Log the incoming payload
     console.log('[twilio-webhook] Inbound voice call received:', {
       CallSid: payload.CallSid,
-      From: payload.From ? aliasFromValue('phone', normalizePhone(payload.From)) : null,
-      To: payload.To ? aliasFromValue('phone', normalizePhone(payload.To)) : null,
+      From: normalizedFrom ? aliasFromValue('phone', normalizedFrom) : null,
+      To: normalizedTo ? aliasFromValue('phone', normalizedTo) : null,
       CallStatus: payload.CallStatus,
       Direction: payload.Direction,
     });
 
-    // TODO: Wire to eventBus.emit() when Twilio account is configured.
-    // Example:
-    //   eventBus.emit({
-    //     type: 'inbound_call',
-    //     source: 'twilio',
-    //     payload: {
-    //       caller_id: payload.From,
-    //       caller_name: null,
-    //       twilio_call_sid: payload.CallSid,
-    //     },
-    //     metadata: { twilio_call_sid: payload.CallSid },
-    //   });
+    if (!householdStore || !eventBus) {
+      return res.status(501).json({ error: 'Twilio routing is not configured' });
+    }
 
-    // Respond with empty TwiML to acknowledge the webhook
-    res.set('Content-Type', 'text/xml');
-    return res.status(200).send(TWIML_EMPTY_RESPONSE);
+    const routeInboundCall = async () => {
+      const household = await householdStore.findHouseholdByTwilioNumber(normalizedTo);
+      if (!household) {
+        console.warn('[twilio-webhook] Unknown household Twilio number:', {
+          To: normalizedTo ? aliasFromValue('phone', normalizedTo) : null,
+          CallSid: payload.CallSid,
+        });
+        return res.status(404).json({ error: 'No household is assigned to this Twilio number' });
+      }
+
+      const fullHousehold = await householdStore.getHousehold(household.household_id);
+      const primaryMember = getPrimaryMember(fullHousehold.members ?? []);
+      const fallbackMember = primaryMember ?? fullHousehold.members?.[0] ?? null;
+
+      eventBus.emit({
+        type: 'inbound_call',
+        source: 'twilio',
+        household_id: household.household_id,
+        target_member: fallbackMember?.id ?? null,
+        payload: {
+          from: normalizedFrom,
+          to: normalizedTo,
+          twilio_call_sid: payload.CallSid,
+          call_status: payload.CallStatus ?? null,
+          direction: payload.Direction ?? null,
+        },
+        metadata: {
+          household_id: household.household_id,
+          twilio_call_sid: payload.CallSid,
+        },
+      });
+
+      res.set('Content-Type', 'text/xml');
+      return res.status(200).send(TWIML_EMPTY_RESPONSE);
+    };
+
+    return routeInboundCall().catch((error) => {
+      console.error('[twilio-webhook] Failed to process inbound voice call:', error);
+      return res.status(500).json({ error: 'Failed to process Twilio webhook' });
+    });
   });
 
   return router;

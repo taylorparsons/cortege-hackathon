@@ -26,11 +26,15 @@ describe('HouseholdStore', () => {
     const household = await store.createHousehold({
       name: 'Test Family',
       location_id: 'loc_home',
+      twilio_number: '+12065550100',
+      pass_through_number: '+19147634039',
     });
 
     assert.ok(household.household_id);
     assert.equal(household.name, 'Test Family');
     assert.equal(household.location_id, 'loc_home');
+    assert.equal(household.twilio_number, '+12065550100');
+    assert.equal(household.pass_through_number, '+19147634039');
     assert.deepEqual(household.members, []);
 
     const raw = fs.readFileSync(path.join(dataDir, `${household.household_id}.json`), 'utf8');
@@ -39,7 +43,7 @@ describe('HouseholdStore', () => {
   });
 
   test('listHouseholds returns decrypted summaries', async () => {
-    await store.createHousehold({ name: 'Family 1', location_id: 'loc_1' });
+    await store.createHousehold({ name: 'Family 1', location_id: 'loc_1', twilio_number: '+12065550101' });
     await store.createHousehold({ name: 'Family 2', location_id: 'loc_2' });
 
     const households = await store.listHouseholds();
@@ -47,6 +51,7 @@ describe('HouseholdStore', () => {
     assert.equal(households.length, 2);
     assert.equal(households[0].name.length > 0, true);
     assert.equal(households[0].member_count, 0);
+    assert.equal(households.some((household) => household.twilio_number === '+12065550101'), true);
   });
 
   test('addMember encrypts direct PII at rest and returns decrypted member data', async () => {

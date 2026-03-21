@@ -17,6 +17,7 @@ data/memories/
 data/events/
 data/households/
 data/locations/
+data/fraud-cases/
 data/test-*/
 data/*.db
 data/cortege.db.backup.1773876131352

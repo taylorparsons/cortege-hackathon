@@ -11,6 +11,9 @@ import { Router } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import StorageAdapter from '../storage/storage-adapter.js';
+import FraudCaseStore from '../storage/fraud-case-store.js';
+import { analyzeFraudCase } from '../risk/fraud-case-analyzer.js';
 import {
   isValidDateOfBirth,
   isValidE164,
@@ -68,6 +71,28 @@ async function expandHousehold(orchestrator, household) {
       address_summary: formatLegacyAddressSummary(household.address),
     } : null),
   };
+}
+
+async function findTwilioNumberConflict(householdStore, twilioNumber, excludeHouseholdId = null) {
+  if (!twilioNumber) return null;
+  const existing = await householdStore.findHouseholdByTwilioNumber(twilioNumber);
+  if (!existing) return null;
+  if (excludeHouseholdId && existing.household_id === excludeHouseholdId) return null;
+  return existing;
+}
+
+function eventMatchesHousehold(event, household) {
+  if (!event || !household) return false;
+
+  if (event.source === 'twilio' && household.twilio_number) {
+    return normalizePhone(event.payload?.to) === normalizePhone(household.twilio_number);
+  }
+
+  if (event.target_member && Array.isArray(household.members)) {
+    return household.members.some((member) => member.id === event.target_member);
+  }
+
+  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +188,8 @@ function getCompanionCreatedAt(instance) {
  */
 export function createApiRouter(orchestrator) {
   const router = Router();
+  const storageAdapter = new StorageAdapter();
+  const fraudCaseStore = orchestrator.fraudCaseStore ?? new FraudCaseStore();
 
   // -------------------------------------------------------------------------
   // GET /api/household
@@ -342,7 +369,7 @@ export function createApiRouter(orchestrator) {
   // -------------------------------------------------------------------------
   router.post('/api/households', async (req, res) => {
     try {
-      const { name, location_id } = req.body;
+      const { name, location_id, twilio_number, pass_through_number } = req.body;
 
       if (!name) {
         return res.status(400).json({ error: 'Household name is required' });
@@ -364,9 +391,30 @@ export function createApiRouter(orchestrator) {
         return res.status(400).json({ error: err.message });
       }
 
+      const normalizedTwilioNumber = twilio_number ? normalizePhone(twilio_number) : null;
+      if (twilio_number && !isValidE164(twilio_number)) {
+        return res.status(400).json({ error: 'twilio_number must be valid E.164 (e.g. +15551234567)' });
+      }
+      const normalizedPassThroughNumber = pass_through_number ? normalizePhone(pass_through_number) : null;
+      if (pass_through_number && !isValidE164(pass_through_number)) {
+        return res.status(400).json({ error: 'pass_through_number must be valid E.164 (e.g. +15551234567)' });
+      }
+      const twilioConflict = await findTwilioNumberConflict(
+        orchestrator.householdStore,
+        normalizedTwilioNumber
+      );
+      if (twilioConflict) {
+        return res.status(409).json({
+          error: 'twilio_number is already assigned to another household',
+          household_id: twilioConflict.household_id,
+        });
+      }
+
       const household = await orchestrator.householdStore.createHousehold({
         name,
-        location_id
+        location_id,
+        twilio_number: normalizedTwilioNumber,
+        pass_through_number: normalizedPassThroughNumber,
       });
       
       res.status(201).json(await expandHousehold(orchestrator, household));
@@ -428,7 +476,7 @@ export function createApiRouter(orchestrator) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
       
-      const { name, location_id } = req.body;
+      const { name, location_id, twilio_number, pass_through_number } = req.body;
       const updates = {};
       if (name) updates.name = name;
       if (location_id !== undefined) {
@@ -441,6 +489,38 @@ export function createApiRouter(orchestrator) {
           return res.status(400).json({ error: err.message });
         }
         updates.location_id = location_id;
+      }
+      if (twilio_number !== undefined) {
+        if (twilio_number === null || twilio_number === '') {
+          updates.twilio_number = null;
+        } else {
+          if (!isValidE164(twilio_number)) {
+            return res.status(400).json({ error: 'twilio_number must be valid E.164 (e.g. +15551234567)' });
+          }
+          const normalizedTwilioNumber = normalizePhone(twilio_number);
+          const twilioConflict = await findTwilioNumberConflict(
+            orchestrator.householdStore,
+            normalizedTwilioNumber,
+            req.params.id
+          );
+          if (twilioConflict) {
+            return res.status(409).json({
+              error: 'twilio_number is already assigned to another household',
+              household_id: twilioConflict.household_id,
+            });
+          }
+          updates.twilio_number = normalizedTwilioNumber;
+        }
+      }
+      if (pass_through_number !== undefined) {
+        if (pass_through_number === null || pass_through_number === '') {
+          updates.pass_through_number = null;
+        } else {
+          if (!isValidE164(pass_through_number)) {
+            return res.status(400).json({ error: 'pass_through_number must be valid E.164 (e.g. +15551234567)' });
+          }
+          updates.pass_through_number = normalizePhone(pass_through_number);
+        }
       }
       
       const household = await orchestrator.householdStore.updateHousehold(
@@ -703,7 +783,7 @@ export function createApiRouter(orchestrator) {
         return res.status(400).json({ error: 'Invalid date format — use YYYY-MM-DD' });
       }
 
-      const events = readRecentEvents(limit, date);
+      const events = storageAdapter.getRecentEvents(limit, date);
       res.json(events);
     } catch (err) {
       console.error('[api] GET /api/events error:', err);
@@ -765,6 +845,86 @@ export function createApiRouter(orchestrator) {
       res.json({ reloaded: true, timestamp: new Date().toISOString() });
     } catch (err) {
       console.error('[api] POST /api/agents/reload error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /api/fraud-cases
+  // Lists persisted fraud cases for one household
+  // -------------------------------------------------------------------------
+  router.get('/api/fraud-cases', async (req, res) => {
+    try {
+      const householdId = req.query.household_id;
+      if (!householdId) {
+        return res.status(400).json({ error: 'household_id is required' });
+      }
+
+      const cases = await fraudCaseStore.listCases(householdId);
+      res.json(cases);
+    } catch (err) {
+      console.error('[api] GET /api/fraud-cases error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // POST /api/fraud-cases
+  // Creates a persisted household fraud case from one event + evidence item
+  // -------------------------------------------------------------------------
+  router.post('/api/fraud-cases', async (req, res) => {
+    try {
+      if (!orchestrator.householdStore) {
+        return res.status(501).json({ error: 'Household store not enabled' });
+      }
+
+      const { household_id, event_id, evidence } = req.body;
+      const validEvidenceTypes = new Set(['message_excerpt', 'suspicious_url', 'screenshot_note']);
+
+      if (!household_id || !event_id || !evidence?.type || !evidence?.content?.trim()) {
+        return res.status(400).json({ error: 'household_id, event_id, and non-empty evidence are required' });
+      }
+      if (!validEvidenceTypes.has(evidence.type)) {
+        return res.status(400).json({ error: 'Unsupported evidence type' });
+      }
+
+      const household = await orchestrator.householdStore.getHousehold(household_id);
+      const event = storageAdapter.getEventById(event_id);
+
+      if (!event) {
+        return res.status(404).json({ error: 'Linked event not found' });
+      }
+      if (!eventMatchesHousehold(event, household)) {
+        return res.status(400).json({ error: 'Linked event does not belong to the requested household' });
+      }
+
+      const analysis = analyzeFraudCase({
+        event,
+        evidence: { type: evidence.type, content: evidence.content.trim() },
+        household,
+      });
+
+      const fraudCase = await fraudCaseStore.createCase({
+        household_id,
+        event_id,
+        evidence: { type: evidence.type, content: evidence.content.trim() },
+        analysis,
+        linked_event: {
+          id: event.id,
+          type: event.type,
+          source: event.source,
+          target_member: event.target_member ?? null,
+          timestamp: event.timestamp,
+          payload: event.payload,
+        },
+      });
+
+      res.status(201).json(fraudCase);
+    } catch (err) {
+      if (err.message.includes('not found')) {
+        return res.status(404).json({ error: err.message });
+      }
+      console.error('[api] POST /api/fraud-cases error:', err);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
