@@ -608,7 +608,7 @@ function PhilosophyView() {
           <em>kind you never notice.</em>
         </div>
         <div className="phil-sub">
-          CORTEGE v2 doesn't hand you a threat feed and ask you to act.
+          CORTEGE doesn't hand you a threat feed and ask you to act.
           It works in the background, continuously, without asking for your attention.
           Its success metric is the opposite of every other app on your phone.
         </div>
@@ -616,7 +616,7 @@ function PhilosophyView() {
 
       <div className="compare-grid">
         <div className="compare-card">
-          <div className="compare-label" style={{ color: "var(--muted)" }}>v1 — Alert Model</div>
+          <div className="compare-label" style={{ color: "var(--muted)" }}>Alert Model</div>
           <div className="compare-title">The Security Dashboard</div>
           {[
             ["Your role", "Informed decision-maker"],
@@ -634,7 +634,7 @@ function PhilosophyView() {
         </div>
 
         <div className="compare-card" style={{ borderColor: "rgba(78,205,196,0.2)" }}>
-          <div className="compare-label" style={{ color: "#4ECDC4" }}>v2 — Companion Model</div>
+          <div className="compare-label" style={{ color: "#4ECDC4" }}>Companion Model</div>
           <div className="compare-title" style={{ fontFamily: "var(--serif)" }}>The Silent Escort</div>
           {[
             ["Your role", "Protected without involvement"],
@@ -757,7 +757,7 @@ export default function Cortege() {
         <nav className="nav">
           <div className="nav-brand">
             <div className="nav-wordmark">CORTEGE</div>
-            <div className="nav-badge">COMPANION MODEL v2</div>
+            <div className="nav-badge">COMPANIONS</div>
           </div>
           <div className="nav-tabs">
             {[
@@ -944,7 +944,7 @@ export default function Cortege() {
           {tab === "philosophy" && (
             <>
               <div className="section-eyebrow">Product Philosophy</div>
-              <div className="section-title">v1 Alert Model vs. v2 Companion Model</div>
+              <div className="section-title">Why Companions, Not Alerts</div>
               <PhilosophyView />
             </>
           )}

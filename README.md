@@ -1,4 +1,4 @@
-# CORTEGE v2 - AI Security Companion System
+# CORTEGE — AI Security Companion System
 
 CORTEGE is a companion-model AI security product where each household member is paired with a dedicated AI agent that silently protects them from scams, fraud, and security threats. Protection deepens over time through behavioral learning.
 
