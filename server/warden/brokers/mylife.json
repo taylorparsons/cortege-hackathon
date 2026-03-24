@@ -3,33 +3,53 @@
   "name": "MyLife",
   "search_url": "https://www.mylife.com/find-person/{name}",
   "opt_out_url": "https://www.mylife.com/privacy/index.mvc",
-  "requires_pii": ["name", "address"],
+  "requires_pii": ["name", "city"],
   "verification_method": "email",
   "version": "2026-03-01",
-  "last_verified": "2026-03-20",
+  "last_verified": "2026-03-23",
   "associate_selectors": {
-    "container": ".possible-relatives, .known-associates",
-    "name": ".relative-name, h4.person-name",
-    "relationship": ".relation-label"
+    "container": ".possible-relatives, .known-associates, .related-persons li",
+    "name": ".relative-name, h4.person-name, .associate-name",
+    "relationship": ".relation-label, .relationship-type"
   },
   "steps": [
-    { "action": "navigate", "url": "https://www.mylife.com/privacy/index.mvc" },
+    {
+      "action": "web_search",
+      "engine": "duckduckgo",
+      "query": "\"{name}\" site:mylife.com",
+      "result_selector": ".result__body, .result__title, .results_links",
+      "skip_if_no_results": true,
+      "timeout_ms": 12000,
+      "_comment": "Phase 1: threat assessment — confirm MyLife has a public profile for this member"
+    },
+    {
+      "action": "navigate",
+      "url": "https://www.mylife.com/find-person/{name}",
+      "timeout_ms": 15000,
+      "_comment": "Phase 2: public people-search — see exposed profile and extract associates"
+    },
     {
       "action": "detect_captcha",
-      "selectors": [
-        "iframe[src*='recaptcha']",
-        ".g-recaptcha",
-        "iframe[src*='hcaptcha']",
-        "#challenge-running"
-      ]
+      "selectors": ["iframe[src*='recaptcha']", ".g-recaptcha", "iframe[src*='hcaptcha']", "#challenge-running"]
     },
-    { "action": "fill", "selector": "input[name='firstName'], input[id='firstName']", "value_source": "member.first_name" },
-    { "action": "fill", "selector": "input[name='lastName'], input[id='lastName']", "value_source": "member.last_name" },
-    { "action": "fill", "selector": "input[name='email'], input[id='email']", "value_source": "member.email" },
-    { "action": "fill", "selector": "input[name='city'], input[id='city']", "value_source": "member.city" },
-    { "action": "click", "selector": "button[type='submit'], .submit-removal" },
-    { "action": "wait", "selector": ".results, .profile-found, .no-profile", "timeout_ms": 8000 },
+    { "action": "wait", "selector": ".results, .profile-card, .person-result, .no-profile", "timeout_ms": 10000 },
     { "action": "extract_associates" },
+    {
+      "action": "navigate",
+      "url": "https://www.mylife.com/privacy/index.mvc",
+      "timeout_ms": 15000,
+      "_comment": "Phase 3: privacy/removal request form"
+    },
+    {
+      "action": "detect_captcha",
+      "selectors": ["iframe[src*='recaptcha']", ".g-recaptcha", "iframe[src*='hcaptcha']"]
+    },
+    { "action": "fill", "selector": "input[name='firstName'], input[id='firstName'], input[placeholder*='First' i]", "value_source": "member.first_name" },
+    { "action": "fill", "selector": "input[name='lastName'], input[id='lastName'], input[placeholder*='Last' i]", "value_source": "member.last_name" },
+    { "action": "fill", "selector": "input[name='email'], input[id='email'], input[type='email']", "value_source": "member.email" },
+    { "action": "fill", "selector": "input[name='city'], input[id='city'], input[placeholder*='city' i]", "value_source": "member.city" },
+    { "action": "click", "selector": "button[type='submit'], .submit-removal" },
+    { "action": "wait", "selector": ".results, .profile-found, .no-profile, .removal-list", "timeout_ms": 10000 },
     { "action": "click", "selector": ".remove-my-info, a[href*='remove'], .opt-out-link" },
     {
       "action": "detect_success",

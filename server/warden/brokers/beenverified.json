@@ -3,35 +3,55 @@
   "name": "BeenVerified",
   "search_url": "https://www.beenverified.com/people/{name}",
   "opt_out_url": "https://www.beenverified.com/app/optout/search",
-  "requires_pii": ["name", "address"],
+  "requires_pii": ["name", "state"],
   "verification_method": "email",
   "version": "2026-03-01",
-  "last_verified": "2026-03-20",
+  "last_verified": "2026-03-23",
   "associate_selectors": {
-    "container": ".possible-relatives, .associates-section",
-    "name": ".relative-name, .associate-name a",
-    "relationship": ".relationship-type"
+    "container": ".possible-relatives, .associates-section, .relatives-list li",
+    "name": ".relative-name, .associate-name a, .person-card-name",
+    "relationship": ".relationship-type, .relative-relation"
   },
   "steps": [
-    { "action": "navigate", "url": "https://www.beenverified.com/app/optout/search" },
+    {
+      "action": "web_search",
+      "engine": "duckduckgo",
+      "query": "\"{name}\" site:beenverified.com",
+      "result_selector": ".result__body, .result__title, .results_links",
+      "skip_if_no_results": true,
+      "timeout_ms": 12000,
+      "_comment": "Phase 1: threat assessment — confirm BeenVerified has a profile for this member"
+    },
+    {
+      "action": "navigate",
+      "url": "https://www.beenverified.com/people/{name}",
+      "timeout_ms": 15000,
+      "_comment": "Phase 2: public people search — see listing and extract associates"
+    },
     {
       "action": "detect_captcha",
-      "selectors": [
-        "iframe[src*='recaptcha']",
-        ".g-recaptcha",
-        "iframe[src*='hcaptcha']",
-        "#challenge-running"
-      ]
+      "selectors": ["iframe[src*='recaptcha']", ".g-recaptcha", "iframe[src*='hcaptcha']", "#challenge-running"]
     },
-    { "action": "fill", "selector": "input[name='fname'], input[placeholder*='First Name' i]", "value_source": "member.first_name" },
-    { "action": "fill", "selector": "input[name='lname'], input[placeholder*='Last Name' i]", "value_source": "member.last_name" },
-    { "action": "fill", "selector": "input[name='state'], select[name='state']", "value_source": "member.state" },
-    { "action": "click", "selector": "button[type='submit'], .search-submit" },
-    { "action": "wait", "selector": ".search-results, .optout-result, .no-records", "timeout_ms": 10000 },
+    { "action": "wait", "selector": ".search-results, .person-result-card, .result-card, .no-records", "timeout_ms": 10000 },
     { "action": "extract_associates" },
-    { "action": "click", "selector": ".opt-out-button, input[type='radio'][value='optout'], a[href*='optout']" },
-    { "action": "click", "selector": "button.proceed-optout, button[type='submit']" },
-    { "action": "wait", "selector": ".optout-confirmation, .success-message", "timeout_ms": 8000 },
+    {
+      "action": "navigate",
+      "url": "https://www.beenverified.com/app/optout/search",
+      "timeout_ms": 15000,
+      "_comment": "Phase 3: BeenVerified opt-out search"
+    },
+    {
+      "action": "detect_captcha",
+      "selectors": ["iframe[src*='recaptcha']", ".g-recaptcha", "iframe[src*='hcaptcha']", "#challenge-running"]
+    },
+    { "action": "fill", "selector": "input[name='fname'], input[placeholder*='First Name' i], #fname", "value_source": "member.first_name" },
+    { "action": "fill", "selector": "input[name='lname'], input[placeholder*='Last Name' i], #lname", "value_source": "member.last_name" },
+    { "action": "fill", "selector": "input[name='state'], select[name='state'], #state", "value_source": "member.state" },
+    { "action": "click", "selector": "button[type='submit'], .search-submit, button.btn-primary" },
+    { "action": "wait", "selector": ".search-results, .optout-result, .no-records, .optout-results-list", "timeout_ms": 12000 },
+    { "action": "click", "selector": ".opt-out-button, input[type='radio'][value='optout'], a[href*='optout'], button[data-optout]" },
+    { "action": "click", "selector": "button.proceed-optout, button[type='submit'], .confirm-optout" },
+    { "action": "wait", "selector": ".optout-confirmation, .success-message, .opt-out-complete", "timeout_ms": 10000 },
     {
       "action": "detect_success",
       "indicators": [

@@ -1,36 +1,56 @@
 {
   "id": "peoplesearch",
   "name": "PeopleSearch",
-  "search_url": "https://www.peoplefinders.com/opt-out",
+  "search_url": "https://www.peoplefinders.com/people/{name}/{state}",
   "opt_out_url": "https://www.peoplefinders.com/opt-out",
-  "requires_pii": ["name", "address"],
+  "requires_pii": ["name", "state"],
   "verification_method": "email",
   "version": "2026-03-01",
-  "last_verified": "2026-03-20",
+  "last_verified": "2026-03-23",
   "associate_selectors": {
-    "container": ".relatives, .possible-relatives",
-    "name": ".relative-name a, .name",
-    "relationship": ".relationship-label"
+    "container": ".relatives, .possible-relatives, .associates-list li",
+    "name": ".relative-name a, .name, .associate-name",
+    "relationship": ".relationship-label, .relation-type"
   },
   "steps": [
-    { "action": "navigate", "url": "https://www.peoplefinders.com/opt-out" },
+    {
+      "action": "web_search",
+      "engine": "duckduckgo",
+      "query": "\"{name}\" site:peoplefinders.com",
+      "result_selector": ".result__body, .result__title, .results_links",
+      "skip_if_no_results": true,
+      "timeout_ms": 12000,
+      "_comment": "Phase 1: threat assessment — confirm PeopleFinders has a listing for this member"
+    },
+    {
+      "action": "navigate",
+      "url": "https://www.peoplefinders.com/people/{name}/{state}",
+      "timeout_ms": 15000,
+      "_comment": "Phase 2: public people-search — see actual listing and extract associates"
+    },
     {
       "action": "detect_captcha",
-      "selectors": [
-        "iframe[src*='recaptcha']",
-        ".g-recaptcha",
-        "iframe[src*='hcaptcha']",
-        "#challenge-running"
-      ]
+      "selectors": ["iframe[src*='recaptcha']", ".g-recaptcha", "iframe[src*='hcaptcha']", "#challenge-running"]
+    },
+    { "action": "wait", "selector": ".results-list, .record-card, .person-card, .no-results", "timeout_ms": 10000 },
+    { "action": "extract_associates" },
+    {
+      "action": "navigate",
+      "url": "https://www.peoplefinders.com/opt-out",
+      "timeout_ms": 15000,
+      "_comment": "Phase 3: opt-out form"
+    },
+    {
+      "action": "detect_captcha",
+      "selectors": ["iframe[src*='recaptcha']", ".g-recaptcha", "iframe[src*='hcaptcha']", "#challenge-running"]
     },
     { "action": "fill", "selector": "input[name='firstName'], input[placeholder*='First' i]", "value_source": "member.first_name" },
     { "action": "fill", "selector": "input[name='lastName'], input[placeholder*='Last' i]", "value_source": "member.last_name" },
-    { "action": "fill", "selector": "input[name='state'], select#state", "value_source": "member.state" },
+    { "action": "fill", "selector": "input[name='state'], select#state, select[name='state']", "value_source": "member.state" },
     { "action": "click", "selector": "button[type='submit'], .search-records" },
-    { "action": "wait", "selector": ".results-list, .record-card, .no-results", "timeout_ms": 8000 },
-    { "action": "extract_associates" },
+    { "action": "wait", "selector": ".results-list, .record-card, .no-results", "timeout_ms": 10000 },
     { "action": "click", "selector": "a[href*='remove'], button.remove-btn, .opt-out-link" },
-    { "action": "wait", "selector": ".success-box, .removal-success", "timeout_ms": 8000 },
+    { "action": "wait", "selector": ".success-box, .removal-success", "timeout_ms": 10000 },
     {
       "action": "detect_success",
       "indicators": [

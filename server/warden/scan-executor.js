@@ -30,6 +30,10 @@ export class ScanExecutor {
         if (result === 'captcha_detected') {
           return { status: 'captcha_detected', associates };
         }
+        if (result === 'exposure_not_confirmed') {
+          // web_search found no results — skip this broker
+          return { status: 'not_found', associates };
+        }
         if (result === 'listing_found') listingFound = true;
         if (result === 'success') successDetected = true;
       } catch (err) {
@@ -50,6 +54,30 @@ export class ScanExecutor {
 
   static async _runStep(step, session, brokerDef, pii, associates) {
     switch (step.action) {
+      case 'web_search': {
+        // Phase 1: threat assessment — confirm member appears on this broker via web search
+        // before spending browser resources on the broker's own site.
+        // Uses DuckDuckGo HTML (no JS required, scraper-friendly).
+        const query = ScanExecutor._interpolateRaw(step.query, pii);
+        const engine = step.engine ?? 'duckduckgo';
+        let searchUrl;
+        if (engine === 'bing') {
+          searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+        } else {
+          // Default: DuckDuckGo HTML endpoint — returns static results without JS
+          searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+        }
+        await session.navigate(searchUrl, { timeout: step.timeout_ms ?? 15000 });
+        // Check for result elements; DDG HTML uses .result__body / .result__title
+        const resultSel = step.result_selector ?? '.result__body, .result__title, .results_links';
+        const hasResults = await session.waitForSelector(resultSel, { timeout: 6000 });
+        if (!hasResults && step.skip_if_no_results !== false) {
+          // No results found — member not listed on this broker
+          return 'exposure_not_confirmed';
+        }
+        return 'listing_found';
+      }
+
       case 'navigate': {
         const url = ScanExecutor._interpolate(step.url, pii);
         await session.navigate(url, { timeout: step.timeout_ms ?? 15000 });
@@ -169,13 +197,21 @@ export class ScanExecutor {
   }
 
   /**
-   * Interpolate {name}, {state}, {city} etc. in URL templates.
+   * Interpolate {name}, {state}, {city} etc. in URL templates (percent-encodes values).
    */
   static _interpolate(template, pii) {
     return template.replace(/\{(\w+)\}/g, (_, key) => {
       const val = pii[key] ?? '';
       return encodeURIComponent(val);
     });
+  }
+
+  /**
+   * Interpolate {name}, {state} etc. in plain-text templates (no percent-encoding).
+   * Used for web search query strings where the whole query is encoded later.
+   */
+  static _interpolateRaw(template, pii) {
+    return template.replace(/\{(\w+)\}/g, (_, key) => pii[key] ?? '');
   }
 }
 

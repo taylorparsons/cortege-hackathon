@@ -2,35 +2,55 @@
   "id": "radaris",
   "name": "Radaris",
   "search_url": "https://radaris.com/ng/search/name/{name}",
-  "opt_out_url": "https://radaris.com/page/how-to-remove-information",
-  "requires_pii": ["name", "address"],
+  "opt_out_url": "https://radaris.com/control/privacy",
+  "requires_pii": ["name", "state"],
   "verification_method": "email",
   "version": "2026-03-01",
-  "last_verified": "2026-03-20",
+  "last_verified": "2026-03-23",
   "associate_selectors": {
-    "container": ".relatives-section .person, .related-people li",
-    "name": ".person-name a, .related-name",
-    "relationship": ".relation-type"
+    "container": ".relatives-section .person, .related-people li, .associate-cards li",
+    "name": ".person-name a, .related-name, .associate-name",
+    "relationship": ".relation-type, .relationship-label"
   },
   "steps": [
-    { "action": "navigate", "url": "https://radaris.com/control/privacy" },
+    {
+      "action": "web_search",
+      "engine": "duckduckgo",
+      "query": "\"{name}\" site:radaris.com",
+      "result_selector": ".result__body, .result__title, .results_links",
+      "skip_if_no_results": true,
+      "timeout_ms": 12000,
+      "_comment": "Phase 1: threat assessment — confirm Radaris has a profile for this member"
+    },
+    {
+      "action": "navigate",
+      "url": "https://radaris.com/ng/search/name/{name}",
+      "timeout_ms": 15000,
+      "_comment": "Phase 2: public people-search — see exposed profile and extract associates"
+    },
     {
       "action": "detect_captcha",
-      "selectors": [
-        "iframe[src*='recaptcha']",
-        ".g-recaptcha",
-        "iframe[src*='hcaptcha']",
-        "#challenge-running"
-      ]
+      "selectors": ["iframe[src*='recaptcha']", ".g-recaptcha", "iframe[src*='hcaptcha']", "#challenge-running"]
     },
-    { "action": "fill", "selector": "input[name='firstName'], input.first-name", "value_source": "member.first_name" },
-    { "action": "fill", "selector": "input[name='lastName'], input.last-name", "value_source": "member.last_name" },
-    { "action": "fill", "selector": "input[name='state'], select.state-select", "value_source": "member.state" },
-    { "action": "click", "selector": "button[type='submit'], .search-btn" },
-    { "action": "wait", "selector": ".results, .profile-results, .empty-results", "timeout_ms": 8000 },
+    { "action": "wait", "selector": ".results, .profile-results, .person-card, .empty-results", "timeout_ms": 10000 },
     { "action": "extract_associates" },
+    {
+      "action": "navigate",
+      "url": "https://radaris.com/control/privacy",
+      "timeout_ms": 15000,
+      "_comment": "Phase 3: privacy control / removal request form"
+    },
+    {
+      "action": "detect_captcha",
+      "selectors": ["iframe[src*='recaptcha']", ".g-recaptcha", "iframe[src*='hcaptcha']", "#challenge-running"]
+    },
+    { "action": "fill", "selector": "input[name='firstName'], input.first-name, input[placeholder*='First' i]", "value_source": "member.first_name" },
+    { "action": "fill", "selector": "input[name='lastName'], input.last-name, input[placeholder*='Last' i]", "value_source": "member.last_name" },
+    { "action": "fill", "selector": "input[name='state'], select.state-select, select[name='state']", "value_source": "member.state" },
+    { "action": "click", "selector": "button[type='submit'], .search-btn" },
+    { "action": "wait", "selector": ".results, .profile-results, .empty-results", "timeout_ms": 10000 },
     { "action": "click", "selector": ".remove-profile, a[href*='remove'], .opt-out-link" },
-    { "action": "wait", "selector": ".success, .removal-submitted", "timeout_ms": 8000 },
+    { "action": "wait", "selector": ".success, .removal-submitted", "timeout_ms": 10000 },
     {
       "action": "detect_success",
       "indicators": [

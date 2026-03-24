@@ -804,3 +804,15 @@ I want to plan and new type of agent that will find where the house hold address
 Notes:
 - Follow-up clarifications: (1) social graph = discover "associated people" on broker sites, flag as suggested household members; (2) CAPTCHA UX = screenshot + direct link approach (not live CDP proxy)
 - Feature branch: feat/warden-agent
+
+## CR-20260323-1100
+Date: 2026-03-23 11:00
+Source: chat
+
+Request (verbatim):
+yes update it and I think step 1 is to do a threat analyzes with a search on the web, I personally use google, but open to any method.
+
+Notes:
+- Context: updating broker definitions to add a search-first phase to find exposed listings before attempting opt-out
+- "threat analysis" = web search (Google or equivalent) as step 1 to confirm the member appears on a broker before automating that broker's site
+- Open to DuckDuckGo or other engines as Google may block headless browsers

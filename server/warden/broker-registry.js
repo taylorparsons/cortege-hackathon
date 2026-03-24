@@ -15,6 +15,7 @@ const DEFAULT_BROKERS_DIR = path.join(__dirname, 'brokers');
 
 const REQUIRED_FIELDS = ['id', 'name', 'opt_out_url', 'requires_pii', 'steps'];
 const VALID_STEP_ACTIONS = new Set([
+  'web_search',
   'navigate',
   'fill',
   'click',
