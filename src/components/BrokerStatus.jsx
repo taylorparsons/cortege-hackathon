@@ -39,7 +39,7 @@ function statusBadge(status) {
   );
 }
 
-export function BrokerStatus({ householdId, onCaptchaNeeded }) {
+export function BrokerStatus({ householdId, onCaptchaNeeded, version }) {
   const [scanStatus, setScanStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,7 +52,7 @@ export function BrokerStatus({ householdId, onCaptchaNeeded }) {
       .then((r) => r.json())
       .then((data) => { setScanStatus(data); setLoading(false); })
       .catch((err) => { setError(err.message); setLoading(false); });
-  }, [householdId]);
+  }, [householdId, version]);
 
   // Build summary lines from scan status
   const summaryLines = buildSummaryLines(scanStatus);

@@ -17,6 +17,8 @@ const ACTION_REQUIRED_FIELDS = {
   hard_block: ['target', 'reason'],
   escalate: ['level', 'to', 'summary'],
   log_evidence: ['reason'],
+  // WARDEN: CAPTCHA assist escalation
+  captcha_assist: ['session_id', 'broker', 'member_id'],
 };
 
 // ---------------------------------------------------------------------------
@@ -263,6 +265,24 @@ export class EscalationHandler {
           );
           const evidence = this._captureEvidence(agentResponse, agentInstance);
           results.push({ type, status: 'processed', evidence });
+          break;
+        }
+
+        case 'captcha_assist': {
+          console.log(
+            `[escalation] ACTION captcha_assist — session_id=${action.session_id} broker=${action.broker} member=${sanitizeString(action.member_id)}`
+          );
+          this.ws('warden:captcha_required', {
+            sessionId: action.session_id,
+            brokerId: action.broker,
+            brokerName: action.broker_name ?? action.broker,
+            memberId: action.member_id,
+            screenshotBase64: action.screenshot_base64 ?? null,
+            optOutUrl: action.opt_out_url ?? null,
+            expiresAt: action.expires_at ?? null,
+            summary: sanitizeString(action.summary ?? 'CAPTCHA assistance required'),
+          });
+          results.push({ type, status: 'processed', sessionId: action.session_id });
           break;
         }
       }

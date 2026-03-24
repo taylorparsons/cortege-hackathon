@@ -17,6 +17,7 @@ import { BrowserSession } from './browser-session.js';
 import { ScanExecutor } from './scan-executor.js';
 import { AssociateDiscovery } from './associate-discovery.js';
 import { sanitizeString, decryptMemberFromStorage } from '../privacy/pii.js';
+import { CaptchaManager } from './captcha-manager.js';
 
 const DEFAULT_CRON = process.env.WARDEN_SCAN_CRON ?? '0 3 * * *';
 const MAX_SESSIONS = parseInt(process.env.WARDEN_MAX_CONCURRENT_SESSIONS ?? '2', 10);
@@ -41,7 +42,7 @@ export class WardenEngine {
 
     this.brokerScanStore = new BrokerScanStore(dataDir);
     this.brokerRegistry = new BrokerRegistry();
-    this.captchaManager = null; // injected in Phase 3
+    this.captchaManager = new CaptchaManager({ ws: this.ws });
 
     this._queue = [];          // Array of ScanJob
     this._activeSessions = 0;

@@ -19,6 +19,8 @@ export function useCortegeData() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
   const [processingStates, setProcessingStates] = useState(new Map());
+  const [captchaSessions, setCaptchaSessions] = useState([]);
+  const [brokerStatusVersion, setBrokerStatusVersion] = useState(0);
 
   const wsRef = useRef(null);
   const reconnectTimer = useRef(null);
@@ -139,6 +141,19 @@ export function useCortegeData() {
           next[idx] = { ...next[idx], ...data };
           return next;
         });
+      // WARDEN events
+      } else if (event === 'warden:captcha_required') {
+        setCaptchaSessions(prev => {
+          // Deduplicate by sessionId
+          const filtered = prev.filter(s => s.sessionId !== data.sessionId);
+          return [...filtered, data];
+        });
+        showToast(`CAPTCHA needed: ${data.brokerName ?? data.brokerId}`);
+      } else if (event === 'warden:captcha_expired' || event === 'warden:captcha_resolved') {
+        setCaptchaSessions(prev => prev.filter(s => s.sessionId !== data.sessionId));
+      } else if (event === 'warden:status_update' || event === 'warden:scan_complete') {
+        // Bump version so BrokerStatus re-fetches
+        setBrokerStatusVersion(v => v + 1);
       }
     };
 
@@ -179,6 +194,8 @@ export function useCortegeData() {
     error,
     toast,
     processingStates,
+    captchaSessions,
+    brokerStatusVersion,
     refetch: fetchData,
   };
 }

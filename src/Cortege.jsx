@@ -11,6 +11,7 @@ import { getAgentDisplay, getStageIndex, formatStageName, DEPTH_STAGES } from '.
 import { HouseholdSelector } from './components/HouseholdSelector.jsx';
 import { useHouseholdContext } from './context/HouseholdContext.jsx';
 import { BrokerStatus } from './components/BrokerStatus.jsx';
+import { CaptchaAssist } from './components/CaptchaAssist.jsx';
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap');`;
 
@@ -722,6 +723,8 @@ export default function Cortege() {
     error,
     toast,
     processingStates,
+    captchaSessions,
+    brokerStatusVersion,
   } = useCortegeData();
 
   // Detail panel data
@@ -1018,6 +1021,14 @@ export default function Cortege() {
 
       {toast && (
         <div className="toast-banner">{toast}</div>
+      )}
+
+      {captchaSessions.length > 0 && (
+        <CaptchaAssist
+          session={captchaSessions[0]}
+          onResolved={(sessionId) => {/* WebSocket will update captchaSessions */}}
+          onDismiss={() => {/* user dismissed — session stays active server-side until timeout */}}
+        />
       )}
     </>
   );

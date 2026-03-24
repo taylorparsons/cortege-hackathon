@@ -20,7 +20,18 @@ import { WebSocketServer } from 'ws';
 const ESCALATION_QUEUE_MAX = 50;
 
 /** Event names that are considered escalation events and should be queued. */
-const ESCALATION_EVENT_NAMES = new Set(['escalation:fired']);
+const ESCALATION_EVENT_NAMES = new Set([
+  'escalation:fired',
+  // WARDEN events
+  'warden:captcha_required',
+  'warden:captcha_expired',
+  'warden:captcha_resolved',
+  'warden:associate_discovered',
+  'warden:scan_started',
+  'warden:scan_progress',
+  'warden:status_update',
+  'warden:scan_complete',
+]);
 
 // ---------------------------------------------------------------------------
 // createWebSocketServer
