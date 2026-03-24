@@ -14,6 +14,7 @@ import { EXTERNAL_EVENT_TYPES } from './event-bus.js';
 import { HouseholdStore } from '../storage/household-store.js';
 import { LocationStore } from '../storage/location-store.js';
 import { ensurePiiReady } from '../privacy/pii.js';
+import { WardenEngine } from '../warden/warden-engine.js';
 
 // ---------------------------------------------------------------------------
 // Orchestrator
@@ -32,6 +33,7 @@ export class Orchestrator {
     this.escalationHandler = null;
     this.householdStore = null;
     this.locationStore = null;
+    this.wardenEngine = null;
     this.enableHouseholdStore = options.enableHouseholdStore ?? false;
     this._ws = null;
     this._agentsDir = path.resolve('agents');
@@ -99,6 +101,17 @@ export class Orchestrator {
 
     // 9. Create and start Scheduler
     // Collect custom schedules from all agent template frontmatters
+
+    // 10. Start WARDEN engine
+    this.wardenEngine = new WardenEngine({
+      eventBus,
+      escalationHandler: this.escalationHandler,
+      ws,
+      householdStore: this.householdStore,
+      locationStore: this.locationStore,
+    });
+    this.wardenEngine.start();
+
     console.log('[orchestrator] Started successfully');
     return this;
   }
@@ -112,6 +125,9 @@ export class Orchestrator {
     this._teardownActiveHousehold();
     if (this.scheduler) {
       this.scheduler.stop();
+    }
+    if (this.wardenEngine) {
+      this.wardenEngine.stop();
     }
     console.log('[orchestrator] Stopped');
   }
