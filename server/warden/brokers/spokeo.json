@@ -1,0 +1,45 @@
+{
+  "id": "spokeo",
+  "name": "Spokeo",
+  "search_url": "https://www.spokeo.com/{name}",
+  "opt_out_url": "https://www.spokeo.com/optout",
+  "requires_pii": ["name", "address"],
+  "verification_method": "email",
+  "version": "2026-03-01",
+  "last_verified": "2026-03-20",
+  "associate_selectors": {
+    "container": ".possible-relatives .relative-card, .associates .person-listing",
+    "name": ".relative-name, .person-name a",
+    "relationship": ".relationship, .relative-type"
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://www.spokeo.com/optout" },
+    {
+      "action": "detect_captcha",
+      "selectors": [
+        "iframe[src*='recaptcha']",
+        ".g-recaptcha",
+        "iframe[src*='hcaptcha']",
+        "#challenge-running"
+      ]
+    },
+    { "action": "fill", "selector": "input#first_name, input[name='first_name']", "value_source": "member.first_name" },
+    { "action": "fill", "selector": "input#last_name, input[name='last_name']", "value_source": "member.last_name" },
+    { "action": "fill", "selector": "input#city, input[name='city']", "value_source": "member.city" },
+    { "action": "fill", "selector": "input#state, input[name='state']", "value_source": "member.state" },
+    { "action": "click", "selector": "button[type='submit'], input[type='submit']" },
+    { "action": "wait", "selector": ".search-results, .profile-list, .no-results-message", "timeout_ms": 8000 },
+    { "action": "extract_associates" },
+    { "action": "click", "selector": ".remove-listing, a[href*='remove'], button.opt-out-btn" },
+    { "action": "wait", "selector": ".success, .removal-confirmed, .opt-out-confirmed", "timeout_ms": 8000 },
+    {
+      "action": "detect_success",
+      "indicators": [
+        "text:Your listing has been removed",
+        "text:opt-out request",
+        "text:successfully removed",
+        "selector:.removal-success"
+      ]
+    }
+  ]
+}

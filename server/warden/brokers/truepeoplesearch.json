@@ -1,0 +1,44 @@
+{
+  "id": "truepeoplesearch",
+  "name": "TruePeopleSearch",
+  "search_url": "https://www.truepeoplesearch.com/results?name={name}&citystatezip={city}%2C+{state}",
+  "opt_out_url": "https://www.truepeoplesearch.com/removal",
+  "requires_pii": ["name", "address"],
+  "verification_method": "none",
+  "version": "2026-03-01",
+  "last_verified": "2026-03-20",
+  "associate_selectors": {
+    "container": ".card-block .relativeNames, .associates-section",
+    "name": ".relativeNames a, .associate-name",
+    "relationship": ".relationship-label"
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://www.truepeoplesearch.com/removal" },
+    {
+      "action": "detect_captcha",
+      "selectors": [
+        "iframe[src*='recaptcha']",
+        ".g-recaptcha",
+        "iframe[src*='hcaptcha']",
+        "#challenge-running",
+        ".cf-challenge-running"
+      ]
+    },
+    { "action": "fill", "selector": "input[name='name'], #fullname", "value_source": "member.name" },
+    { "action": "fill", "selector": "input[name='citystate'], #location", "value_source": "member.city_state" },
+    { "action": "click", "selector": "button[type='submit'], .btnSearchRecords" },
+    { "action": "wait", "selector": ".card-block, .results-list, .no-results", "timeout_ms": 8000 },
+    { "action": "extract_associates" },
+    { "action": "click", "selector": "a[href*='removal'], button.btn-remove, .remove-record-link" },
+    { "action": "wait", "selector": ".removal-confirmation, .success-alert", "timeout_ms": 8000 },
+    {
+      "action": "detect_success",
+      "indicators": [
+        "text:Your record has been removed",
+        "text:removal request submitted",
+        "text:successfully removed",
+        "selector:.alert-success"
+      ]
+    }
+  ]
+}

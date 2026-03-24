@@ -791,3 +791,16 @@ use this cortege-AI-Agents-Week-long-Hack.pptx  and remove the demo.pptx
 Notes:
 - There is no `demo.pptx` file in the repo.
 - The current tracked PPTX artifacts are `deck.pptx` and `cortege-AI-Agents-Week-long-Hack.pptx`.
+
+## CR-20260323-1000
+Date: 2026-03-23 10:00
+Source: chat
+Decision: [D-20260323-1000](decisions.md#d-20260323-1000)
+Spec: [`specs/20260323-warden-agent/spec.md`](specs/20260323-warden-agent/spec.md)
+
+Request (verbatim):
+I want to plan and new type of agent that will find where the house hold address is listed on common commerciel web sites that are showing the house hold address and the social graph of the household members.  It will use a headless browser and act on behalf of the household member to remove each household person by name, phone number and address, from the commerical web sites.  If the web site has a bot blocker it will raise up a L3 issue for the house hold to engage with the agent to click the I am not a robot or select the images.
+
+Notes:
+- Follow-up clarifications: (1) social graph = discover "associated people" on broker sites, flag as suggested household members; (2) CAPTCHA UX = screenshot + direct link approach (not live CDP proxy)
+- Feature branch: feat/warden-agent

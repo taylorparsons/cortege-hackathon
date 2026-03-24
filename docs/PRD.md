@@ -335,3 +335,11 @@ See [`TRACEABILITY.md`](TRACEABILITY.md) for how to follow the audit trail acros
 - The current March 21 repo-scoped work SHALL be committed locally on `main` before publication. (Sources: [CR-20260321-0831](requests.md#cr-20260321-0831); [D-20260321-0831](decisions.md#d-20260321-0831))
 - `origin/main` SHALL be updated by pushing the resulting local `main` commit. (Sources: [CR-20260321-0831](requests.md#cr-20260321-0831); [D-20260321-0831](decisions.md#d-20260321-0831))
 - Publication SHALL include the repo-targeted `deck.pptx` artifact and exclude the duplicate renamed PPTX and Office lock artifact from source control. (Sources: [CR-20260321-0831](requests.md#cr-20260321-0831); [D-20260321-0831](decisions.md#d-20260321-0831))
+
+## WARDEN Agent — Data Broker Removal (Sources: CR-20260323-1000; D-20260323-1000)
+- WARDEN is a proactive data broker removal subsystem (`server/warden/`) that scans commercial data broker sites for household member PII and submits opt-out requests via headless browser. (Sources: CR-20260323-1000; D-20260323-1000) — [spec](specs/20260323-warden-agent/spec.md)
+- Ten initial broker definitions stored as declarative JSON; adding a broker requires only a JSON file. (Sources: CR-20260323-1000; D-20260323-1000)
+- CAPTCHA detection fires L3 escalation + `warden:captcha_required` WebSocket event with screenshot + direct URL; member clicks "Mark as Resolved" to resume. (Sources: CR-20260323-1000; D-20260323-1000)
+- Social graph discovery: associated people extracted from broker listings, surfaced as suggested household members (read-only — member explicitly adds). (Sources: CR-20260323-1000; D-20260323-1000)
+- Hardcoded "Data Broker Status" UI card replaced with live `<BrokerStatus>` component. (Sources: CR-20260323-1000; D-20260323-1000)
+- Scheduled re-monitoring via WARDEN-managed `node-cron` (real-world time, daily 3 AM default). (Sources: CR-20260323-1000; D-20260323-1000)

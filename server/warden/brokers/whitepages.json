@@ -1,0 +1,44 @@
+{
+  "id": "whitepages",
+  "name": "WhitePages",
+  "search_url": "https://www.whitepages.com/name/{name}/{state}",
+  "opt_out_url": "https://www.whitepages.com/suppression-requests",
+  "requires_pii": ["name", "phone"],
+  "verification_method": "phone_call",
+  "version": "2026-03-01",
+  "last_verified": "2026-03-20",
+  "associate_selectors": {
+    "container": ".associates-list .associate-item, .relatives-section .person-card",
+    "name": ".associate-name, .person-name",
+    "relationship": ".associate-relationship, .relation-type"
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://www.whitepages.com/suppression-requests" },
+    {
+      "action": "detect_captcha",
+      "selectors": [
+        "iframe[src*='recaptcha']",
+        ".g-recaptcha",
+        "iframe[src*='hcaptcha']",
+        "#challenge-running",
+        ".cf-challenge-running"
+      ]
+    },
+    { "action": "fill", "selector": "input[name='name'], input[placeholder*='name' i]", "value_source": "member.name" },
+    { "action": "fill", "selector": "input[name='phone'], input[placeholder*='phone' i]", "value_source": "member.phone" },
+    { "action": "click", "selector": "button[type='submit'], input[type='submit']" },
+    { "action": "wait", "selector": ".search-results, .suppression-results, .no-results", "timeout_ms": 8000 },
+    { "action": "extract_associates" },
+    { "action": "click", "selector": ".opt-out-link, a[href*='opt-out'], button[data-action='remove']" },
+    { "action": "wait", "selector": ".confirmation, .success-message, .request-submitted", "timeout_ms": 8000 },
+    {
+      "action": "detect_success",
+      "indicators": [
+        "text:Your request has been submitted",
+        "text:suppression request",
+        "text:successfully submitted",
+        "selector:.confirmation-message"
+      ]
+    }
+  ]
+}

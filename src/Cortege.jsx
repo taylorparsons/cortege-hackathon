@@ -10,6 +10,7 @@ import { useCompanionDetail } from './hooks/useCompanionDetail.js';
 import { getAgentDisplay, getStageIndex, formatStageName, DEPTH_STAGES } from './lib/companion-display.js';
 import { HouseholdSelector } from './components/HouseholdSelector.jsx';
 import { useHouseholdContext } from './context/HouseholdContext.jsx';
+import { BrokerStatus } from './components/BrokerStatus.jsx';
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap');`;
 
@@ -533,7 +534,7 @@ function DetailPanel({ c, onControl }) {
 }
 
 // ─── HOUSEHOLD NETWORK VIEW ───────────────────────────────────────────────────
-function NetworkView() {
+function NetworkView({ householdId }) {
   return (
     <div className="network-view">
       <div className="relay-grid">
@@ -557,16 +558,7 @@ function NetworkView() {
               "Never relayed: Normal social communications or low-signal anomalies"
             ]
           },
-          {
-            tag: "Data Exposure", tagColor: "#4ECDC4", tagBg: "rgba(78,205,196,0.1)",
-            title: "Household Data Broker Status",
-            items: [
-              "412 brokers monitored across 3 companion profiles",
-              "Taylor: FastPeopleSearch removal pending (re-listed this week)",
-              "Mom: WhitePages, Spokeo, MyLife — removal confirmed",
-              "Alex: School and birthday suppressed from 6 broker listings (COPPA basis)"
-            ]
-          },
+          null, // replaced by <BrokerStatus> below
           {
             tag: "Privacy Architecture", tagColor: "#9B7FD4", tagBg: "rgba(155,127,212,0.1)",
             title: "What CORTEGE Never Sees",
@@ -577,7 +569,7 @@ function NetworkView() {
               "One-tap full deletion available at any time — companion resets to Day 1"
             ]
           },
-        ].map((r, i) => (
+        ].filter(Boolean).map((r, i) => (
           <div key={i} className="relay-card">
             <div className="relay-header">
               <span className="relay-tag" style={{ background: r.tagBg, color: r.tagColor, border: `1px solid ${r.tagColor}30` }}>{r.tag}</span>
@@ -593,6 +585,7 @@ function NetworkView() {
             </div>
           </div>
         ))}
+        <BrokerStatus householdId={householdId} />
       </div>
     </div>
   );
@@ -937,7 +930,7 @@ export default function Cortege() {
             <>
               <div className="section-eyebrow">Household Signal Layer</div>
               <div className="section-title">How the Companions work together</div>
-              <NetworkView />
+              <NetworkView householdId={currentHouseholdId} />
             </>
           )}
 

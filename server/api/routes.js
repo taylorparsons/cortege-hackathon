@@ -1044,6 +1044,164 @@ export function createApiRouter(orchestrator) {
     }
   });
 
+  // ---------------------------------------------------------------------------
+  // WARDEN — Data Broker Removal Routes
+  // Implements: FR-001, FR-005, FR-008 (20260323-warden-agent)
+  // ---------------------------------------------------------------------------
+
+  // GET /api/warden/status — broker scan status for active household
+  router.get('/api/warden/status', (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const householdId = req.query.household_id ?? orchestrator.activeHouseholdId;
+      if (!householdId) return res.status(400).json({ error: 'No active household' });
+      const status = wardenEngine.brokerScanStore.getScanStatus(householdId);
+      res.json(status ?? { household_id: householdId, members: {}, aggregate: {}, discovered_associates: [] });
+    } catch (err) {
+      console.error('[api] GET /api/warden/status error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // GET /api/warden/status/:memberId — per-broker status for one member
+  router.get('/api/warden/status/:memberId', (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const householdId = req.query.household_id ?? orchestrator.activeHouseholdId;
+      if (!householdId) return res.status(400).json({ error: 'No active household' });
+      const member = wardenEngine.brokerScanStore.getMemberScans(householdId, req.params.memberId);
+      if (!member) return res.status(404).json({ error: 'Member scan data not found' });
+      res.json(member);
+    } catch (err) {
+      console.error('[api] GET /api/warden/status/:memberId error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // POST /api/warden/scan — trigger immediate scan
+  router.post('/api/warden/scan', async (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const householdId = req.body.household_id ?? orchestrator.activeHouseholdId;
+      if (!householdId) return res.status(400).json({ error: 'No active household' });
+      const { member_id, broker_id } = req.body;
+      const result = await wardenEngine.enqueueScan(householdId, { memberId: member_id, brokerId: broker_id });
+      res.json(result);
+    } catch (err) {
+      console.error('[api] POST /api/warden/scan error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // GET /api/warden/brokers — list all known brokers
+  router.get('/api/warden/brokers', (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const brokers = wardenEngine.brokerRegistry.listBrokers().map(({ id, name, opt_out_url, requires_pii, verification_method, version, last_verified }) => ({
+        id, name, opt_out_url, requires_pii, verification_method, version, last_verified,
+      }));
+      res.json({ brokers });
+    } catch (err) {
+      console.error('[api] GET /api/warden/brokers error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // GET /api/warden/captcha — list active CAPTCHA sessions
+  router.get('/api/warden/captcha', (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const householdId = req.query.household_id ?? orchestrator.activeHouseholdId;
+      const sessions = wardenEngine.captchaManager
+        ? wardenEngine.captchaManager.listActiveSessions(householdId)
+        : [];
+      res.json({ sessions });
+    } catch (err) {
+      console.error('[api] GET /api/warden/captcha error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // GET /api/warden/captcha/:sessionId — CAPTCHA session details
+  router.get('/api/warden/captcha/:sessionId', (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const session = wardenEngine.captchaManager?.getActiveSession(req.params.sessionId);
+      if (!session) return res.status(404).json({ error: 'Session not found or expired' });
+      res.json(session);
+    } catch (err) {
+      console.error('[api] GET /api/warden/captcha/:sessionId error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // GET /api/warden/captcha/:sessionId/screenshot — latest screenshot
+  router.get('/api/warden/captcha/:sessionId/screenshot', (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const session = wardenEngine.captchaManager?.getActiveSession(req.params.sessionId);
+      if (!session) return res.status(404).json({ error: 'Session not found or expired' });
+      const screenshot = wardenEngine.captchaManager.getScreenshot(req.params.sessionId);
+      if (!screenshot) return res.status(404).json({ error: 'No screenshot available' });
+      res.json({ screenshot_base64: screenshot, captured_at: session.screenshot_at });
+    } catch (err) {
+      console.error('[api] GET /api/warden/captcha/:sessionId/screenshot error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // POST /api/warden/captcha/:sessionId/resolve — signal CAPTCHA resolved
+  router.post('/api/warden/captcha/:sessionId/resolve', async (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const resolved = await wardenEngine.resolveCaptcha(req.params.sessionId);
+      if (!resolved) return res.status(404).json({ error: 'Session not found or already expired' });
+      res.json({ resolved: true });
+    } catch (err) {
+      console.error('[api] POST /api/warden/captcha/:sessionId/resolve error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // GET /api/warden/associates — discovered associates for active household
+  router.get('/api/warden/associates', (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const householdId = req.query.household_id ?? orchestrator.activeHouseholdId;
+      if (!householdId) return res.status(400).json({ error: 'No active household' });
+      const associates = wardenEngine.brokerScanStore.getAssociates(householdId);
+      res.json({ associates });
+    } catch (err) {
+      console.error('[api] GET /api/warden/associates error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // POST /api/warden/associates/:id/dismiss — dismiss a discovered associate
+  router.post('/api/warden/associates/:id/dismiss', (req, res) => {
+    try {
+      const wardenEngine = orchestrator.wardenEngine;
+      if (!wardenEngine) return res.status(503).json({ error: 'WARDEN not enabled' });
+      const householdId = req.body.household_id ?? orchestrator.activeHouseholdId;
+      if (!householdId) return res.status(400).json({ error: 'No active household' });
+      const dismissed = wardenEngine.brokerScanStore.dismissAssociate(householdId, req.params.id);
+      if (!dismissed) return res.status(404).json({ error: 'Associate not found' });
+      res.json({ dismissed: true });
+    } catch (err) {
+      console.error('[api] POST /api/warden/associates/:id/dismiss error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   return router;
 }
 

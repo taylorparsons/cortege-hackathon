@@ -30,6 +30,13 @@ const INTERNAL_EVENT_TYPES = new Set([
   'household_signal',
   'memory_snapshot',
   'stage_transition',
+  // WARDEN data broker removal events
+  'broker_scan_started',
+  'broker_scan_completed',
+  'broker_status_change',
+  'captcha_required',
+  'captcha_resolved',
+  'associate_discovered',
 ]);
 
 const ALL_EVENT_TYPES = new Set([...EXTERNAL_EVENT_TYPES, ...INTERNAL_EVENT_TYPES]);

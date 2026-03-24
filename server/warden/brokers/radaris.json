@@ -1,0 +1,44 @@
+{
+  "id": "radaris",
+  "name": "Radaris",
+  "search_url": "https://radaris.com/ng/search/name/{name}",
+  "opt_out_url": "https://radaris.com/page/how-to-remove-information",
+  "requires_pii": ["name", "address"],
+  "verification_method": "email",
+  "version": "2026-03-01",
+  "last_verified": "2026-03-20",
+  "associate_selectors": {
+    "container": ".relatives-section .person, .related-people li",
+    "name": ".person-name a, .related-name",
+    "relationship": ".relation-type"
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://radaris.com/control/privacy" },
+    {
+      "action": "detect_captcha",
+      "selectors": [
+        "iframe[src*='recaptcha']",
+        ".g-recaptcha",
+        "iframe[src*='hcaptcha']",
+        "#challenge-running"
+      ]
+    },
+    { "action": "fill", "selector": "input[name='firstName'], input.first-name", "value_source": "member.first_name" },
+    { "action": "fill", "selector": "input[name='lastName'], input.last-name", "value_source": "member.last_name" },
+    { "action": "fill", "selector": "input[name='state'], select.state-select", "value_source": "member.state" },
+    { "action": "click", "selector": "button[type='submit'], .search-btn" },
+    { "action": "wait", "selector": ".results, .profile-results, .empty-results", "timeout_ms": 8000 },
+    { "action": "extract_associates" },
+    { "action": "click", "selector": ".remove-profile, a[href*='remove'], .opt-out-link" },
+    { "action": "wait", "selector": ".success, .removal-submitted", "timeout_ms": 8000 },
+    {
+      "action": "detect_success",
+      "indicators": [
+        "text:removal request",
+        "text:profile removed",
+        "text:successfully",
+        "selector:.success-message"
+      ]
+    }
+  ]
+}

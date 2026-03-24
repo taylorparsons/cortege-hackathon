@@ -1,0 +1,44 @@
+{
+  "id": "fastpeoplesearch",
+  "name": "FastPeopleSearch",
+  "search_url": "https://www.fastpeoplesearch.com/name/{name}",
+  "opt_out_url": "https://www.fastpeoplesearch.com/removal",
+  "requires_pii": ["name", "address"],
+  "verification_method": "none",
+  "version": "2026-03-01",
+  "last_verified": "2026-03-20",
+  "associate_selectors": {
+    "container": ".relatives-container .relative-card, .associates-list li",
+    "name": ".relative-name a, .associate-name",
+    "relationship": ".relative-relationship"
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://www.fastpeoplesearch.com/removal" },
+    {
+      "action": "detect_captcha",
+      "selectors": [
+        "iframe[src*='recaptcha']",
+        ".g-recaptcha",
+        "iframe[src*='hcaptcha']",
+        "#challenge-running",
+        ".cf-challenge-running"
+      ]
+    },
+    { "action": "fill", "selector": "input[name='name'], #search-name", "value_source": "member.name" },
+    { "action": "fill", "selector": "input[name='state'], #search-state", "value_source": "member.state" },
+    { "action": "click", "selector": "button[type='submit'], #search-submit" },
+    { "action": "wait", "selector": ".profile-card, .person-card, .no-results", "timeout_ms": 8000 },
+    { "action": "extract_associates" },
+    { "action": "click", "selector": ".remove-record, a[href*='remove'], .opt-out-button" },
+    { "action": "wait", "selector": ".removal-confirmation, .success", "timeout_ms": 8000 },
+    {
+      "action": "detect_success",
+      "indicators": [
+        "text:Record has been removed",
+        "text:successfully removed",
+        "text:removal request",
+        "selector:.removal-success"
+      ]
+    }
+  ]
+}

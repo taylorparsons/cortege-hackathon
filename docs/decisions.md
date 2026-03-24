@@ -1157,3 +1157,28 @@ Acceptance / test:
 - `deck.pptx` is removed from source control
 - `cortege-AI-Agents-Week-long-Hack.pptx` remains the tracked deck artifact
 - The deck generator and verification script target `cortege-AI-Agents-Week-long-Hack.pptx`
+
+## D-20260323-1000
+Date: 2026-03-23 10:00
+Inputs: CR-20260323-1000
+PRD: WARDEN Agent — Data Broker Removal
+
+Decision:
+Implement WARDEN as a separate server-side subsystem (`server/warden/`), not as an AgentInstance subclass. Browser automation uses Playwright (already installed). CAPTCHA escalation uses screenshot + direct-link approach (not live CDP proxy). Social graph discovery is read-only — extracts "associated people" from broker listings and surfaces as suggested household members, never auto-removes. Broker-specific opt-out procedures stored as declarative JSON files. Ten initial brokers: WhitePages, Spokeo, MyLife, FastPeopleSearch, BeenVerified, Intelius, TruePeopleSearch, Radaris, USSearch, PeopleSearch.
+
+Rationale:
+- Existing AgentInstance pattern is reactive (event → Claude → assessment). WARDEN is proactive (schedule → browser → form submission), requiring a different execution model.
+- Declarative JSON broker steps allow adding new brokers without code changes.
+- Screenshot + direct link for CAPTCHA is simpler to implement at hackathon scope; full CDP proxy is a post-hackathon enhancement.
+- Read-only social graph discovery avoids consent issues — household member explicitly opts in by clicking "Add to Household."
+
+Alternatives considered:
+- AgentInstance subclass (rejected: hollow override of every meaningful method, wrong conceptual fit)
+- Live CDP browser proxy for CAPTCHA (rejected: too complex for hackathon; screenshot polling with direct link demonstrates the concept adequately)
+- Auto-remove all associated people (rejected: consent requirements — only registered household members should have PII removed on their behalf)
+
+Acceptance / test:
+- `server/warden/` subsystem starts/stops cleanly with the orchestrator
+- Declarative broker steps execute against a Playwright session
+- CAPTCHA detection emits L3 escalation → CaptchaAssist modal appears in UI
+- Discovered associates appear in UI with Add to Household action

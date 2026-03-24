@@ -1,0 +1,44 @@
+{
+  "id": "peoplesearch",
+  "name": "PeopleSearch",
+  "search_url": "https://www.peoplefinders.com/opt-out",
+  "opt_out_url": "https://www.peoplefinders.com/opt-out",
+  "requires_pii": ["name", "address"],
+  "verification_method": "email",
+  "version": "2026-03-01",
+  "last_verified": "2026-03-20",
+  "associate_selectors": {
+    "container": ".relatives, .possible-relatives",
+    "name": ".relative-name a, .name",
+    "relationship": ".relationship-label"
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://www.peoplefinders.com/opt-out" },
+    {
+      "action": "detect_captcha",
+      "selectors": [
+        "iframe[src*='recaptcha']",
+        ".g-recaptcha",
+        "iframe[src*='hcaptcha']",
+        "#challenge-running"
+      ]
+    },
+    { "action": "fill", "selector": "input[name='firstName'], input[placeholder*='First' i]", "value_source": "member.first_name" },
+    { "action": "fill", "selector": "input[name='lastName'], input[placeholder*='Last' i]", "value_source": "member.last_name" },
+    { "action": "fill", "selector": "input[name='state'], select#state", "value_source": "member.state" },
+    { "action": "click", "selector": "button[type='submit'], .search-records" },
+    { "action": "wait", "selector": ".results-list, .record-card, .no-results", "timeout_ms": 8000 },
+    { "action": "extract_associates" },
+    { "action": "click", "selector": "a[href*='remove'], button.remove-btn, .opt-out-link" },
+    { "action": "wait", "selector": ".success-box, .removal-success", "timeout_ms": 8000 },
+    {
+      "action": "detect_success",
+      "indicators": [
+        "text:opt-out request received",
+        "text:successfully removed",
+        "text:removal request",
+        "selector:.success-box"
+      ]
+    }
+  ]
+}
