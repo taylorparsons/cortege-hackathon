@@ -1693,3 +1693,57 @@ NOTES
 - Fixes made during verification:
   - Corrected the scaffold template source-guard so it does not fail by default before a real source file is wired in.
   - Corrected the scaffolded unittest template so the generated failure message keeps escaped `\\n` sequences instead of emitting an invalid multiline f-string.
+
+---
+
+Session: 2026-03-23 10:00
+Agent: Claude Code
+Model: claude-sonnet-4-6
+Skills: athena, verification-before-completion
+Feature: 20260323-warden-agent
+Input: CR-20260323-1000
+Decisions: D-20260323-1000
+Spec: docs/specs/20260323-warden-agent/spec.md
+Tasks: docs/specs/20260323-warden-agent/tasks.md
+Goal: Implement WARDEN data broker removal agent — Phase 3 (CAPTCHA escalation) and Phase 4 (AssociateDiscovery UI + polish).
+
+DONE
+- [2026-03-23 10:00] T-001: broker-scan-store.js + tests. (Skills: athena)
+- [2026-03-23 10:00] T-002: broker-registry.js + 10 broker JSON defs + tests. (Skills: athena)
+- [2026-03-23 10:00] T-003: event-bus.js — add 6 WARDEN event types. (Skills: athena)
+- [2026-03-23 10:00] T-004: API routes — 10 WARDEN endpoints. (Skills: athena)
+- [2026-03-23 10:00] T-005: BrokerStatus.jsx — replace hardcoded relay card in Cortege.jsx. (Skills: athena)
+- [2026-03-23 10:00] T-006: Add playwright-core dep (already present as @playwright/test devDep). (Skills: athena)
+- [2026-03-23 10:00] T-007: browser-session.js — Playwright chromium wrapper. (Skills: athena)
+- [2026-03-23 10:00] T-008: scan-executor.js — walks declarative broker steps[]. (Skills: athena)
+- [2026-03-23 10:00] T-009: associate-discovery.js — CSS-selector extraction of associated people. (Skills: athena)
+- [2026-03-23 10:00] T-010: warden-engine.js — queue, session pool, scheduling, orchestration. (Skills: athena)
+- [2026-03-23 10:00] T-011: orchestrator.js — instantiate and lifecycle WardenEngine. (Skills: athena)
+- [2026-03-23 10:10] T-012: captcha-manager.js — session lifecycle, 10-min timeout, screenshot delivery. (Skills: athena)
+- [2026-03-23 10:10] T-013: escalation-handler.js — captcha_assist action → warden:captcha_required WS event. (Skills: athena)
+- [2026-03-23 10:10] T-014: websocket.js — 8 WARDEN event names added to escalation queue buffer. (Skills: athena)
+- [2026-03-23 10:10] T-015: CaptchaAssist.jsx — modal with screenshot, broker URL, Mark as Resolved. (Skills: athena)
+- [2026-03-23 10:10] T-016: useCortegeData.js — warden:* WS handlers for captchaSessions + brokerStatusVersion. (Skills: athena)
+- [2026-03-23 10:30] T-021: AssociateDiscovery.jsx — shows discovered associates with Add/Dismiss actions. (Skills: athena)
+- [2026-03-23 10:30] T-022: Cortege.jsx — wire AssociateDiscovery into NetworkView relay grid. (Skills: athena)
+- [2026-03-23 10:30] T-023: warden-engine.js — default cron changed 3 AM → noon (user available for CAPTCHAs). (Skills: athena)
+- [2026-03-23 10:30] T-024: agents/warden/agent.md — WARDEN agent spec, designation ε. (Skills: athena)
+- [2026-03-23 10:30] T-025: .env.example — WARDEN_ENABLED, WARDEN_SCAN_CRON (noon), CAPTCHA_TIMEOUT, MAX_SESSIONS. (Skills: athena)
+
+IN PROGRESS
+None.
+
+NEXT
+- T-026: Manual end-to-end smoke test with WhitePages and real household data
+
+NOTES
+- Phase 3 commit: 6c72d66
+- Phase 4 commit: 69a66ad
+- All 203 tests pass (0 failures)
+- Build passes: 46 modules → 297 kB
+- Decisions:
+  - Default scan cron changed from 3 AM to noon — user availability for CAPTCHA resolution
+  - AssociateDiscovery returns null (renders nothing) when no associates are pending review — no empty state card shown
+- Risks / open questions:
+  - T-026 (manual smoke test) requires live household PII and Playwright browser — deferred to post-hackathon
+  - Broker step definitions are declarative but opt-out flows change frequently; needs maintenance cadence

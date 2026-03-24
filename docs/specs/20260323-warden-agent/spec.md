@@ -1,6 +1,6 @@
 # Feature Spec: 20260323-warden-agent
 
-Status: Active
+Status: Done
 Created: 2026-03-23 10:00
 Inputs: CR-20260323-1000
 Decisions: D-20260323-1000
