@@ -726,6 +726,7 @@ export default function Cortege() {
     toast,
     processingStates,
     captchaSessions,
+    dismissCaptchaSession,
     brokerStatusVersion,
     refetch,
   } = useCortegeData();
@@ -1029,8 +1030,8 @@ export default function Cortege() {
       {captchaSessions.length > 0 && (
         <CaptchaAssist
           session={captchaSessions[0]}
-          onResolved={(sessionId) => {/* WebSocket will update captchaSessions */}}
-          onDismiss={() => {/* user dismissed — session stays active server-side until timeout */}}
+          onResolved={(sessionId) => dismissCaptchaSession(sessionId)}
+          onDismiss={() => dismissCaptchaSession(captchaSessions[0]?.sessionId)}
         />
       )}
     </>

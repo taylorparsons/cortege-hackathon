@@ -195,6 +195,7 @@ export function useCortegeData() {
     toast,
     processingStates,
     captchaSessions,
+    dismissCaptchaSession: (sessionId) => setCaptchaSessions(prev => prev.filter(s => s.sessionId !== sessionId)),
     brokerStatusVersion,
     refetch: fetchData,
   };

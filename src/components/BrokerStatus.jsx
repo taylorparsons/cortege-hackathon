@@ -39,10 +39,11 @@ function statusBadge(status) {
   );
 }
 
-export function BrokerStatus({ householdId, onCaptchaNeeded, version }) {
+export function BrokerStatus({ householdId, version }) {
   const [scanStatus, setScanStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     if (!householdId) { setLoading(false); return; }
@@ -54,6 +55,22 @@ export function BrokerStatus({ householdId, onCaptchaNeeded, version }) {
       .catch((err) => { setError(err.message); setLoading(false); });
   }, [householdId, version]);
 
+  const handleScanNow = async () => {
+    if (!householdId || scanning) return;
+    setScanning(true);
+    try {
+      await fetch(apiUrl("/api/warden/scan"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ household_id: householdId }),
+      });
+    } catch (err) {
+      console.error("[BrokerStatus] Scan trigger failed:", err);
+    } finally {
+      setScanning(false);
+    }
+  };
+
   // Build summary lines from scan status
   const summaryLines = buildSummaryLines(scanStatus);
   const agg = scanStatus?.aggregate ?? {};
@@ -64,7 +81,7 @@ export function BrokerStatus({ householdId, onCaptchaNeeded, version }) {
   const hasCaptchaNeeded = false; // populated by CaptchaAssist via parent hook
 
   return (
-    <div className="relay-card">
+    <div className="relay-card" data-testid="broker-status-card">
       <div className="relay-header">
         <span
           className="relay-tag"
@@ -74,7 +91,9 @@ export function BrokerStatus({ householdId, onCaptchaNeeded, version }) {
         </span>
         {!loading && (
           <button
-            onClick={() => onCaptchaNeeded?.()}
+            data-testid="btn-scan-now"
+            onClick={handleScanNow}
+            disabled={scanning}
             style={{
               marginLeft: "auto",
               fontSize: 10,
@@ -83,11 +102,12 @@ export function BrokerStatus({ householdId, onCaptchaNeeded, version }) {
               border: `1px solid ${TAG_COLOR}44`,
               borderRadius: 3,
               color: TAG_COLOR,
-              cursor: "pointer",
+              cursor: scanning ? "default" : "pointer",
+              opacity: scanning ? 0.6 : 1,
             }}
             title="Trigger scan now"
           >
-            Scan Now
+            {scanning ? "Queuing…" : "Scan Now"}
           </button>
         )}
       </div>
@@ -101,14 +121,14 @@ export function BrokerStatus({ householdId, onCaptchaNeeded, version }) {
 
       <div className="relay-body">
         {loading && (
-          <div style={{ fontSize: 12, color: "var(--muted)" }}>Loading scan data…</div>
+          <div data-testid="broker-status-loading" style={{ fontSize: 12, color: "var(--muted)" }}>Loading scan data…</div>
         )}
         {error && (
-          <div style={{ fontSize: 12, color: "#E74C3C" }}>WARDEN unavailable</div>
+          <div data-testid="broker-status-error" style={{ fontSize: 12, color: "#E74C3C" }}>WARDEN unavailable</div>
         )}
         {!loading && !error && (
           <>
-            <div style={{ display: "flex", gap: 8, marginBottom: 7, fontSize: 12, color: "var(--muted)" }}>
+            <div data-testid="broker-status-summary" style={{ display: "flex", gap: 8, marginBottom: 7, fontSize: 12, color: "var(--muted)" }}>
               <span style={{ color: TAG_COLOR, flexShrink: 0 }}>·</span>
               <span>{headerLine}</span>
             </div>
@@ -125,7 +145,7 @@ export function BrokerStatus({ householdId, onCaptchaNeeded, version }) {
               </div>
             ))}
             {summaryLines.length === 0 && (
-              <div style={{ fontSize: 12, color: "var(--muted)" }}>
+              <div data-testid="broker-status-empty" style={{ fontSize: 12, color: "var(--muted)" }}>
                 No scan data yet — click <em>Scan Now</em> to start.
               </div>
             )}

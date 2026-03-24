@@ -33,6 +33,7 @@ export function CaptchaAssist({ session, onResolved, onDismiss }) {
         justifyContent: "center",
         zIndex: 9999,
       }}
+      data-testid="captcha-assist-modal"
       onClick={(e) => { if (e.target === e.currentTarget) onDismiss?.(); }}
     >
       <div
@@ -65,7 +66,7 @@ export function CaptchaAssist({ session, onResolved, onDismiss }) {
           </span>
         </div>
 
-        <div style={{ fontFamily: "var(--serif, Georgia)", fontSize: 18, color: "var(--cream, #f5f5f0)", marginBottom: 8 }}>
+        <div data-testid="captcha-assist-broker-name" style={{ fontFamily: "var(--serif, Georgia)", fontSize: 18, color: "var(--cream, #f5f5f0)", marginBottom: 8 }}>
           {session.brokerName} blocked automated access
         </div>
         <div style={{ fontSize: 12, color: "var(--muted, #888)", marginBottom: 20 }}>
@@ -76,6 +77,7 @@ export function CaptchaAssist({ session, onResolved, onDismiss }) {
         {session.screenshotBase64 && (
           <div style={{ marginBottom: 16, borderRadius: 6, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
             <img
+              data-testid="captcha-assist-screenshot"
               src={`data:image/png;base64,${session.screenshotBase64}`}
               alt="Blocked browser page"
               style={{ width: "100%", display: "block", maxHeight: 200, objectFit: "cover", objectPosition: "top" }}
@@ -95,6 +97,7 @@ export function CaptchaAssist({ session, onResolved, onDismiss }) {
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {session.optOutUrl && (
             <a
+              data-testid="captcha-assist-open-link"
               href={session.optOutUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -113,6 +116,7 @@ export function CaptchaAssist({ session, onResolved, onDismiss }) {
             </a>
           )}
           <button
+            data-testid="btn-captcha-resolve"
             onClick={handleResolve}
             style={{
               padding: "8px 20px",
@@ -128,6 +132,7 @@ export function CaptchaAssist({ session, onResolved, onDismiss }) {
             Mark as Resolved
           </button>
           <button
+            data-testid="btn-captcha-dismiss"
             onClick={onDismiss}
             style={{
               padding: "8px 14px",
