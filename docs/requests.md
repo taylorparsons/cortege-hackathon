@@ -816,3 +816,13 @@ Notes:
 - Context: updating broker definitions to add a search-first phase to find exposed listings before attempting opt-out
 - "threat analysis" = web search (Google or equivalent) as step 1 to confirm the member appears on a broker before automating that broker's site
 - Open to DuckDuckGo or other engines as Google may block headless browsers
+
+## CR-20260323-1115
+Date: 2026-03-23 11:15
+Source: chat
+
+Request (verbatim):
+this web site has a lot of PII https://www.cyberbackgroundchecks.com/
+
+Notes:
+- Add cyberbackgroundchecks.com as an 11th broker definition in WARDEN
