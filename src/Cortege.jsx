@@ -12,6 +12,7 @@ import { HouseholdSelector } from './components/HouseholdSelector.jsx';
 import { useHouseholdContext } from './context/HouseholdContext.jsx';
 import { BrokerStatus } from './components/BrokerStatus.jsx';
 import { CaptchaAssist } from './components/CaptchaAssist.jsx';
+import { AssociateDiscovery } from './components/AssociateDiscovery.jsx';
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap');`;
 
@@ -535,7 +536,7 @@ function DetailPanel({ c, onControl }) {
 }
 
 // ─── HOUSEHOLD NETWORK VIEW ───────────────────────────────────────────────────
-function NetworkView({ householdId }) {
+function NetworkView({ householdId, brokerStatusVersion, onMemberAdded }) {
   return (
     <div className="network-view">
       <div className="relay-grid">
@@ -586,7 +587,8 @@ function NetworkView({ householdId }) {
             </div>
           </div>
         ))}
-        <BrokerStatus householdId={householdId} />
+        <BrokerStatus householdId={householdId} version={brokerStatusVersion} />
+        <AssociateDiscovery householdId={householdId} version={brokerStatusVersion} onMemberAdded={onMemberAdded} />
       </div>
     </div>
   );
@@ -725,6 +727,7 @@ export default function Cortege() {
     processingStates,
     captchaSessions,
     brokerStatusVersion,
+    refetch,
   } = useCortegeData();
 
   // Detail panel data
@@ -933,7 +936,7 @@ export default function Cortege() {
             <>
               <div className="section-eyebrow">Household Signal Layer</div>
               <div className="section-title">How the Companions work together</div>
-              <NetworkView householdId={currentHouseholdId} />
+              <NetworkView householdId={currentHouseholdId} brokerStatusVersion={brokerStatusVersion} onMemberAdded={refetch} />
             </>
           )}
 

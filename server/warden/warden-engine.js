@@ -19,7 +19,7 @@ import { AssociateDiscovery } from './associate-discovery.js';
 import { sanitizeString, decryptMemberFromStorage } from '../privacy/pii.js';
 import { CaptchaManager } from './captcha-manager.js';
 
-const DEFAULT_CRON = process.env.WARDEN_SCAN_CRON ?? '0 3 * * *';
+const DEFAULT_CRON = process.env.WARDEN_SCAN_CRON ?? '0 12 * * *'; // noon — user is available to solve CAPTCHAs
 const MAX_SESSIONS = parseInt(process.env.WARDEN_MAX_CONCURRENT_SESSIONS ?? '2', 10);
 const WARDEN_ENABLED = process.env.WARDEN_ENABLED !== 'false';
 
