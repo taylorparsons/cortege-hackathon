@@ -18,10 +18,12 @@ import { ScanExecutor } from './scan-executor.js';
 import { AssociateDiscovery } from './associate-discovery.js';
 import { sanitizeString, decryptMemberFromStorage } from '../privacy/pii.js';
 import { CaptchaManager } from './captcha-manager.js';
+import { ModeResolver } from './mode-resolver.js';
 
 const DEFAULT_CRON = process.env.WARDEN_SCAN_CRON ?? '0 12 * * *'; // noon — user is available to solve CAPTCHAs
 const MAX_SESSIONS = parseInt(process.env.WARDEN_MAX_CONCURRENT_SESSIONS ?? '2', 10);
 const WARDEN_ENABLED = process.env.WARDEN_ENABLED !== 'false';
+const HEADED_MODE = process.env.WARDEN_HEADED_MODE === 'true';
 
 export class WardenEngine {
   /**
@@ -46,6 +48,7 @@ export class WardenEngine {
 
     this._queue = [];          // Array of ScanJob
     this._activeSessions = 0;
+    this._activeHeadedSessions = 0;  // Track headed sessions separately
     this._cronTask = null;
     this._running = false;
   }
@@ -94,9 +97,14 @@ export class WardenEngine {
   /**
    * Enqueue a scan for a household. Optionally narrow by memberId / brokerId.
    *
+   * @param {string} householdId
+   * @param {object} options
+   * @param {string} options.memberId - Optional member ID to scan
+   * @param {string} options.brokerId - Optional broker ID to scan
+   * @param {boolean} options.headed - Optional override for headed mode
    * @returns {{ queued: true, jobs: number }}
    */
-  async enqueueScan(householdId, { memberId, brokerId } = {}) {
+  async enqueueScan(householdId, { memberId, brokerId, headed } = {}) {
     if (!this.householdStore) {
       return { queued: false, error: 'No household store' };
     }
@@ -126,6 +134,7 @@ export class WardenEngine {
           brokerDef: broker,
           priority: 1,
           enqueuedAt: new Date().toISOString(),
+          headedOverride: headed,  // Store override
         });
         jobCount++;
       }
@@ -177,10 +186,21 @@ export class WardenEngine {
   async _executeJob(job) {
     const { householdId, memberId, brokerId, brokerDef, memberData, householdData } = job;
 
-    console.log(`[warden] Starting scan job=${job.id} broker=${brokerId} member=${sanitizeString(memberId)}`);
+    // Resolve browser mode
+    const mode = ModeResolver.resolve(
+      job,
+      brokerDef,
+      HEADED_MODE
+    );
+    const headless = mode === 'headless';
 
-    this._emitEvent('broker_scan_started', { householdId, memberId, brokerId });
-    this.ws('warden:scan_started', { householdId, memberId, brokerId });
+    // Store resolved mode in job for audit
+    job.resolvedMode = mode;
+
+    console.log(`[warden] Starting scan job=${job.id} broker=${brokerId} member=${sanitizeString(memberId)} mode=${mode}`);
+
+    this._emitEvent('broker_scan_started', { householdId, memberId, brokerId, mode });
+    this.ws('warden:scan_started', { householdId, memberId, brokerId, mode });
 
     // Decrypt member PII — held only in this local scope
     let memberPii;
@@ -195,10 +215,22 @@ export class WardenEngine {
     // Launch browser session
     const session = new BrowserSession();
     try {
-      await session.launch({ headless: true });
+      await session.launch({ headless });
+      
+      // Track headed sessions
+      if (!headless) {
+        this._activeHeadedSessions++;
+      }
     } catch (err) {
-      console.error(`[warden] Browser launch failed: ${sanitizeString(err.message)}`);
-      this.brokerScanStore.updateBrokerStatus(householdId, memberId, brokerId, 'error', { error: 'browser_launch_failed' });
+      console.error(`[warden] Browser launch failed (mode=${mode}): ${sanitizeString(err.message)}`);
+      this.brokerScanStore.updateBrokerStatus(
+        householdId,
+        memberId,
+        brokerId,
+        'error',
+        { error: 'browser_launch_failed', mode }
+      );
+      this.ws('warden:scan_error', { householdId, memberId, brokerId, error: 'browser_launch_failed', mode });
       return;
     }
 
@@ -241,16 +273,21 @@ export class WardenEngine {
         memberId,
         brokerId,
         isReListed ? 're_listed' : finalStatus,
-        result.error ? { error: result.error } : {}
+        { ...result.error ? { error: result.error } : {}, mode }
       );
 
-      this._emitEvent('broker_status_change', { householdId, memberId, brokerId, status: finalStatus });
-      this.ws('warden:status_update', { householdId, memberId, brokerId, status: finalStatus, previousStatus: existingBroker?.status });
+      this._emitEvent('broker_status_change', { householdId, memberId, brokerId, status: finalStatus, mode });
+      this.ws('warden:status_update', { householdId, memberId, brokerId, status: finalStatus, previousStatus: existingBroker?.status, mode });
 
-      this._emitEvent('broker_scan_completed', { householdId, memberId, brokerId, status: finalStatus });
+      this._emitEvent('broker_scan_completed', { householdId, memberId, brokerId, status: finalStatus, mode });
       console.log(`[warden] Job ${job.id} completed: broker=${brokerId} status=${finalStatus}`);
 
     } finally {
+      // Track headed sessions
+      if (!headless) {
+        this._activeHeadedSessions--;
+      }
+      
       // Always close the browser — PII in memberPii is GC'd when this scope exits
       await session.close();
       memberPii = null; // explicit release
