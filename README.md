@@ -92,6 +92,95 @@ Agents evolve through four maturity stages:
 3. **Predictive** (0.30-0.60) - Anticipating threats
 4. **Cortege Mode** (0.60-1.00) - Proactive protection
 
+### WARDEN Data Broker Removal Agent
+
+WARDEN is a specialized agent that automatically removes household member information from data broker websites.
+
+```mermaid
+graph TB
+    subgraph "WARDEN Engine"
+        Queue[Scan Queue]
+        ModeResolver[Mode Resolver]
+        SessionPool[Browser Session Pool<br/>Max 2 concurrent]
+    end
+    
+    subgraph "Mode Resolution Priority"
+        UserOverride[1. User Override<br/>headed: true/false]
+        BrokerConfig[2. Broker Config<br/>requires_headed_mode]
+        EnvVar[3. Environment Var<br/>WARDEN_HEADED_MODE]
+        Default[4. Default<br/>headless]
+    end
+    
+    subgraph "Browser Modes"
+        Headless[Headless Mode<br/>Background automation<br/>No CAPTCHA support]
+        Headed[Headed Mode<br/>Visible browser<br/>Manual CAPTCHA resolution]
+    end
+    
+    subgraph "Broker Types"
+        AutoBrokers[Automated Brokers<br/>WhitePages, FastPeopleSearch<br/>Instant Data Removal, etc.]
+        CAPTCHABrokers[CAPTCHA-Protected<br/>Spokeo, CyberBackgroundChecks<br/>Cloudflare protection]
+    end
+    
+    subgraph "CAPTCHA Flow"
+        Detect[CAPTCHA Detected]
+        Screenshot[Take Screenshot]
+        L3[Escalate to L3]
+        UserResolve[User Resolves CAPTCHA]
+        Resume[Resume Scan]
+    end
+    
+    API[POST /api/warden/scan/headed] --> Queue
+    Cron[Daily Cron<br/>Noon Pacific] --> Queue
+    
+    Queue --> ModeResolver
+    
+    ModeResolver --> UserOverride
+    UserOverride --> BrokerConfig
+    BrokerConfig --> EnvVar
+    EnvVar --> Default
+    
+    Default --> SessionPool
+    
+    SessionPool --> Headless
+    SessionPool --> Headed
+    
+    Headless --> AutoBrokers
+    Headed --> CAPTCHABrokers
+    
+    CAPTCHABrokers --> Detect
+    Detect --> Screenshot
+    Screenshot --> L3
+    L3 --> UserResolve
+    UserResolve --> Resume
+    Resume --> CAPTCHABrokers
+    
+    AutoBrokers --> Results[Scan Results<br/>listed/removed/error]
+    CAPTCHABrokers --> Results
+    
+    Results --> Store[Broker Scan Store<br/>Mode + Status + History]
+    
+    style Headed fill:#4ECDC4
+    style Headless fill:#E8A838
+    style CAPTCHABrokers fill:#ff6b6b
+    style AutoBrokers fill:#51cf66
+    style L3 fill:#ff6b6b
+```
+
+**Key Features:**
+- **Automatic Mode Selection**: Priority-based resolution (user override > broker config > env var > default)
+- **Headless Mode**: Background automation for brokers without CAPTCHA protection
+- **Headed Mode**: Visible browser for manual CAPTCHA resolution on Cloudflare-protected sites
+- **CAPTCHA Escalation**: L3 escalation with screenshot when CAPTCHA detected
+- **Session Management**: Max 2 concurrent browser sessions to prevent resource exhaustion
+- **Audit Trail**: All scans tracked with mode, status, and timestamp in scan history
+
+**Supported Brokers:**
+- WhitePages, FastPeopleSearch, Instant Data Removal (headless)
+- Spokeo, CyberBackgroundChecks (headed mode required)
+- 10+ broker definitions with declarative opt-out workflows
+
+See [WARDEN Demo Guide](docs/WARDEN_DEMO_GUIDE.md) for setup and usage.
+
 ### Event Ingestion
 
 - **Event Simulator** - Demo scenarios (default)
