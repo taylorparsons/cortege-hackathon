@@ -700,8 +700,7 @@ Decision: [D-20260321-0801](decisions.md#d-20260321-0801)
 Spec: [`specs/20260321-deck-pptx-export/spec.md`](specs/20260321-deck-pptx-export/spec.md)
 
 Request (verbatim):
-Create a deck.pptx PowerPoint file from the existing reveal.js presentation at deck.html (repo root:
-/Volumes/T9/code/cortege-hackathon/deck.html). Read that file for the exact content. Use the python-pptx library. Match the design:
+Create a deck.pptx PowerPoint file from the existing reveal.js presentation at deck.html (repo root). Read that file for the exact content. Use the python-pptx library. Match the design:
 
 - Dark background (#111009), amber accent (#E8A838), teal (#4ECDC4), light text (#F0EAD8)
 - Fonts: Cormorant Garamond for headings, Outfit for body (fall back to system fonts if needed)
@@ -738,7 +737,7 @@ create a new skill for codex that I can use in the future for any pptx
 
 Notes:
 - The request is for a reusable Codex skill, not a repo-specific one-off script
-- The installed Codex skill directory in this environment is `/Users/taylorparsons/.codex/skills`
+- The installed Codex skill directory is `~/.codex/skills`
 
 ## CR-20260321-0820
 Date: 2026-03-21 08:20

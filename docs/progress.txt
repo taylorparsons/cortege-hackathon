@@ -668,7 +668,7 @@ NEXT
 
 NOTES
 - Commands run: npm install -D cypress → added 132 packages, 0 vulnerabilities
-- Commands run: npm --prefix /Volumes/T9/code/cortege-hackathon run build → ✓ 41 modules, 264KB/79KB gzip
+- Commands run: npm --prefix <repo-root> run build → ✓ 41 modules, 264KB/79KB gzip
 - Commands run: node --test server/tests/household-store.test.js → PRE-EXISTING FAILURE (vitest missing; not caused by this session)
 - Household CRUD delete test fixed: creates two households, selects one as current so delete button shows for the other
 - Member API calls include companion field (required by POST /api/households/:id/members alongside name+profile_type)
@@ -1576,7 +1576,7 @@ Goal: Install a reusable global Codex skill for future PPTX generation work.
 
 DONE
 - [2026-03-21 08:16] T-001: Capture the reusable Codex PPTX-skill request in ATHENA docs and create the feature spec/tasks. (Skills: athena, writing-skills)
-- [2026-03-21 08:17] T-002: Install the new global Codex skill at `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md`. (Skills: writing-skills)
+- [2026-03-21 08:17] T-002: Install the new global Codex skill at `~/.codex/skills/pptx-presentation-builder/SKILL.md`. (Skills: writing-skills)
 - [2026-03-21 08:17] T-003: Verify the installed skill file exists and is readable in the global Codex skill directory. (Skills: verification-before-completion)
 
 IN PROGRESS
@@ -1586,12 +1586,12 @@ NEXT
 
 NOTES
 - Install step:
-  - `install -d /Users/taylorparsons/.codex/skills/pptx-presentation-builder`
-  - `cat > /Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md <<'EOF' ... EOF` -> PASS
+  - `install -d ~/.codex/skills/pptx-presentation-builder`
+  - `cat > ~/.codex/skills/pptx-presentation-builder/SKILL.md <<'EOF' ... EOF` -> PASS
 - Verification:
-  - `sed -n '1,220p' /Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md` -> PASS
-  - `test -r /Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md && echo readable` -> PASS (`readable`)
-  - `ls -ld /Users/taylorparsons/.codex/skills/pptx-presentation-builder /Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md` -> PASS
+  - `sed -n '1,220p' ~/.codex/skills/pptx-presentation-builder/SKILL.md` -> PASS
+  - `test -r ~/.codex/skills/pptx-presentation-builder/SKILL.md && echo readable` -> PASS (`readable`)
+  - `ls -ld ~/.codex/skills/pptx-presentation-builder ~/.codex/skills/pptx-presentation-builder/SKILL.md` -> PASS
 - Skill scope:
   - The installed skill is intentionally broad enough for HTML/markdown/screenshots/spec-driven deck work, but still opinionated toward editable native `python-pptx` output and explicit verification.
 
@@ -1681,15 +1681,15 @@ None.
 NEXT
 
 NOTES
-- Installed helpers under `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/`:
+- Installed helpers under `~/.codex/skills/pptx-presentation-builder/scripts/`:
   - `scaffold_pptx_workflow.py`
   - `inspect_pptx.py`
 - Verification:
-  - `find /Users/taylorparsons/.codex/skills/pptx-presentation-builder -maxdepth 2 -type f | sort` -> PASS
-  - `python3 /Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/inspect_pptx.py /Volumes/T9/code/cortege-hackathon/deck.pptx --expect-slides 8 --expect-media-min 3 --expect-text CORTEGE --expect-text '174 passing tests'` -> PASS
-  - `python3 /Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/scaffold_pptx_workflow.py --slug smoke_deck --output smoke_deck.pptx --force` in `/private/tmp/pptx-skill-smoke` -> PASS
-  - `/Volumes/T9/code/cortege-hackathon/.venv/bin/python scripts/build_smoke_deck_pptx.py` in `/private/tmp/pptx-skill-smoke` -> PASS
-  - `/Volumes/T9/code/cortege-hackathon/.venv/bin/python -m unittest scripts/test_build_smoke_deck_pptx.py` in `/private/tmp/pptx-skill-smoke` -> PASS (`1` test)
+  - `find ~/.codex/skills/pptx-presentation-builder -maxdepth 2 -type f | sort` -> PASS
+  - `python3 ~/.codex/skills/pptx-presentation-builder/scripts/inspect_pptx.py <repo-root>/deck.pptx --expect-slides 8 --expect-media-min 3 --expect-text CORTEGE --expect-text '174 passing tests'` -> PASS
+  - `python3 ~/.codex/skills/pptx-presentation-builder/scripts/scaffold_pptx_workflow.py --slug smoke_deck --output smoke_deck.pptx --force` in `/tmp/pptx-skill-smoke` -> PASS
+  - `<repo-root>/.venv/bin/python scripts/build_smoke_deck_pptx.py` in `/tmp/pptx-skill-smoke` -> PASS
+  - `<repo-root>/.venv/bin/python -m unittest scripts/test_build_smoke_deck_pptx.py` in `/tmp/pptx-skill-smoke` -> PASS (`1` test)
 - Fixes made during verification:
   - Corrected the scaffold template source-guard so it does not fail by default before a real source file is wired in.
   - Corrected the scaffolded unittest template so the generated failure message keeps escaped `\\n` sequences instead of emitting an invalid multiline f-string.

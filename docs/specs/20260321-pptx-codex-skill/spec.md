@@ -14,17 +14,17 @@ Narrative:
 - As a Codex user, I want a reusable PPTX skill in my global skill directory so future presentation requests start from a known-good workflow.
 
 Acceptance scenarios:
-1. Given the Codex global skill directory is `/Users/taylorparsons/.codex/skills`, When the work completes, Then a new `pptx-presentation-builder` skill exists there. (Verifies: FR-001, FR-003)
+1. Given the Codex global skill directory is `~/.codex/skills`, When the work completes, Then a new `pptx-presentation-builder` skill exists there. (Verifies: FR-001, FR-003)
 2. Given the skill is intended for broad PPTX work, When a future session reads it, Then it explains when to use editable native slides, how to translate a source deck into PowerPoint primitives, and how to verify the result. (Verifies: FR-002)
 3. Given future sessions need more than prose, When the skill is installed, Then helper scripts for scaffolding and artifact inspection are available under the skill directory and documented in the skill. (Verifies: FR-004, FR-005)
 
 ## Requirements
 
 Functional requirements:
-- FR-001: A new global Codex skill shall be installed at `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md`. (Sources: CR-20260321-0815; D-20260321-0815)
+- FR-001: A new global Codex skill shall be installed at `~/.codex/skills/pptx-presentation-builder/SKILL.md`. (Sources: CR-20260321-0815; D-20260321-0815)
 - FR-002: The skill shall describe a reusable `python-pptx` workflow covering source review, design-token extraction, native slide construction, media handling, and verification. (Sources: CR-20260321-0815; D-20260321-0815)
 - FR-003: Verification shall confirm the installed skill file exists and is readable after creation. (Sources: CR-20260321-0815; D-20260321-0815)
-- FR-004: The global skill shall include reusable helper scripts under `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/` for scaffolding a PPTX workflow and inspecting a generated `.pptx` artifact. (Sources: CR-20260321-0820; D-20260321-0820)
+- FR-004: The global skill shall include reusable helper scripts under `~/.codex/skills/pptx-presentation-builder/scripts/` for scaffolding a PPTX workflow and inspecting a generated `.pptx` artifact. (Sources: CR-20260321-0820; D-20260321-0820)
 - FR-005: The skill documentation shall reference the helper scripts with enough usage detail that future Codex sessions can invoke them directly. (Sources: CR-20260321-0820; D-20260321-0820)
 
 Non-functional requirements:

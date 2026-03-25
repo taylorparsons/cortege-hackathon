@@ -1052,7 +1052,7 @@ PRD: [Global Codex PPTX Skill](PRD.md#global-codex-pptx-skill-sources-cr-2026032
 Spec: [`specs/20260321-pptx-codex-skill/spec.md`](specs/20260321-pptx-codex-skill/spec.md)
 
 Decision:
-Create a global Codex skill under `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md` that teaches a reusable, editable-first `python-pptx` workflow for future presentation tasks.
+Create a global Codex skill under `~/.codex/skills/pptx-presentation-builder/SKILL.md` that teaches a reusable, editable-first `python-pptx` workflow for future presentation tasks.
 
 Rationale:
 - The user asked for something reusable in future Codex sessions, which implies installation in the global Codex skill directory instead of only this repo.
@@ -1064,7 +1064,7 @@ Alternatives considered:
 - Create a skill tied only to reveal.js-to-PowerPoint conversion (rejected: too narrow for “any pptx”)
 
 Acceptance / test:
-- The new skill exists at `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/SKILL.md`
+- The new skill exists at `~/.codex/skills/pptx-presentation-builder/SKILL.md`
 - The skill frontmatter and content clearly guide future PPTX tasks and reference verification expectations
 
 ## D-20260321-0820
@@ -1086,7 +1086,7 @@ Alternatives considered:
 - Ship one monolithic generator script (rejected: too opinionated for “any pptx” use case)
 
 Acceptance / test:
-- The global skill directory contains helper scripts under `/Users/taylorparsons/.codex/skills/pptx-presentation-builder/scripts/`
+- The global skill directory contains helper scripts under `~/.codex/skills/pptx-presentation-builder/scripts/`
 - The skill text references those scripts and their intended usage
 
 ## D-20260321-0826
