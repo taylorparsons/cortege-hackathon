@@ -17,6 +17,7 @@ import { analyzeFraudCase } from '../risk/fraud-case-analyzer.js';
 import {
   isValidDateOfBirth,
   isValidE164,
+  isValidEmail,
   normalizePhone,
 } from '../privacy/pii.js';
 
@@ -569,7 +570,7 @@ export function createApiRouter(orchestrator) {
         return res.status(501).json({ error: 'Household store not enabled' });
       }
       
-      const { name, date_of_birth, phone, profile_type, companion, is_primary, primary_contact } = req.body;
+      const { name, date_of_birth, phone, email, profile_type, companion, is_primary, primary_contact } = req.body;
 
       if (!name || !phone || !profile_type || !companion) {
         return res.status(400).json({
@@ -582,11 +583,15 @@ export function createApiRouter(orchestrator) {
       if (!isValidDateOfBirth(date_of_birth)) {
         return res.status(400).json({ error: 'date_of_birth must be YYYY-MM-DD' });
       }
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ error: 'email must be a valid email address' });
+      }
 
       const member = await orchestrator.householdStore.addMember(req.params.id, {
         name,
         date_of_birth,
         phone: normalizePhone(phone),
+        email: email?.trim() || null,
         profile_type,
         companion,
         is_primary,
@@ -617,6 +622,7 @@ export function createApiRouter(orchestrator) {
         name,
         date_of_birth,
         phone,
+        email,
         profile_type,
         companion,
         is_primary,
@@ -628,10 +634,14 @@ export function createApiRouter(orchestrator) {
       if (!isValidDateOfBirth(date_of_birth)) {
         return res.status(400).json({ error: 'date_of_birth must be YYYY-MM-DD' });
       }
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ error: 'email must be a valid email address' });
+      }
       const updates = {};
       if (name !== undefined) updates.name = name;
       if (date_of_birth !== undefined) updates.date_of_birth = date_of_birth;
       if (phone !== undefined) updates.phone = normalizePhone(phone);
+      if (email !== undefined) updates.email = email?.trim() || null;
       if (profile_type !== undefined) updates.profile_type = profile_type;
       if (companion !== undefined) updates.companion = companion;
       if (is_primary !== undefined) updates.is_primary = is_primary;
@@ -1093,6 +1103,67 @@ export function createApiRouter(orchestrator) {
     } catch (err) {
       console.error('[api] POST /api/warden/scan error:', err);
       res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  /**
+   * POST /api/warden/scan/headed
+   * Trigger a headed (visible browser) scan for a specific member and broker.
+   */
+  router.post('/api/warden/scan/headed', async (req, res) => {
+    const { household_id, member_id, broker_id } = req.body;
+
+    // Validate required fields
+    if (!household_id || !member_id || !broker_id) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['household_id', 'member_id', 'broker_id'],
+      });
+    }
+
+    const wardenEngine = orchestrator.wardenEngine;
+    if (!wardenEngine) {
+      return res.status(503).json({ error: 'WARDEN not enabled' });
+    }
+
+    // Validate household exists
+    const householdStore = orchestrator.householdStore;
+    if (!householdStore) {
+      return res.status(503).json({ error: 'Household store not available' });
+    }
+
+    const household = await householdStore.getHousehold(household_id).catch(() => null);
+    if (!household) {
+      return res.status(404).json({ error: 'Household not found' });
+    }
+
+    // Validate member exists
+    const member = (household.members || []).find(m => m.id === member_id);
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    // Validate broker exists
+    const broker = wardenEngine.brokerRegistry.getBroker(broker_id);
+    if (!broker) {
+      return res.status(404).json({ error: 'Broker not found' });
+    }
+
+    // Enqueue headed scan
+    const result = await wardenEngine.enqueueScan(household_id, {
+      memberId: member_id,
+      brokerId: broker_id,
+      headed: true,  // Force headed mode
+    });
+
+    if (result.queued) {
+      res.json({
+        queued: true,
+        jobs: result.jobs,
+        message: 'Headed scan queued. Browser will open shortly.',
+      });
+    } else {
+      res.status(500).json({ error: result.error || 'Failed to queue scan' });
     }
   });
 
