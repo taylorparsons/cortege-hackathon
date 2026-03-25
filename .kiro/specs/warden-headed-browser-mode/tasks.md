@@ -295,11 +295,11 @@ Create summary document of completed implementation.
 - Create: `.kiro/specs/warden-headed-browser-mode/IMPLEMENTATION_SUMMARY.md`
 
 **Acceptance:**
-- [ ] Summary lists all completed tasks
-- [ ] Summary includes test results
-- [ ] Summary lists all files changed (new and modified)
-- [ ] Summary confirms all 10 requirements implemented
-- [ ] Summary includes next steps and future enhancements
+- [x] Summary lists all completed tasks
+- [x] Summary includes test results
+- [x] Summary lists all files changed (new and modified)
+- [x] Summary confirms all 10 requirements implemented
+- [x] Summary includes next steps and future enhancements
 
 ---
 
