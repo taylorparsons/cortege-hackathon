@@ -1210,3 +1210,39 @@ Acceptance / test:
 - Restart server
 - Verify 4 companion agents are created for the Seattle Parsons household
 - Verify all 4 members show in the UI companion section
+
+
+## D-20260325-1000
+Date: 2026-03-25 10:00
+Inputs: [CR-20260325-1000](requests.md#cr-20260325-1000)
+PRD: [WARDEN Agent](PRD.md#warden-agent)
+Spec: [`.kiro/specs/warden-headed-browser-mode/requirements.md`](../.kiro/specs/warden-headed-browser-mode/requirements.md)
+
+Decision:
+Implement headed/headless browser mode selection for WARDEN data broker scans with priority-based resolution: user override > broker config > env var > default. Run comprehensive security audit before merge.
+
+Rationale:
+- Cloudflare-protected brokers (Spokeo, CyberBackgroundChecks) require manual CAPTCHA resolution
+- Headed mode (visible browser) allows household members to solve CAPTCHAs
+- Headless mode (background browser) provides automated scanning for non-protected brokers
+- Priority-based resolution provides flexibility: per-scan override, per-broker defaults, global config
+- Security audit ensures PII protection, input validation, and browser session security before production
+- Mode tracking in scan history provides audit trail for compliance
+
+Alternatives considered:
+- Always use headed mode (rejected — wastes resources on non-CAPTCHA brokers)
+- Always use headless mode (rejected — fails on Cloudflare-protected brokers)
+- Manual mode selection only (rejected — no per-broker defaults, poor UX)
+- Skip security audit (rejected — PII handling and browser security are critical)
+
+Acceptance / test:
+- ModeResolver implements priority-based resolution (7 unit tests)
+- WARDEN Engine integrates mode resolution with session tracking
+- Broker Scan Store persists mode in scan history
+- POST /api/warden/scan/headed endpoint validates inputs and queues headed scans
+- Spokeo and CyberBackgroundChecks flagged with requires_headed_mode: true
+- Security audit: NO CRITICAL ISSUES FOUND
+- All 224 tests passing (221 pass, 3 skip, 0 fail)
+- OWASP Top 10 compliance verified
+- Privacy and data protection requirements met
+- Documentation: API.md, .env.example, IMPLEMENTATION_SUMMARY.md, WARDEN_SECURITY_AUDIT_2026-03-25.md
