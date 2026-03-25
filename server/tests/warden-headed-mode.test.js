@@ -28,4 +28,25 @@ describe('Headed Scan Integration', () => {
     // Integration with WARDEN engine is verified via unit tests
     assert.ok(true, 'Integration verified via unit tests');
   });
+
+  test('Cloudflare-protected brokers use headed mode by default', async () => {
+    const { BrokerRegistry } = await import('../warden/broker-registry.js');
+    const { ModeResolver } = await import('../warden/mode-resolver.js');
+    
+    const registry = new BrokerRegistry();
+    registry.load();
+    
+    const spokeo = registry.getBroker('spokeo');
+    const cyberBg = registry.getBroker('cyberbackgroundchecks');
+    
+    assert.ok(spokeo, 'Spokeo broker should exist');
+    assert.ok(cyberBg, 'CyberBackgroundChecks broker should exist');
+    assert.strictEqual(spokeo.requires_headed_mode, true, 'Spokeo should require headed mode');
+    assert.strictEqual(cyberBg.requires_headed_mode, true, 'CyberBackgroundChecks should require headed mode');
+    
+    // Verify mode resolution
+    const job = {};
+    assert.strictEqual(ModeResolver.resolve(job, spokeo, false), 'headed', 'Spokeo should resolve to headed mode');
+    assert.strictEqual(ModeResolver.resolve(job, cyberBg, false), 'headed', 'CyberBackgroundChecks should resolve to headed mode');
+  });
 });

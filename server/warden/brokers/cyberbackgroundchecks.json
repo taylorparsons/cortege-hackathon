@@ -4,9 +4,10 @@
   "search_url": "https://www.cyberbackgroundchecks.com/people/{name}/{state}",
   "opt_out_url": "https://www.cyberbackgroundchecks.com/removal",
   "requires_pii": ["name", "state"],
+  "requires_headed_mode": true,
   "verification_method": "none",
-  "version": "2026-03-23",
-  "last_verified": "2026-03-23",
+  "version": "2026-03-25",
+  "last_verified": "2026-03-25",
   "associate_selectors": {
     "container": ".relatives .relative, .possible-relatives li, .associates-section li",
     "name": ".relative-name a, .associate-name, .person-name",
