@@ -117,4 +117,46 @@ describe('BrokerRegistry', () => {
     registry.load(); // should not throw
     assert.equal(registry.getBroker('broken'), null);
   });
+
+  test('validates requires_headed_mode is boolean', () => {
+    // Invalid: string instead of boolean
+    fs.writeFileSync(path.join(tmpDir, 'invalid_mode.json'), JSON.stringify({
+      id: 'invalid_mode',
+      name: 'Invalid Mode Broker',
+      opt_out_url: 'https://example.com',
+      requires_pii: ['name'],
+      requires_headed_mode: 'yes', // Invalid: should be boolean
+      steps: [],
+    }));
+    const registry = new BrokerRegistry(tmpDir);
+    registry.load();
+    assert.equal(registry.getBroker('invalid_mode'), null);
+  });
+
+  test('accepts valid requires_headed_mode true', () => {
+    writeBroker(tmpDir, 'headed_broker', { requires_headed_mode: true });
+    const registry = new BrokerRegistry(tmpDir);
+    registry.load();
+    const broker = registry.getBroker('headed_broker');
+    assert.ok(broker);
+    assert.equal(broker.requires_headed_mode, true);
+  });
+
+  test('accepts valid requires_headed_mode false', () => {
+    writeBroker(tmpDir, 'headless_broker', { requires_headed_mode: false });
+    const registry = new BrokerRegistry(tmpDir);
+    registry.load();
+    const broker = registry.getBroker('headless_broker');
+    assert.ok(broker);
+    assert.equal(broker.requires_headed_mode, false);
+  });
+
+  test('accepts missing requires_headed_mode', () => {
+    writeBroker(tmpDir, 'no_mode_broker', {});
+    const registry = new BrokerRegistry(tmpDir);
+    registry.load();
+    const broker = registry.getBroker('no_mode_broker');
+    assert.ok(broker);
+    assert.equal(broker.requires_headed_mode, undefined);
+  });
 });

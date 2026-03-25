@@ -96,6 +96,13 @@ export class BrokerRegistry {
       }
     }
 
+    // Validate requires_headed_mode if present
+    if ('requires_headed_mode' in def) {
+      if (typeof def.requires_headed_mode !== 'boolean') {
+        errors.push('requires_headed_mode must be boolean');
+      }
+    }
+
     return errors;
   }
 
