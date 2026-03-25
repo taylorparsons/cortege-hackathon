@@ -144,6 +144,13 @@ export function isValidDateOfBirth(value) {
   return !Number.isNaN(date.getTime());
 }
 
+export function isValidEmail(value) {
+  if (value === undefined || value === null || value === '') return true;
+  const trimmed = String(value).trim();
+  if (!trimmed) return true;
+  return /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(trimmed);
+}
+
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -375,6 +382,7 @@ export function encryptMemberForStorage(member) {
     name_enc: encryptString(member.name),
     phone_enc: encryptString(phone),
     phone_token: phone ? tokenizeValue('phone', phone) : null,
+    email_enc: encryptString(member.email ?? null),
     date_of_birth_enc: encryptString(member.date_of_birth ?? null),
     profile_type: member.profile_type,
     companion: member.companion,
@@ -388,6 +396,7 @@ export function decryptMemberFromStorage(raw) {
     id: raw.id,
     name: decryptString(raw.name_enc ?? raw.name ?? null),
     phone: decryptString(raw.phone_enc ?? raw.phone ?? null),
+    email: decryptString(raw.email_enc ?? raw.email ?? null),
     date_of_birth: decryptString(raw.date_of_birth_enc ?? raw.date_of_birth ?? null),
     profile_type: raw.profile_type,
     companion: raw.companion,

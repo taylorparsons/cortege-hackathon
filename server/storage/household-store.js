@@ -116,6 +116,7 @@ export class HouseholdStore {
       name: memberData.name,
       date_of_birth: memberData.date_of_birth ?? null,
       phone: memberData.phone ?? null,
+      email: memberData.email ?? null,
       profile_type: memberData.profile_type,
       companion: memberData.companion,
       is_primary: memberData.is_primary ?? false,
@@ -144,6 +145,7 @@ export class HouseholdStore {
       'profile_type',
       'companion',
       'phone',
+      'email',
       'is_primary',
       'primary_contact',
     ];

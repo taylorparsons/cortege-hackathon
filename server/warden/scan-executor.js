@@ -143,6 +143,15 @@ export class ScanExecutor {
       }
 
       case 'wait': {
+        // If a no_results_selector is specified, check it first — if it matches, listing is absent
+        if (step.no_results_selector && session.page) {
+          try {
+            const noResultsEl = await session.page.$(step.no_results_selector);
+            if (noResultsEl) return null; // page loaded but no listing
+          } catch {
+            // ignore — fall through to positive check
+          }
+        }
         const found = await session.waitForSelector(step.selector, { timeout: step.timeout_ms ?? 8000 });
         if (found) return 'listing_found';
         return null;

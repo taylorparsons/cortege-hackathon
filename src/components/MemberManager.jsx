@@ -83,12 +83,14 @@ export function MemberManager({ householdId }) {
   // Add form state
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [newDob, setNewDob] = useState('');
   const [newProfileType, setNewProfileType] = useState('adult');
 
   // Edit form state
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editDob, setEditDob] = useState('');
   const [editProfileType, setEditProfileType] = useState('adult');
 
@@ -122,6 +124,7 @@ export function MemberManager({ householdId }) {
         body: JSON.stringify({
           name: newName,
           phone: normalizePhoneInput(newPhone),
+          email: newEmail || undefined,
           date_of_birth: newDob || undefined,
           profile_type: newProfileType,
           companion: COMPANION_MAP[newProfileType],
@@ -131,7 +134,7 @@ export function MemberManager({ householdId }) {
         const message = await readMemberError(response, `Failed to add member (${response.status})`);
         throw new Error(message);
       }
-      setNewName(''); setNewPhone(''); setNewDob(''); setNewProfileType('adult');
+      setNewName(''); setNewPhone(''); setNewEmail(''); setNewDob(''); setNewProfileType('adult');
       setShowAddForm(false);
       await fetchMembers();
       bumpMemberVersion();
@@ -150,6 +153,7 @@ export function MemberManager({ householdId }) {
         body: JSON.stringify({
           name: editName,
           phone: normalizePhoneInput(editPhone),
+          email: editEmail || undefined,
           date_of_birth: editDob || undefined,
           profile_type: editProfileType,
           companion: COMPANION_MAP[editProfileType],
@@ -188,6 +192,7 @@ export function MemberManager({ householdId }) {
     setEditingId(member.id);
     setEditName(member.name);
     setEditPhone(member.phone ?? '');
+    setEditEmail(member.email ?? '');
     setEditDob(member.date_of_birth ?? '');
     setEditProfileType(member.profile_type ?? 'adult');
     setEditError('');
@@ -237,6 +242,12 @@ export function MemberManager({ householdId }) {
             type="tel" placeholder="Phone (e.g. +15551234567 or 914-764-5049)" value={newPhone}
             onChange={(e) => setNewPhone(e.target.value)}
             required
+            style={inputStyle}
+          />
+          <input
+            data-testid="input-member-email"
+            type="email" placeholder="Email (optional)" value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
             style={inputStyle}
           />
           <input
@@ -297,6 +308,9 @@ export function MemberManager({ householdId }) {
                     style={inputStyle} />
                   <input data-testid="input-member-phone" type="tel" placeholder="Phone" value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
+                    style={inputStyle} />
+                  <input data-testid="input-member-email" type="email" placeholder="Email (optional)" value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
                     style={inputStyle} />
                   <input data-testid="input-member-dob" type="date" value={editDob}
                     onChange={(e) => setEditDob(e.target.value)}
