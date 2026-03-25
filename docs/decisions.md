@@ -1182,3 +1182,31 @@ Acceptance / test:
 - Declarative broker steps execute against a Playwright session
 - CAPTCHA detection emits L3 escalation → CaptchaAssist modal appears in UI
 - Discovered associates appear in UI with Add to Household action
+
+
+## D-20260324-1000
+Date: 2026-03-24 10:00
+Inputs: [CR-20260324-1000](requests.md#cr-20260324-1000)
+PRD: [Companion Agent Creation Bug](PRD.md#companion-agent-creation-bug)
+Spec: [`specs/20260324-companion-agent-creation-bug/spec.md`](specs/20260324-companion-agent-creation-bug/spec.md)
+
+Decision:
+The root cause is that the orchestrator activates the first household alphabetically at startup, which is currently an E2E test household with 0 members. The Seattle Parsons household exists with 4 members but is not being activated. The fix is to either: (1) set DEFAULT_HOUSEHOLD_ID in .env to the desired household, or (2) clean up test households after E2E runs, or (3) change the default selection logic to skip empty households.
+
+Rationale:
+- The agent factory code is working correctly - it creates one instance per member
+- The household store correctly decrypts all 4 members from the encrypted JSON
+- The orchestrator correctly calls `createInstances(templates, members)` with the active household's members
+- The problem is that the wrong household is being activated at startup
+- Test households created by E2E tests are persisting and interfering with the demo
+
+Alternatives considered:
+- Bug in agent factory (rejected - code is correct, creates one instance per member)
+- Bug in household decryption (rejected - all 4 members are properly decrypted)
+- Bug in orchestrator activation (rejected - activation logic is correct)
+
+Acceptance / test:
+- Set DEFAULT_HOUSEHOLD_ID=hh_fab2e400 in .env
+- Restart server
+- Verify 4 companion agents are created for the Seattle Parsons household
+- Verify all 4 members show in the UI companion section

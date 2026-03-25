@@ -825,3 +825,20 @@ this web site has a lot of PII https://www.cyberbackgroundchecks.com/
 
 Notes:
 - Add cyberbackgroundchecks.com as an 11th broker definition in WARDEN
+
+
+## CR-20260324-1000
+Date: 2026-03-24 10:00
+Source: chat
+Decision: [D-20260324-1000](decisions.md#d-20260324-1000)
+Spec: [`specs/20260324-companion-agent-creation-bug/spec.md`](specs/20260324-companion-agent-creation-bug/spec.md)
+
+Request (verbatim):
+created a new family but only once family member shows here are all of them
+
+Notes:
+- User created a household with 4 members (David T Parsons, Melanie Blair, Walker Parsons, Aidan Parsons)
+- All 4 members show in the household editor UI
+- Only 1 companion agent (David T Parsons) appears in the "Companion Agents" section
+- Expected: 4 companion agents should be created (one per household member)
+- Screenshots show: household location "The parsons (seatte, WA, United States)" with 4 members, but only David showing as active companion

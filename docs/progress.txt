@@ -1747,3 +1747,44 @@ NOTES
 - Risks / open questions:
   - T-026 (manual smoke test) requires live household PII and Playwright browser — deferred to post-hackathon
   - Broker step definitions are declarative but opt-out flows change frequently; needs maintenance cadence
+
+
+---
+
+Session: 2026-03-24 10:00
+Agent: Kiro
+Model: Claude Sonnet 4.5
+Skills: athena, systematic-debugging
+Feature: 20260324-companion-agent-creation-bug
+Input: CR-20260324-1000
+Decisions: D-20260324-1000
+Spec: docs/specs/20260324-companion-agent-creation-bug/spec.md
+Tasks: docs/specs/20260324-companion-agent-creation-bug/tasks.md
+Goal: Fix bug where only 1 of 4 household members shows as a companion agent.
+
+DONE
+- [2026-03-24 10:00] T-001: Set DEFAULT_HOUSEHOLD_ID=hh_fab2e400 in .env. (Skills: athena)
+- [2026-03-24 10:05] T-002: Update .env.example with DEFAULT_HOUSEHOLD_ID documentation. (Skills: athena)
+- [2026-03-24 10:10] T-003: Add empty household skip logic to orchestrator._resolveInitialHouseholdId(). (Skills: athena, systematic-debugging)
+- [2026-03-24 10:15] T-005: Verify fix - all 4 companions now appear. (Skills: athena, verification-before-completion)
+
+IN PROGRESS
+
+NEXT
+- T-004: Update E2E test cleanup (deferred - tests already have cleanup logic)
+- T-006: Update ATHENA docs (in progress)
+
+NOTES
+- Root cause: Orchestrator was activating first household alphabetically (E2E test household with 0 members) instead of Seattle Parsons household with 4 members
+- Agent factory code was correct - creates one instance per member
+- Household store decryption was correct - all 4 members properly decrypted
+- Fix 1: Set DEFAULT_HOUSEHOLD_ID=hh_fab2e400 in .env to explicitly activate Seattle Parsons household
+- Fix 2: Updated orchestrator to skip empty households when no DEFAULT_HOUSEHOLD_ID is set
+- Fix 3: Documented DEFAULT_HOUSEHOLD_ID in .env.example
+- Verification: Server logs show "Activated household 'Seattle Parsons' with 4 member(s)" and "Created 4 agent instance(s)"
+- Verification: API returns 4 companions: David T Parsons, Melanie Blair, Walker Parsons, Aidan Parsons
+- Commands run: node server/index.js → 4 agent instances created
+- Commands run: curl http://localhost:3001/api/companions | jq 'length' → 4
+- Evidence: server/orchestrator/orchestrator.js (_resolveInitialHouseholdId now skips empty households)
+- Evidence: .env (DEFAULT_HOUSEHOLD_ID=hh_fab2e400)
+- Evidence: .env.example (documented DEFAULT_HOUSEHOLD_ID)

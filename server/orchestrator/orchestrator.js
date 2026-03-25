@@ -157,6 +157,14 @@ export class Orchestrator {
     if (households.length === 0) {
       throw new Error('No households found in household store');
     }
+    // Skip empty households when selecting default
+    const nonEmptyHousehold = households.find(h => h.member_count > 0);
+    if (nonEmptyHousehold) {
+      console.log(`[orchestrator] Selected first non-empty household: ${nonEmptyHousehold.household_id}`);
+      return nonEmptyHousehold.household_id;
+    }
+    // Fall back to first household if all are empty
+    console.warn('[orchestrator] All households are empty, using first household');
     return households[0].household_id;
   }
 
