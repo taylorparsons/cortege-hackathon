@@ -129,4 +129,22 @@ describe('BrokerScanStore', () => {
     const result = store.dismissAssociate('hh_001', 'assoc_nonexistent');
     assert.equal(result, false);
   });
+
+  test('stores mode in scan history', () => {
+    store.updateBrokerStatus('hh_test', 'mem_test', 'spokeo', 'not_found', { mode: 'headed' });
+    
+    const scans = store.getMemberScans('hh_test', 'mem_test');
+    assert.equal(scans.brokers.spokeo.last_scan_mode, 'headed');
+    assert.ok(scans.brokers.spokeo.scan_history);
+    assert.equal(scans.brokers.spokeo.scan_history.length, 1);
+    assert.equal(scans.brokers.spokeo.scan_history[0].mode, 'headed');
+  });
+
+  test('defaults to headless when mode not provided', () => {
+    store.updateBrokerStatus('hh_test', 'mem_test', 'spokeo', 'not_found', {});
+    
+    const scans = store.getMemberScans('hh_test', 'mem_test');
+    assert.equal(scans.brokers.spokeo.last_scan_mode, 'headless');
+    assert.equal(scans.brokers.spokeo.scan_history[0].mode, 'headless');
+  });
 });

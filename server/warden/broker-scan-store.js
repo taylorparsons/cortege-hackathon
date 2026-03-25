@@ -150,6 +150,8 @@ export class BrokerScanStore {
       removal_requested: null,
       removal_confirmed: null,
       last_checked: null,
+      last_scan_mode: null,
+      scan_history: [],
       attempts: 0,
       error: null,
     };
@@ -159,6 +161,7 @@ export class BrokerScanStore {
       ...extra,
       status,
       last_checked: now,
+      last_scan_mode: extra.mode || 'headless',  // Track mode
     };
 
     if (status === 'listed' && !updated.first_found) {
@@ -170,6 +173,16 @@ export class BrokerScanStore {
     if (status === 'removal_confirmed' && !updated.removal_confirmed) {
       updated.removal_confirmed = now;
     }
+
+    // Add to scan history
+    if (!updated.scan_history) {
+      updated.scan_history = [];
+    }
+    updated.scan_history.push({
+      timestamp: now,
+      status,
+      mode: extra.mode || 'headless',
+    });
 
     member.brokers[brokerId] = updated;
     this._recalcAggregate(doc);
