@@ -10,6 +10,7 @@ Base URL: `http://localhost:3001`
 - [Agents](#agents)
 - [Household Management](#household-management)
 - [Location Management](#location-management)
+- [WARDEN (Data Broker Removal)](#warden-data-broker-removal)
 - [Manual Event Injection](#manual-event-injection)
 - [Twilio Webhooks](#twilio-webhooks)
 - [WebSocket](#websocket)
@@ -436,6 +437,353 @@ Triggers agent factory hot-reload (reloads agent templates from disk).
 **Example:**
 ```bash
 curl -X POST http://localhost:3001/api/agents/reload
+```
+
+---
+
+## WARDEN (Data Broker Removal)
+
+WARDEN is CORTEGE's automated data broker removal agent that scans data brokers for household member PII and initiates opt-out requests.
+
+### POST /api/warden/scan
+
+Trigger an immediate scan for a household. Optionally narrow by member or broker.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| household_id | string | No | Household ID (defaults to active household) |
+| member_id | string | No | Specific member to scan |
+| broker_id | string | No | Specific broker to scan |
+
+**Response:** `200 OK`
+```json
+{
+  "queued": true,
+  "jobs": 44
+}
+```
+
+**Example:**
+```bash
+# Scan all members across all brokers
+curl -X POST http://localhost:3001/api/warden/scan \
+  -H "Content-Type: application/json" \
+  -d '{"household_id":"hh_fab2e400"}'
+
+# Scan specific member and broker
+curl -X POST http://localhost:3001/api/warden/scan \
+  -H "Content-Type: application/json" \
+  -d '{"household_id":"hh_fab2e400","member_id":"mem_123","broker_id":"spokeo"}'
+```
+
+---
+
+### POST /api/warden/scan/headed
+
+Trigger a headed (visible browser) scan for a specific member and broker. Use this when a broker requires manual CAPTCHA resolution.
+
+**Request Body:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| household_id | string | Yes | Household ID |
+| member_id | string | Yes | Member ID to scan |
+| broker_id | string | Yes | Broker ID to scan |
+
+**Response:** `200 OK`
+```json
+{
+  "queued": true,
+  "jobs": 1,
+  "message": "Headed scan queued. Browser will open shortly."
+}
+```
+
+**Error Responses:**
+- `400`: Missing required fields
+- `404`: Household, member, or broker not found
+- `500`: Failed to queue scan
+- `503`: WARDEN not enabled
+
+**Example:**
+```bash
+curl -X POST http://localhost:3001/api/warden/scan/headed \
+  -H "Content-Type: application/json" \
+  -d '{
+    "household_id": "hh_fab2e400",
+    "member_id": "mem_123",
+    "broker_id": "spokeo"
+  }'
+```
+
+**Use Cases:**
+- Brokers with Cloudflare bot protection (Spokeo, CyberBackgroundChecks)
+- Manual CAPTCHA resolution required
+- Debugging broker automation issues
+
+---
+
+### GET /api/warden/brokers
+
+List all known data brokers.
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": "spokeo",
+    "name": "Spokeo",
+    "opt_out_url": "https://www.spokeo.com/optout",
+    "requires_pii": ["name", "city", "state"],
+    "requires_headed_mode": true,
+    "verification_method": "email"
+  },
+  {
+    "id": "whitepages",
+    "name": "WhitePages",
+    "opt_out_url": "https://www.whitepages.com/suppression_requests",
+    "requires_pii": ["name", "phone"],
+    "requires_headed_mode": false,
+    "verification_method": "none"
+  }
+]
+```
+
+---
+
+### GET /api/warden/status/:householdId
+
+Get WARDEN scan status for a household.
+
+**Response:** `200 OK`
+```json
+{
+  "household_id": "hh_fab2e400",
+  "last_full_scan": "2026-03-25T12:00:00.000Z",
+  "next_scheduled_scan": "2026-03-26T12:00:00.000Z",
+  "aggregate": {
+    "total_brokers": 44,
+    "listed": 2,
+    "removal_pending": 1,
+    "removal_confirmed": 8,
+    "not_found": 33,
+    "captcha_timeout": 0,
+    "error": 0
+  },
+  "members": {
+    "mem_123": {
+      "brokers": {
+        "spokeo": {
+          "status": "not_found",
+          "last_checked": "2026-03-25T12:05:00.000Z",
+          "last_scan_mode": "headed",
+          "scan_history": [
+            {
+              "timestamp": "2026-03-25T12:05:00.000Z",
+              "status": "not_found",
+              "mode": "headed"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### GET /api/warden/status/:householdId/:memberId
+
+Get WARDEN scan status for a specific member.
+
+**Response:** `200 OK`
+```json
+{
+  "brokers": {
+    "spokeo": {
+      "status": "not_found",
+      "last_checked": "2026-03-25T12:05:00.000Z",
+      "last_scan_mode": "headed",
+      "first_found": null,
+      "removal_requested": null,
+      "removal_confirmed": null,
+      "scan_history": [
+        {
+          "timestamp": "2026-03-25T12:05:00.000Z",
+          "status": "not_found",
+          "mode": "headed"
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+### POST /api/warden/captcha/:sessionId/resolve
+
+Signal that a CAPTCHA has been resolved by the user.
+
+**Response:** `200 OK`
+```json
+{
+  "resolved": true
+}
+```
+
+**Error Responses:**
+- `404`: Session not found or expired
+
+---
+
+### GET /api/warden/associates/:householdId
+
+Get discovered associates for a household (people found on data broker sites who may be related).
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": "assoc_abc123",
+    "name": "Jane Doe",
+    "relationship": "relative",
+    "found_on": ["spokeo", "whitepages"],
+    "found_via_member": "mem_123",
+    "first_seen": "2026-03-25T12:05:00.000Z",
+    "status": "pending_review",
+    "dismissed": false
+  }
+]
+```
+
+---
+
+### POST /api/warden/associates/:id/dismiss
+
+Dismiss a discovered associate (mark as not relevant).
+
+**Response:** `200 OK`
+```json
+{
+  "dismissed": true
+}
+```
+
+---
+
+### WARDEN Configuration
+
+Configure WARDEN via environment variables in `.env`:
+
+```env
+# Enable or disable WARDEN entirely
+WARDEN_ENABLED=true
+
+# Cron schedule for automatic scans (default: daily at noon)
+WARDEN_SCAN_CRON=0 12 * * *
+
+# Minutes before a pending CAPTCHA session expires (default: 10)
+WARDEN_CAPTCHA_TIMEOUT_MINUTES=10
+
+# Maximum concurrent browser sessions (default: 2)
+WARDEN_MAX_CONCURRENT_SESSIONS=2
+
+# DEPRECATED: Use per-broker requires_headed_mode instead
+# Force all scans to use visible browser (headed mode)
+WARDEN_HEADED_MODE=false
+```
+
+---
+
+### WARDEN Browser Modes
+
+WARDEN supports two browser modes:
+
+**Headless Mode** (default):
+- Fully automated, no visible browser window
+- Faster execution
+- Works for most brokers
+
+**Headed Mode**:
+- Visible browser window
+- Required for CAPTCHA-protected brokers
+- User can manually resolve CAPTCHAs
+- Triggered automatically for brokers with `requires_headed_mode: true`
+- Can be manually triggered via `/api/warden/scan/headed`
+
+**Mode Resolution Priority:**
+1. User override (via `/api/warden/scan/headed` or `headed` parameter)
+2. Broker configuration (`requires_headed_mode` in broker definition)
+3. Global env var (`WARDEN_HEADED_MODE` - deprecated)
+4. Default (headless)
+
+---
+
+### WARDEN WebSocket Events
+
+WARDEN emits real-time events via WebSocket:
+
+**Scan Started:**
+```json
+{
+  "type": "warden:scan_started",
+  "data": {
+    "householdId": "hh_fab2e400",
+    "memberId": "mem_123",
+    "brokerId": "spokeo",
+    "mode": "headed"
+  }
+}
+```
+
+**Scan Completed:**
+```json
+{
+  "type": "warden:scan_completed",
+  "data": {
+    "householdId": "hh_fab2e400",
+    "memberId": "mem_123",
+    "brokerId": "spokeo",
+    "status": "not_found",
+    "mode": "headed"
+  }
+}
+```
+
+**CAPTCHA Required:**
+```json
+{
+  "type": "warden:captcha_required",
+  "data": {
+    "sessionId": "captcha_abc123",
+    "brokerId": "spokeo",
+    "brokerName": "Spokeo",
+    "memberId": "mem_123",
+    "householdId": "hh_fab2e400",
+    "screenshotBase64": "data:image/png;base64,...",
+    "optOutUrl": "https://www.spokeo.com/optout",
+    "expiresAt": "2026-03-25T12:15:00.000Z"
+  }
+}
+```
+
+**Associate Discovered:**
+```json
+{
+  "type": "warden:associate_discovered",
+  "data": {
+    "householdId": "hh_fab2e400",
+    "memberId": "mem_123",
+    "associate": {
+      "id": "assoc_abc123",
+      "name": "Jane Doe",
+      "relationship": "relative",
+      "found_on": ["spokeo"]
+    }
+  }
+}
 ```
 
 ---

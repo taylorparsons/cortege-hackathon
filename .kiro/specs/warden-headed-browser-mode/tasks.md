@@ -139,11 +139,11 @@ Document the new headed scan endpoint in API documentation.
 - Modify: `docs/API.md`
 
 **Acceptance:**
-- [ ] API.md includes POST /api/warden/scan/headed section
-- [ ] Documentation shows request body schema
-- [ ] Documentation shows success response format
-- [ ] Documentation shows error responses (400, 404, 500)
-- [ ] Documentation includes curl example
+- [x] API.md includes POST /api/warden/scan/headed section
+- [x] Documentation shows request body schema
+- [x] Documentation shows success response format
+- [x] Documentation shows error responses (400, 404, 500)
+- [x] Documentation includes curl example
 
 ---
 
