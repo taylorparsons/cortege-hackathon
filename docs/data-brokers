@@ -1,0 +1,339 @@
+# Building a low-compute agent to remove a US household from data brokers
+
+## Executive summary
+
+A practical “removal agent” for a typical US household is a workflow system, not a machine learning system: it keeps a structured inventory of household identifiers (names, phones, emails, addresses, prior addresses), drives broker-specific opt-out steps, records evidence, and rechecks for reappearance on a schedule. The hard parts are not compute, they are friction points such as CAPTCHAs, phone or email verification loops, changing opt-out URLs, and paywalls that hide whether a record is actually gone. citeturn33view1turn50view0turn22view1
+
+The most important US-specific development for minimizing compute is that residents of entity["state","California","us state"] can submit a single deletion request to hundreds of registered data brokers through the state-run Delete Request and Opt-out Platform (DROP). DROP is available to consumers and data brokers must begin processing DROP deletion requests starting August 1, 2026, with a requirement to retrieve and process consumer deletion lists at least every 45 days. citeturn15view1turn45view0turn29view1 This can replace a large portion of broker-by-broker automation for eligible households.
+
+For people-search sites that publish profiles, a low-compute strategy is to prioritize (a) high-visibility sites that appear in multiple “popular” lists, and (b) clusters where one suppression workflow affects multiple brands. One confirmed cluster is the PeopleConnect family (Intelius, US Search, TruthFinder, Instant Checkmate), where opting out routes through a common suppression workflow that includes email and phone code verification and lets the user suppress matching records. citeturn22view1turn25view0turn34view0turn33view0
+
+The recommended architecture is a small local scheduler (cron) plus a light state machine backed by an encrypted SQLite database. It should default to HTTP form submissions and email parsing, and only escalate to a real browser session when a CAPTCHA or JavaScript-only form blocks progress. This keeps compute and energy use low because most runs are short, mostly idle I/O, and do not require long-lived headless browsers.
+
+Unspecified details that affect an implementation include: your state of residence (DROP eligibility), number of household members, name changes (maiden names), number of prior addresses, and whether you will use one shared “opt-out inbox” email address for the whole household. citeturn18view2turn22view1
+
+This report incorporates the linkage-mapping and “removal leverage” framing from your provided job specification. fileciteturn0file0
+
+## Legal basis and practical opt-out rights in the US
+
+### State privacy rights and data broker laws
+
+US opt-outs are driven mainly by state privacy laws and broker-specific “do not sell/share” or “remove my info” mechanisms. The broadest consumer-facing rights are illustrated by the entity["organization","California Department of Justice","state attorney general office"] summary of the California Consumer Privacy Act (CCPA): the rights to know, delete, opt out of sale or sharing, correct, and limit certain uses of sensitive personal information, plus non-discrimination for exercising rights. citeturn46view0
+
+Several states require data broker registration, which improves discoverability of brokers and their privacy contacts. For example, entity["state","Oregon","us state"] requires data broker registration and defines “brokered personal data” in a way that explicitly includes data about members of an Oregon resident’s “immediate family or household,” including names and addresses. citeturn35view0 entity["state","Texas","us state"] (through the Texas Data Broker Act) requires registered data brokers to post notices, register, and maintain a comprehensive information security program, with the Texas Secretary of State maintaining a central registry. citeturn35view1turn35view2
+
+entity["organization","California Privacy Protection Agency","state privacy regulator"] now operates a state-hosted deletion and opt-out platform (DROP). DROP allows California residents to submit one deletion request to all active and registered data brokers that are required to process it. citeturn15view0turn15view1
+
+### DROP and why it matters for a low-compute agent
+
+DROP has design features that are relevant to an agent builder because they establish a model for privacy-preserving matching and operational efficiency. The state documentation describes that consumers can submit basic identifiers (name, DOB, ZIP, email, phone) and optionally other identifiers, and that submitted identifiers are hashed so data brokers can match without seeing the original values. citeturn18view2turn18view3turn29view0
+
+The rule text for the “accessible deletion mechanism” further specifies: (a) a “consumer deletion list” contains hashed consumer identifiers and the hashing algorithm used, (b) data brokers must access DROP at least once every 45 calendar days, and (c) subsequent downloads contain only new or amended requests after the last download, which is an incremental update model. citeturn29view0turn29view1
+
+If you are building an agent for your own household, the key consequence is simple: if you are a California resident, you can shift much of the work from “submit dozens of opt-out forms” to “submit one DROP request and track its status,” then focus your compute on a smaller set of public people-search sites and non-covered brokers. citeturn15view1turn18view2turn22view3
+
+### Obstacles and why human-in-the-loop is normal
+
+A recent entity["organization","Joint Economic Committee","us congress committee"] minority report describes practices that reduce opt-out discoverability, including reports of brokers using “no index” instructions that keep opt-out pages out of search results, which adds time and friction for consumers trying to exercise privacy rights. citeturn50view0turn50view1
+
+Independent academic measurement of people-search sites also finds that sites often separate “account data” tools from “public data” tools, impose identity verification steps or paywalls, and have inconsistent responses across users, which complicates automation and verification. citeturn33view0turn33view1
+
+## High-exposure broker landscape and leverage map
+
+### How this report prioritizes brokers by exposure risk
+
+This report prioritizes brokers based on exposure risk for a typical US household defined as: likelihood of appearing in common “people search” results, amount of personal data exposed (addresses, relatives, age/DOB), and impact of one removal action on multiple connected sites. Sites listed as “popular” by Experian and “most common” lists from BrandYourself are weighted up because they are more likely to be encountered by a casual searcher. citeturn22view1turn27view0
+
+### Connection and leverage signals that reduce work
+
+Several cross-site connections reduce the number of distinct workflows you need to run:
+
+- **PeopleConnect cluster (confirmed parent and shared tooling):** A published privacy policy for PeopleConnect describes the operator as The Control Group Media Company LLC, doing business as PeopleConnect, and lists Intelius, US Search, TruthFinder, and Instant Checkmate as sister sites with their own privacy policies and contact emails. citeturn25view0turn25view3 Academic measurement further reports that the “Public Data Tools” across Intelius, Instant Checkmate, TruthFinder and USSearch led to PeopleConnect as the parent company. citeturn33view0
+
+- **Whitepages and 411 linkage (observed and suspected):** Research observed that 411 redirected to parts of Whitepages’ privacy policy and grouped Whitepages and 411 together as connected. citeturn33view0turn33view2
+
+- **PeopleFinders linkage (suspected downstream effects):** The same research reports suspected connected behavior where successful removal from PeopleFinders corresponded with removals observed on TruePeopleSearch and FastPeopleSearch, and summarizes this in an appendix table as “suspected connected sites.” Treat this as a heuristic, not a guarantee, because it is observational and may change. citeturn33view1turn33view2
+
+- **BeenVerified and PeopleLooker linkage (observed response path):** The research reports that emailing PeopleLooker resulted in a response by BeenVerified, indicating an operational connection (shared response path). citeturn33view0turn33view2
+
+These linkages support a low-compute plan: start with the clusters and then mop up remaining high-exposure sites.
+
+## Comparison table of prioritized brokers
+
+The table below focuses on US-facing, high-exposure people-search brokers. “Exposure rank” is a practical priority order for a typical household, based on appearance in “popular/common broker” lists and linkage leverage, not a claim about absolute market share. citeturn22view1turn27view0turn33view2
+
+Compute cost is an estimate for client-side compute per run:
+- **A:** a few HTTP requests plus email parsing, no browser.
+- **B:** browser session needed due to CAPTCHA or heavy JavaScript.
+- **C:** multi-step or paywalled verification that tends to require repeated manual interaction.
+
+| Broker | Exposure rank | Opt-out method | Automation difficulty | Required documents or proofs | Rate limits and friction points | Estimated compute cost |
+|---|---:|---|---|---|---|---|
+| entity["company","PeopleConnect","people-search parent company"] (suppression workflow for multiple brands) | 1 | Central suppression workflow with email link verification, full street address required, then email and phone codes, then “visibility setting” to suppress matching records. citeturn34view0turn25view0turn33view0 | High, multi-step verification and brand-specific matching UI; third-party agents may be refused. citeturn34view0turn33view1 | Email access, phone access, full street address. citeturn34view0 | Verification link must be used within 15 minutes; requires email code and phone code. citeturn34view0 | B |
+| entity["company","Intelius","people search site"] | 2 | Routed through PeopleConnect suppression workflow (see PeopleConnect row). citeturn22view1turn33view2turn34view0 | High, same as PeopleConnect. citeturn34view0 | Same as PeopleConnect. citeturn34view0 | Same as PeopleConnect. citeturn34view0 | B |
+| entity["company","TruthFinder","people search site"] | 3 | Routed through PeopleConnect suppression workflow (see PeopleConnect row). citeturn25view0turn34view0turn33view2 | High. citeturn34view0 | Same as PeopleConnect. citeturn34view0 | Same as PeopleConnect. citeturn34view0 | B |
+| entity["company","Instant Checkmate","people search site"] | 4 | Routed through PeopleConnect suppression workflow (see PeopleConnect row). citeturn25view0turn34view0turn33view2 | High. citeturn34view0 | Same as PeopleConnect. citeturn34view0 | Same as PeopleConnect. citeturn34view0 | B |
+| entity["company","US Search","people search site"] | 5 | Routed through PeopleConnect suppression workflow (see PeopleConnect row). citeturn25view0turn34view0turn33view2 | High. citeturn34view0 | Same as PeopleConnect. citeturn34view0 | Same as PeopleConnect. citeturn34view0 | B |
+| entity["company","Whitepages","people search site"] | 6 | Opt-out requires phone verification via automated call code; some guidance notes separate “premium” listings may behave differently and recommends double-checking. citeturn27view1turn33view2 | High, due to phone loop and frequent anti-bot friction. citeturn27view1turn33view1 | Phone access; likely requires entering a code from an automated call. citeturn27view1 | Phone call and code entry are required in some flows. citeturn27view1 | B |
+| entity["company","411.com","directory site"] | 7 | Often treated as linked to Whitepages, with removal attributed to Whitepages removal in observational research. citeturn33view2turn33view0 | High if it follows Whitepages flow. citeturn33view2turn27view1 | Likely phone verification via Whitepages flow. citeturn27view1turn33view2 | Same friction as Whitepages if linked. citeturn33view2turn27view1 | B |
+| entity["company","Spokeo","people search site"] | 8 | Web opt-out expects the profile URL and email confirmation; notes also report that “Right-to-Know” tooling may be account-scoped, which can complicate rights requests. citeturn27view1turn33view0 | Medium to high, due to changing flows and potential anti-bot. citeturn33view0turn50view1 | Email access. citeturn27view1 | Requires clicking a confirmation link sent by email. citeturn27view1 | A to B |
+| entity["company","BeenVerified","people search site"] | 9 | Removal commonly uses a site workflow; academic measurement reports identity verification failures tied to address mismatches and that additional info may be requested by support for access requests. citeturn33view0turn33view1turn22view1 | High, because verification can vary by user and paywalls can block verification of success. citeturn33view1 | Often email, sometimes address matching for verification in practice. citeturn33view0 | Paywall makes it hard to confirm removal for common names; verification outcomes can be inconsistent. citeturn33view1turn33view0 | B |
+| entity["company","PeopleFinders","people search site"] | 10 | High-exposure “popular” people-search site; observational research flags suspected connected removals to other sites, but treat as probabilistic. citeturn22view1turn33view2 | Medium to high, varies by flow and anti-bot. citeturn33view0turn50view1 | Typically email and identifying details, exact requirements vary. citeturn33view0 | Potential CAPTCHA and inconsistent outcomes reported in academic measurement. citeturn33view0 | B |
+| entity["company","FastPeopleSearch","people search site"] | 11 | Removal can require CAPTCHA solving; treat as likely manual. citeturn27view1turn33view2 | Medium, CAPTCHA-driven. citeturn27view1 | Often email plus CAPTCHA; details vary. citeturn27view1turn33view2 | CAPTCHA is a common blocker. citeturn27view1 | B |
+| entity["company","TruePeopleSearch","people search site"] | 12 | Removal commonly uses email plus CAPTCHA (often hCaptcha) and an email completion link. citeturn51search9turn27view1turn33view2 | Medium, CAPTCHA-driven. citeturn51search9turn27view1 | Email access; CAPTCHA completion. citeturn51search9 | hCaptcha plus email completion step. citeturn51search9 | B |
+| entity["company","FamilyTreeNow","genealogy people search site"] | 13 | Dedicated opt-out tool described as a multi-step process. citeturn47search17turn22view1turn27view0 | Medium, usually form-driven. citeturn47search17 | Typically identifying details; may not require government ID. citeturn47search17 | Rechecks are needed because reappearance can happen over time when sources refresh. citeturn22view1 | A to B |
+| entity["company","PeekYou","people search site"] | 14 | Opt-out is possible but profiles can reappear; ongoing monitoring is needed. citeturn47search0turn22view1 | Medium. citeturn47search0 | Often email plus identifying details; exact requirements vary. citeturn47search0 | Reappearance risk is explicitly noted in opt-out guidance. citeturn47search0turn22view1 | A to B |
+| entity["company","Nuwber","people search site"] | 15 | Removal commonly uses the profile URL and an email confirmation step. citeturn51search0turn33view1turn22view1 | Medium, requires profile discovery plus verification. citeturn51search0turn33view1 | Email access; profile URL. citeturn51search0 | Verification outcomes can differ when records are stale, which can cause mismatches. citeturn33view1 | A to B |
+| entity["company","ThatsThem","people search site"] | 16 | Copy listing details, submit an opt-out form, complete CAPTCHA; listings can return, so periodic rechecks matter. citeturn51search1turn51search12turn27view0 | Medium, CAPTCHA-driven and record-by-record. citeturn51search12 | CAPTCHA plus exact record-match details. citeturn51search12 | CAPTCHA and repeat submissions for multiple listings; re-listing over time is noted in guidance. citeturn51search1turn22view1 | B |
+
+Notes on scope limits:
+- Some brokers are “data brokers” for marketing or B2B enrichment but do not expose consumer profiles publicly. They matter for data sale and reuse, and DROP is designed to cover many of them when eligible. citeturn15view0turn18view3turn45view0
+- The broker domains above often deploy anti-bot measures. In practice, that pushes an agent design toward assisted flows rather than unattended scraping. citeturn33view1turn50view1
+
+## Low-compute architecture for automated or assisted opt-outs
+
+### Design goals and constraints
+
+The core objective is automated or assisted opt-outs and monitoring with minimal compute and energy. That means:
+
+- Prefer incremental, low-bandwidth workflows over continuous scanning.
+- Store the minimum personal data needed to complete opt-outs and prove completion.
+- Avoid training or running heavy models.
+- Treat CAPTCHAs and phone verification as “explicit human checkpoints,” not automation targets, because bypassing them is often disallowed and tends to be brittle. citeturn50view1turn34view0turn33view1
+
+### Workflow overview
+
+```mermaid
+flowchart TD
+  A[Household identifier inventory] --> B[Broker queue and priority scorer]
+  B --> C{Eligible for state portal?}
+  C -->|Yes| D[Submit state deletion request<br/>store request ID and timestamp]
+  C -->|No| E[Run broker-specific opt-out module]
+  E --> F{Human checkpoint needed?}
+  F -->|CAPTCHA or phone code| G[Notify user, open task with instructions]
+  F -->|No| H[Submit request, store confirmation artifacts]
+  G --> H
+  D --> I[Periodic status check]
+  H --> J[Verification and monitoring checks]
+  I --> K[Alerting and evidence log]
+  J --> K
+  K --> L[Retry queue with backoff and change detection]
+```
+
+This diagram separates three phases:
+1) opt-out submission, 2) verification, 3) reappearance monitoring.
+
+It also creates a clean “escape hatch” for human action when a CAPTCHA, an email click, or a phone code is required. citeturn34view0turn51search9turn27view1
+
+### Data model and storage needs
+
+A low-compute agent mostly needs a small database and an encrypted document store:
+
+- **SQLite database (encrypted at rest):**
+  - Household members (names, alias names, DOB month/year if used, phones, emails, addresses, prior addresses).
+  - Broker modules (opt-out method type, required fields, last-known URL template, difficulty tier).
+  - Tasks and state transitions (NEW, WAITING_EMAIL, WAITING_PHONE, SUBMITTED, CONFIRMED, NEEDS_RECHECK, FAILED).
+  - Evidence pointers (hash of HTML snapshot, hash of email subject/body, confirmation timestamps).
+
+- **Encrypted “evidence vault” directory (optional, minimize contents):**
+  - Redacted screenshots of removal confirmations.
+  - Copies of emails that confirm removal or suppression.
+  - Do not store driver’s licenses unless a broker requires it, and even then store locally, encrypted, and delete when no longer needed.
+
+This matches how DROP itself emphasizes encryption and hashing to reduce exposure risk, and it is a good design pattern even outside DROP. citeturn18view3turn29view0
+
+### Scheduling for minimal compute
+
+A typical schedule that balances reappearance risk and compute:
+
+- **Weekly:** process “human checkpoint” tasks that are pending (email clicks, phone codes). This is low compute because it mostly generates notifications and waits for the user. citeturn34view0turn51search9turn27view1
+- **Monthly:** recheck the highest exposure sites (top of the table) for each adult, because reappearance is common over time when brokers refresh data sources. citeturn22view1turn47search0turn51search1
+- **Quarterly:** re-run the full high-exposure list and look for new variants (old addresses, name variants). Experian explicitly recommends rechecking “every few months” because data can reappear and new sites appear. citeturn22view1
+- **If using DROP:** store DROP ID and check the DROP status page occasionally, with the understanding that the status will not change until brokers begin processing (August 2026) and that statuses include deleted, exempted, opted-out, and record not found. citeturn18view2turn45view0turn29view3
+
+### Retry, backoff, and change detection
+
+A low-compute agent should treat broker modules as unstable interfaces:
+
+- Use exponential backoff on network failures.
+- Use “URL fingerprinting” to detect opt-out flow changes: store the last successful opt-out page title hash and key-field names, and flag when they change.
+- Keep a per-broker minimum interval between submissions to reduce lockouts and reduce load on broker infrastructure.
+
+This aligns with public reporting that opt-out pages can be intentionally hard to find and can change over time, so the agent should expect breakage and surface it quickly. citeturn50view1turn22view1
+
+## Lightweight implementation patterns and snippets
+
+The snippets below are examples of low-compute building blocks. They avoid heavy browser automation by default, and they are structured so that a browser is only used when the system flags a human checkpoint.
+
+### Cron-based scheduling
+
+```sh
+# Run the orchestrator daily at 02:15 local time, log to a file.
+15 2 * * * /usr/bin/python3 /opt/removal_agent/run.py >> /var/log/removal_agent.log 2>&1
+```
+
+### Minimal Python task runner with backoff
+
+```python
+import time
+import random
+import sqlite3
+from dataclasses import dataclass
+
+@dataclass
+class Task:
+    task_id: int
+    broker_key: str
+    state: str
+    attempts: int
+    next_run_epoch: int
+
+def backoff_seconds(attempt: int) -> int:
+    # Exponential + jitter, capped. Low compute, avoids tight retry loops.
+    base = min(3600, 2 ** attempt)
+    return base + random.randint(0, 30)
+
+def fetch_due_tasks(db_path: str) -> list[Task]:
+    now = int(time.time())
+    with sqlite3.connect(db_path) as cx:
+        rows = cx.execute(
+            "SELECT task_id, broker_key, state, attempts, next_run_epoch "
+            "FROM tasks WHERE next_run_epoch <= ? AND state NOT IN ('DONE')",
+            (now,),
+        ).fetchall()
+    return [Task(*r) for r in rows]
+
+def mark_retry(db_path: str, task: Task, reason: str) -> None:
+    delay = backoff_seconds(task.attempts + 1)
+    with sqlite3.connect(db_path) as cx:
+        cx.execute(
+            "UPDATE tasks SET attempts = attempts + 1, next_run_epoch = ?, last_error = ? "
+            "WHERE task_id = ?",
+            (int(time.time()) + delay, reason[:500], task.task_id),
+        )
+
+def mark_human_checkpoint(db_path: str, task: Task, checkpoint: str) -> None:
+    with sqlite3.connect(db_path) as cx:
+        cx.execute(
+            "UPDATE tasks SET state = ?, next_run_epoch = ? WHERE task_id = ?",
+            (checkpoint, int(time.time()) + 3600, task.task_id),
+        )
+
+# In real code, dispatch_task() calls a broker module that either:
+# - submits a form (HTTP), or
+# - returns HUMAN_CAPTCHA / HUMAN_PHONE / HUMAN_EMAIL
+```
+
+### Email verification handling
+
+Many opt-out flows require a “click this link to confirm” email. For low compute, parse a dedicated mailbox and extract links, then notify the user to click. A safe default is to never auto-click removal links; just surface them.
+
+```python
+import imaplib
+import email
+import re
+
+CONFIRM_LINK_RE = re.compile(r"https?://[^\s>]+", re.IGNORECASE)
+
+def find_recent_confirmation_links(
+    host: str, user: str, password: str, folder: str = "INBOX", limit: int = 50
+) -> list[str]:
+    links: list[str] = []
+    with imaplib.IMAP4_SSL(host) as imap:
+        imap.login(user, password)
+        imap.select(folder)
+        typ, data = imap.search(None, "ALL")
+        msg_ids = data[0].split()[-limit:]
+        for msg_id in reversed(msg_ids):
+            typ, msg_data = imap.fetch(msg_id, "(RFC822)")
+            raw = msg_data[0][1]
+            msg = email.message_from_bytes(raw)
+            # Look at plain text parts only to keep parsing cheap.
+            if msg.is_multipart():
+                parts = [p for p in msg.walk() if p.get_content_type() == "text/plain"]
+            else:
+                parts = [msg]
+            for p in parts:
+                body = p.get_payload(decode=True) or b""
+                body_text = body.decode(errors="ignore")
+                links.extend(CONFIRM_LINK_RE.findall(body_text))
+    return links
+```
+
+If you do want “assisted automation,” the agent can open a local HTML page listing pending confirmation links, and you click them in your browser session.
+
+### CAPTCHA, phone verification, and why the agent should not bypass them
+
+Many of the prioritized brokers rely on CAPTCHAs (including hCaptcha) and phone verification to gate removals. citeturn51search9turn51search12turn27view1turn34view0 A low-compute agent should treat these as explicit checkpoints:
+
+- Detect the checkpoint (response contains “captcha,” hCaptcha framing, or a “send code” step).
+- Save the task state as HUMAN_CAPTCHA or HUMAN_PHONE.
+- Notify the user with the smallest possible instruction set and the record identifiers needed to complete the step.
+
+This is also the simplest way to stay inside legal and ethical constraints, because it avoids “circumvention” behavior and reduces the risk of account bans or terms violations. citeturn50view1turn33view1
+
+### Legal and ethical constraints for an opt-out agent
+
+Key constraints to bake into the design:
+
+- Only submit requests for yourself and household members you are authorized to act for.
+- Do not pretend to be someone else or fabricate identity proofs.
+- Do not try to defeat CAPTCHAs or anti-bot systems.
+- Rate-limit your own requests and avoid scraping at high volume, particularly where opt-out pages are intentionally hidden or fragile. citeturn50view1turn22view1
+
+For California residents using DROP, the state mechanism is explicitly designed for deletion requests and for hashed matching, which is preferable to building your own large-scale matching system. citeturn18view3turn29view0turn45view0
+
+## Monitoring strategy, alerting, and maintenance plan
+
+### Verification and reappearance monitoring
+
+Verification should be staged because many workflows do not give immediate clarity:
+
+- **Short-term verification (days):** after submission, wait a week and re-search. Experian suggests checking in the future and notes that removal is an ongoing process. citeturn22view1
+- **Medium-term verification (months):** recheck every few months, because brokers refresh databases and new public records or reseller updates can republish a profile. citeturn22view1turn51search1turn47search0
+- **Evidence realism:** academic work highlights that paywalls can make it hard to confirm success, and that making a profile “private” may simply make it inaccessible rather than deleted. citeturn33view1
+
+A low-compute heuristic that works well in practice is “stable URL monitoring”:
+- When an opt-out flow requires a profile URL, store that URL and periodically fetch it (or the lightweight equivalent) to see whether it resolves to a record page, a “not found,” or a “suppressed” page.
+- If a profile URL is not available due to dynamic search, store the minimal query tuple (name variant, city/state, prior address) and re-run the smallest search that the site allows, accepting that CAPTCHAs may force human review. citeturn27view1turn33view1turn51search9
+
+### Lightweight alerting
+
+For minimal compute, alerting can be a single daily digest email or a local notification:
+
+- Send a digest when a task enters HUMAN_* state, and include only what is needed: broker name, household member key, and the next action.
+- Send an alert when a previously-removed record reappears, and include the stored profile URL or the exact query tuple that produced the match.
+
+### Maintenance plan for changing broker flows
+
+Maintenance is unavoidable because opt-out processes change and are sometimes made harder to find. citeturn22view1turn50view1 A workable plan:
+
+- Keep each broker workflow as a separate module with its own tests (does page load, are required fields present).
+- Use “canary runs” monthly that only check if opt-out pages still match expected fingerprints (form fields, step count).
+- When a canary fails, downgrade automation for that broker to “assisted mode” until updated.
+
+### Where DROP fits a long-term plan
+
+If eligible, DROP becomes the “base layer” for ongoing deletion requests to registered brokers:
+
+- It uses hashed identifiers and is designed to prevent brokers from seeing raw identifiers inside the deletion lists. citeturn18view3turn29view0
+- It defines broker operational requirements like 45-day access cycles and status codes (record deleted, record opted out of sale, record exempted, record not found). citeturn29view1turn29view3
+- The state documentation states the DROP status page will not change until brokers begin processing requests in August 2026, so your agent should not waste compute on high-frequency status polling before then. citeturn18view2turn45view0
+
+## Risks, limitations, and operational tradeoffs
+
+### Risks
+
+Submitting opt-out requests can itself disclose additional identifiers to a broker. The PeopleConnect suppression flow described by DeleteMe requires full street address and verifies both email and phone via codes, which increases the amount of data you hand to the workflow even if the goal is suppression. citeturn34view0turn33view1 You can mitigate this by using a dedicated opt-out email inbox and by only providing fields required by the workflow, but you cannot remove this risk completely.
+
+A second risk is “false confidence.” Paywalls and inconsistent outcomes can make it difficult to verify that a record is gone or to confirm that it is suppressed for all viewers. citeturn33view1turn33view0
+
+### Limitations
+
+- Anti-bot systems and CAPTCHAs limit unattended automation, so a fully hands-free agent is not realistic for the highest-exposure brokers. citeturn51search9turn51search12turn27view1
+- Cross-site “connections” can change. The academic linkage findings explicitly label some relationships as “suspected,” so an agent should treat them as a prioritization heuristic, not a guarantee. citeturn33view2turn33view1
+- DROP eligibility is limited to California residents and uses residency verification; if your household is not eligible, your agent must rely more heavily on broker-by-broker workflows. citeturn18view2turn15view1
+
+### Maintenance cost
+
+A removal agent is closer to a small compliance tool than a crawler. It needs ongoing updates because opt-out links can be hidden or moved, and new sites appear over time. citeturn22view1turn50view1 The lowest-compute way to manage this is to plan for breakage: keep a curated “top set” of brokers, automate what is stable, and keep human-in-the-loop checklists for the rest.
