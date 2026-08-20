@@ -1246,3 +1246,36 @@ Acceptance / test:
 - OWASP Top 10 compliance verified
 - Privacy and data protection requirements met
 - Documentation: API.md, .env.example, IMPLEMENTATION_SUMMARY.md, WARDEN_SECURITY_AUDIT_2026-03-25.md
+
+## D-20260819-1922
+Date: 2026-08-19 19:22
+Inputs: [CR-20260819-1922](requests.md#cr-20260819-1922), [CR-20260819-1924](requests.md#cr-20260819-1924)
+PRD: [WARDEN Mobile App](PRD.md#warden-mobile-app-shipaton-spinoff-sources-cr-20260819-1922-d-20260819-1922-cr-20260819-1924)
+Spec: [`specs/20260819-warden-mobile-app/spec.md`](specs/20260819-warden-mobile-app/spec.md)
+
+Decision:
+Spin WARDEN's data-broker-scan engine out into a standalone Expo/React Native mobile app, extending the existing CORTEGE Node server rather than extracting or rebuilding it. MVP: free one-time broker-exposure scan, paid subscription unlocks continuous re-scan/monitoring (no automated removal filing or family plan tier in v1). Sign-in via Apple/Google only (no email/password or magic link). Single RevenueCat entitlement ("Monitoring", monthly + annual packages). On-device/local-model inference scoped to exposure summarization only (platform-native APIs — iOS Foundation Models, Android Gemini Nano — with a plain template-string fallback; no bundled cross-platform LLM). New `mobile/` Expo project added inside this repo, no separate repo or monorepo tooling.
+
+Rationale:
+- Built as a real product decision, not a hackathon scramble — user explicitly chose "real product, hackathon is opportunistic" over "Shipaton deadline drives scope"
+- Expo/React Native is the closest framework to the team's existing Vite/React stack and has first-party RevenueCat support
+- WARDEN's broker-scan crawling requires real browser automation (Playwright) against 44 external sites — this cannot run on-device, so it must stay server-side regardless of any local-model requirement
+- The user's "must run locally using a local model" constraint was ambiguous between (a) on-device scam/fraud call/text triage (a return to CORTEGE's original ANCHOR/SENTINEL/SCOUT concept) and (b) local summarization of already-fetched scan results; ai-pm ML-strategy analysis found (a) carries high false-negative risk on real fraud detection plus platform-fragmentation risk (Android on-device models are largely flagship-only) and reopens the "scope too broad" criticism from the prior judged round (see `docs/cortege-judge-feedback.md`) — user confirmed (b), the low-stakes option
+- Single-tier MVP (free scan / paid monitoring only) matches the already-narrow scope decision and keeps the RevenueCat paywall configuration simple
+- Apple/Google sign-in avoids building and owning email-sending infrastructure or password-reset flows, and Apple requires "Sign in with Apple" anyway if any other social login is offered on iOS
+- Extending the existing server (vs. extracting WARDEN into its own service, or building a new backend) reuses the working scan engine directly and matches the "real product but move fast" framing — there's minimal code to share between the Vite web app and an Expo app either way, so a second repo/monorepo tooling isn't justified
+
+Alternatives considered:
+- Flutter or native iOS/Android (rejected — no overlap with the team's existing React stack; native also doubles the build into two codebases)
+- Extract WARDEN into its own service, or build a new backend and port WARDEN logic in (rejected — real extraction/rebuild work with no v1 payoff; revisit if the mobile product outgrows the shared server)
+- Full concept in v1 (free scan + paid monitoring + automated removal + family plan) (rejected — largest scope option; deferred past v1 per the "scope too broad" lesson)
+- On-device scam/fraud call/text triage as the flagship local-model feature (rejected for v1 — high-severity ML risk per ai-pm analysis; a candidate for a deliberate future feature, not bolted onto the broker-scan app)
+- Email + magic link or email + password for auth (rejected — magic link needs email-sending infra to build/own; password needs reset-flow ownership; both convert worse on mobile than native social sign-in)
+- Bundled cross-platform local LLM (llama.cpp/GGUF or MLX) for summarization (rejected — adds app size and eval burden disproportionate to a feature that isn't privacy- or latency-critical, since broker listings are public data)
+
+Acceptance / test:
+- `mobile/` Expo project exists inside `cortege-hackathon`, builds and runs against the existing CORTEGE server
+- A free scan can be triggered from the mobile app and returns broker-exposure results sourced from the existing WARDEN engine
+- RevenueCat "Monitoring" entitlement gates continuous re-scan/monitoring; unentitled users see scan results only, no re-scan
+- Sign-in works via Apple on iOS and Google on Android with no email/password path present
+- Exposure summarization uses the platform-native on-device API where available and falls back to a template string where not, with no bundled model shipped in the app binary

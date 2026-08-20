@@ -862,3 +862,116 @@ Notes:
 - Audit result: NO CRITICAL ISSUES FOUND - approved for production
 - 2 minor recommendations: rate limiting on API endpoints, audit logging for headed mode scans
 - All 224 tests passing with full security coverage
+
+## CR-20260618-0001
+Date: 2026-06-18 00:01
+Source: chat
+
+Request (verbatim):
+create a md file in the root of the docs/ folder that has this table, the URL's for each and the steps to follow to remove your self from these sites so that scammer will know your family and social graph
+
+Notes:
+- "this table" = the data broker priority table previously shared in the conversation
+- Purpose: a human-readable opt-out guide for household members to manually remove themselves from data broker sites
+- Covers all 19 brokers in the priority research list plus brokers implemented in WARDEN
+- Each entry should include: search URL, opt-out URL, verification method, and manual removal steps
+
+## CR-20260618-0002
+Date: 2026-06-18 15:30
+Source: chat
+
+Request (verbatim):
+create a docx verision of data-broker-removal-guide.md so I can send out in email
+
+Notes:
+- Word-document export of the existing removal guide for emailing to household members
+- Generated via pandoc from the markdown source to keep both in sync
+
+## CR-20260618-0003
+Date: 2026-06-18 15:38
+Source: chat
+
+Request (verbatim):
+update the DOCX put the two most important sites at the top as in do now.
+
+Notes:
+- "two most important sites" = TruePeopleSearch and FastPeopleSearch (free, no account, full relative names + addresses = easiest social-graph exposure)
+- Add a prominent "DO NOW" section at the top of the guide, then regenerate the DOCX from the markdown source
+
+## CR-20260618-0004
+Date: 2026-06-18 16:00
+Source: chat
+
+Request (verbatim):
+update the docx so these narratives are numbers list not like this
+Steps: 1. Go to https://suppression.peoplefinders.com/ 2. Enter your first name, last name, and state. 3. Click Search. ... 13. Save. You should see a suppression confirmation screen.
+
+also do not using emdash use a regular dash
+
+Notes:
+- Root cause: "**Steps:**" label sits directly above the numbered list with no blank line, so pandoc renders the whole block as one run-on paragraph instead of an ordered list. Fix = insert a blank line after every "**Steps:**".
+- Replace em-dashes (and en-dashes in ranges) with regular hyphens throughout, then regenerate the DOCX.
+
+## CR-20260618-0005
+Date: 2026-06-18 17:05
+Source: chat
+
+Request (verbatim):
+update the docx file as well in the same way, add a note the true people offered a subscription to find more and it is not free, do not use it.
+
+Notes:
+- Add a caution to the TruePeopleSearch section: the site upsells a paid subscription to "find more" details; it is not free and should not be used. The removal flow itself stays free.
+- Regenerate docs/data-broker-removal-guide.docx after the edit.
+
+## CR-20260618-0006
+Date: 2026-06-18 17:25
+Source: chat
+
+Request (verbatim):
+response here with a little introduction that someone called Bill Blair asking if she has a daughter named Melanie Blair.  He said she got in an accident and then played your Mom's voice to him.  Grandma told him to hang up and he did and called your Mom.  I did a hackathon this past spring in which I gathered a lot of information on this scam.
+
+Flow is an email with two actions you can do today to prevent scammers from using your informaiton against our family.
+
+Notes:
+- Deliverable: a family email. Intro tells the Bill Blair / Melanie voice-clone scam story, then gives two do-today actions (TruePeopleSearch + FastPeopleSearch removal), with the full guide DOCX attached.
+- Assumption flagged to user: Melanie = Mom (Grandma's daughter, the cloned voice). Pending confirmation.
+- Voice: taylor-style-voice (first person, specific, no filler); regular dashes only, no em-dashes.
+
+## CR-20260819-1922
+Date: 2026-08-19 19:22
+Source: chat
+Decision: [D-20260819-1922](decisions.md#d-20260819-1922)
+Spec: [`specs/20260819-warden-mobile-app/spec.md`](specs/20260819-warden-mobile-app/spec.md)
+
+Request (verbatim):
+lets pivot to create an app for the warden
+
+Notes:
+- Follow-up to a discussion of whether the RevenueCat Shipaton 2026 hackathon (mobile app + RevenueCat subscription required) is a fit for CORTEGE — concluded no fit as-is since CORTEGE is a web app with no mobile shell or monetization layer
+- User wants to spin WARDEN's data-broker-scan engine out into a standalone mobile app; Shipaton treated as opportunistic, not the hard deadline (confirmed in brainstorming: "Real product, hackathon is opportunistic")
+- Brainstormed via superpowers:brainstorming (architectural path): Expo/React Native, extend the existing CORTEGE Node server rather than extract/rebuild, MVP = free one-time broker-exposure scan -> paid continuous re-scan/monitoring (no auto-removal or family plan in v1)
+
+## CR-20260819-1924
+Date: 2026-08-19 19:24
+Source: chat
+Decision: [D-20260819-1922](decisions.md#d-20260819-1922)
+Spec: [`specs/20260819-warden-mobile-app/spec.md`](specs/20260819-warden-mobile-app/spec.md)
+
+Request (verbatim):
+use ai-pm-agent-level4 skill to find the best fit and answer all questions
+
+Notes:
+- Context: mid-brainstorm, user had introduced a new constraint ("this needs to run locally on your phone using a local model in the app") that was resolved via the ai-pm-agent-level4 skill (aipm-ml-strategy-judgment + aipm-context-depth) to mean the exposure-summarization feature only, not broker-scan crawling (which must stay server-side) or a return to full on-device scam/fraud triage
+- Remaining open decisions (auth mechanism, local-model implementation approach, RevenueCat entitlement structure, repo layout) resolved via aipm-agentic-workflow: Apple/Google sign-in only, platform-native on-device summarization with template fallback, single "Monitoring" entitlement (monthly+annual), new `mobile/` Expo project inside this repo
+- AI-PM artifacts: `artifacts/ml_strategy_judgment/2026-08-20T02:06:50Z.json`, `artifacts/context_depth/2026-08-20T02:06:50Z.json`, `artifacts/context_depth/2026-08-20T02:12:49Z.json` (context_depth run twice — second under agentic_workflow), `artifacts/agentic_workflow/2026-08-20T02:12:49Z.json`
+
+## CR-20260819-1926
+Date: 2026-08-19 19:26
+Source: chat
+
+Request (verbatim):
+create the pitch
+
+Notes:
+- Full architectural design not yet given final sign-off by the user (brainstorming was interrupted by the ai-pm detour and the "create the pitch" request before an explicit "yes" on the whole picture)
+- Deliverable: a pitch document/deck for the WARDEN mobile app concept, informed by the locked design decisions above and the existing `.claude/skills/hackathon/references/demo-script-template.md` structure

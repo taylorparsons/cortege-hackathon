@@ -1,0 +1,28 @@
+{
+  "system_context": {
+    "mission": "Ship a real, sustainable mobile product spun out of WARDEN — a hackathon submission (Shipaton) is opportunistic, not the driver.",
+    "constraints": [
+      "Shipaton requires RevenueCat SDK integration on a supported mobile framework (native, React Native, Kotlin Multiplatform, Flutter, or Expo).",
+      "WARDEN's broker-scan crawling requires real browser automation (Playwright) against 44 external sites — cannot run on-device.",
+      "Prior judged round explicitly penalized CORTEGE for scope that was too broad and unclear."
+    ],
+    "governing_rules_locked_so_far": [
+      "Framework: Expo / React Native",
+      "Backend: extend the existing CORTEGE Node server rather than extracting or rebuilding",
+      "MVP scope: free scan + paid continuous re-scan/monitoring for broker exposure; automated removal filing and family plan tier deferred past v1"
+    ]
+  },
+  "user_context": {
+    "stakeholder": "Taylor Parsons — building this as a genuine product decision, not a scramble to a hackathon deadline. Comfortable with technical tradeoffs; prefers direct, concise collaboration over exhaustive option surveys.",
+    "new_signal": "Introduced a 'must run locally on the phone using a local model' requirement mid-brainstorm. Motivation not yet stated explicitly (likely privacy and/or differentiation) and target feature is ambiguous — could mean the broker-scan app's analysis layer, or a return to CORTEGE's original on-device scam/fraud triage concept (ANCHOR/SENTINEL/SCOUT)."
+  },
+  "tool_context": {
+    "execution_environment": "Expo / React Native mobile app talking to the existing CORTEGE Node server.",
+    "on_device_inference_assumptions": [
+      "iOS: Apple's on-device Foundation Models framework (newer OS/hardware only).",
+      "Android: Gemini Nano via AICore (largely flagship-only hardware; broad fragmentation risk).",
+      "Cross-platform alternative: bundled small model via llama.cpp/GGUF or MLX bridge, trading consistency for app size and eval burden."
+    ],
+    "open_question_for_brainstorm": "Which specific feature the local-model requirement applies to must be resolved before continuing the architectural design — it changes the backend/data-flow design materially depending on the answer."
+  }
+}

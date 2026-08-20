@@ -1849,3 +1849,71 @@ NOTES
 - Commands run: python3 .kiro/skills/git-workflow-automation/scripts/audit_repository_security.py → security audit completed
 - Feature status: COMPLETE - all requirements implemented, tested, documented, and security audited
 - Branch: feat/warden-agent (ready for merge to main)
+
+---
+
+Session: 2026-06-18 15:30
+Agent: Claude Code
+Model: claude-opus-4-8 (1M context)
+Skills: athena
+Feature: 20260618-data-broker-removal-guide
+Input: CR-20260618-0001, CR-20260618-0002, CR-20260618-0003, CR-20260618-0004, CR-20260618-0005, CR-20260618-0006
+Goal: Produce a human-readable data-broker opt-out guide (MD + emailable DOCX) and lead with the two highest-priority free social-graph sites.
+
+DONE
+- [2026-06-18 00:01] T-001: Create docs/data-broker-removal-guide.md - 19-broker priority table, per-broker opt-out URLs + step-by-step removal instructions, removal tracking checklist, California DROP note, "why this matters" section, sources. (Skills: athena)
+- [2026-06-18 15:30] T-002: Generate docs/data-broker-removal-guide.docx via pandoc for emailing to household members. (Skills: athena)
+- [2026-06-18 15:38] T-003: Add "DO NOW - Start With These Two Sites" section at top (TruePeopleSearch, FastPeopleSearch - free, no account, full relative names/addresses), then regenerate DOCX. (Skills: athena)
+- [2026-06-18 16:48] T-004: Fix run-on step narratives + remove em-dashes. Inserted a blank line after every "**Steps:**" label (18 blocks) so pandoc renders proper numbered lists instead of one run-on paragraph; replaced all em/en-dashes (50 em + 5 en) with regular hyphens. Regenerated and verified DOCX. (Skills: athena)
+- [2026-06-18 17:05] T-005: Add caution note to TruePeopleSearch section - site upsells a paid "find more" subscription that is not free; do not use it (removal/opt-out stays free). Regenerated and verified DOCX. (Skills: athena)
+- [2026-06-18 17:25] T-006: Draft family intro email (docs/data-broker-intro-email.md) - Bill Blair / Melanie voice-clone scam story + two do-today actions (TruePeopleSearch, FastPeopleSearch) with guide DOCX as attachment. Style validated (0 em-dashes). Open question: confirm Melanie = Mom. (Skills: athena, taylor-style-voice)
+
+IN PROGRESS
+None.
+
+NEXT
+None.
+
+NOTES
+- Source files (kept in sync): docs/data-broker-removal-guide.md (source of truth), docs/data-broker-removal-guide.docx (derived, 19K).
+- Broker data sourced from docs/data-brokers (priority research) and server/warden/brokers/*.json (11 broker definitions: search_url, opt_out_url, verification_method, steps).
+- "Two most important" rationale: TruePeopleSearch + FastPeopleSearch are fully free, need no account/payment, and expose full relative names + home addresses in seconds - the lowest-friction family/social-graph lookup, so highest scammer value and first to remove.
+- T-004 root cause: pandoc folds a numbered list into the preceding paragraph when there is no blank line between the "**Steps:**" label and the "1." item, producing a single run-on paragraph in the DOCX. Fix = blank line after every "**Steps:**". DO NOW lists were unaffected (already had a blank line before their list). Verified: docx→plain shows each step on its own numbered line; 0 em-dashes remain.
+- Free-vs-paywall family-exposure map established: fully free = TruePeopleSearch, FastPeopleSearch, FamilyTreeNow, CyberBackgroundChecks; partial = Whitepages, Radaris, Spokeo, MyLife; paywalled = BeenVerified, Intelius, TruthFinder, Instant Checkmate.
+- Commands run: pandoc docs/data-broker-removal-guide.md -o docs/data-broker-removal-guide.docx --from=markdown --to=docx --toc --toc-depth=2 -V geometry:margin=1in
+- Verification: pandoc docx→plain confirms "DO NOW" section at line 23, ahead of "Broker Priority Table".
+- pypandoc not installed; used pandoc CLI binary (/opt/homebrew/bin/pandoc) directly.
+- Branch: feat/warden-agent (docs only; not committed/pushed — no explicit request).
+
+---
+
+Session: 2026-08-19 19:22
+Agent: Claude Code
+Model: claude-sonnet-5
+Skills: athena, superpowers:brainstorming, ai-pm-agent-level4, hackathon
+Feature: 20260819-warden-mobile-app
+Input: CR-20260819-1922, CR-20260819-1924, CR-20260819-1926
+Decisions: D-20260819-1922
+Spec: docs/specs/20260819-warden-mobile-app/spec.md
+Tasks: docs/specs/20260819-warden-mobile-app/tasks.md
+Goal: Design and pitch a standalone WARDEN mobile app (Expo/RN + RevenueCat), spun out of CORTEGE, as a real product with the Shipaton hackathon as an opportunistic submission target.
+
+DONE
+- [2026-08-19 19:22] Evaluated RevenueCat Shipaton 2026 fit for CORTEGE as-is: poor fit (web app, no mobile shell, no subscription layer). (Skills: hackathon)
+- [2026-08-19 19:22] Brainstormed WARDEN mobile app design via superpowers:brainstorming (architectural path): Expo/RN, extend existing server, MVP = free scan + paid monitoring, Apple/Google auth, single RevenueCat entitlement, on-device summarization only, new mobile/ folder. (Skills: superpowers:brainstorming, ai-pm-agent-level4)
+
+IN PROGRESS
+None.
+
+NEXT
+- T-002: Confirm the full design with the user (explicit sign-off) before writing an implementation plan.
+- T-003: Write superpowers implementation plan (writing-plans skill) once design is confirmed.
+
+NOTES
+- [2026-08-19 19:35] T-001 DONE: pitch document created at docs/warden-mobile-pitch.md, validated against taylor-style-voice (0 issues after removing 2 em dashes).
+- Commands run: python3 ~/.claude/skills/taylor-style-voice/scripts/validate_style.py --file docs/warden-mobile-pitch.md -> 1 em-dash error, fixed, re-ran -> No style issues found.
+- Decisions: D-20260819-1922 — see docs/decisions.md for full rationale and alternatives considered
+- Risks / open questions: full design has not received explicit user sign-off (brainstorming was interrupted by an ai-pm detour and the "create the pitch" request); monthly/annual pricing for the "Monitoring" entitlement not yet set
+- Related artifacts (ai-pm-agent-level4, not ATHENA-tracked): artifacts/ml_strategy_judgment/2026-08-20T02:06:50Z.json, artifacts/context_depth/2026-08-20T02:06:50Z.json, artifacts/context_depth/2026-08-20T02:12:49Z.json, artifacts/agentic_workflow/2026-08-20T02:12:49Z.json, logs/traceability.jsonl
+- Related project skill created earlier this session: .claude/skills/hackathon/ (fit-check + submission-package workflow, informed by docs/cortege-judge-feedback.md)
+- Branch: feat/warden-agent (docs only so far; not committed — no explicit request)

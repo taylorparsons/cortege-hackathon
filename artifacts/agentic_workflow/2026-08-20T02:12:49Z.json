@@ -1,0 +1,60 @@
+{
+  "task_graph": [
+    {
+      "step_id": "auth-mechanism",
+      "objective": "Resolve sign-in method for the WARDEN mobile app, since it becomes the identity RevenueCat ties subscriptions to.",
+      "owner_role": "Founder/PM decision",
+      "dependencies": [],
+      "deliverable": "Decision: Sign in with Apple (iOS) + Sign in with Google (Android), no email/password path in v1.",
+      "success_criteria": "Zero-friction signup with no email-sending infrastructure to build/maintain. Satisfies Apple App Store policy (any third-party social login on iOS requires offering Sign in with Apple, so building Apple+Google directly avoids a later forced add). Standard pattern for subscription-conversion mobile apps — fewer signup dropoffs between 'see your exposure' and 'start free trial'. Trade-off accepted: one-time OAuth config per platform vs. magic-link email plumbing or password-reset ownership."
+    },
+    {
+      "step_id": "local-model-implementation",
+      "objective": "Decide how the on-device model for exposure summarization is implemented, given it was scoped as low-stakes/optional (not safety-critical).",
+      "owner_role": "Founder/PM decision",
+      "dependencies": [],
+      "deliverable": "Decision: use platform-native on-device APIs where available (iOS Foundation Models framework, Android Gemini Nano via AICore) with a plain template-string fallback (no model) everywhere else. Do not bundle a cross-platform LLM (e.g. GGUF via llama.cpp/MLX).",
+      "success_criteria": "Matches the earlier ML-strategy finding that this feature is optional and not privacy/latency-critical (broker listings are public data) — a bundled model would add app size and eval burden disproportionate to the feature's value. Template fallback means the feature always works, just with less natural phrasing on older/non-flagship devices."
+    },
+    {
+      "step_id": "revenuecat-entitlement-structure",
+      "objective": "Decide the subscription/paywall structure for RevenueCat given the locked MVP scope (free scan + paid continuous monitoring only; no auto-removal or family plan in v1).",
+      "owner_role": "Founder/PM decision",
+      "dependencies": ["auth-mechanism"],
+      "deliverable": "Decision: single entitlement ('Monitoring') with monthly and annual package options. Free tier = one-time scan, no re-scan. No additional entitlements/tiers in v1.",
+      "success_criteria": "Minimizes RevenueCat dashboard configuration and paywall UI complexity to match the already-locked single-tier MVP; family plan and auto-removal entitlements can be added later without restructuring the existing one."
+    },
+    {
+      "step_id": "repo-layout",
+      "objective": "Decide where the mobile app's code lives relative to the existing CORTEGE repo.",
+      "owner_role": "Founder/PM decision",
+      "dependencies": [],
+      "deliverable": "Decision: add a top-level mobile/ Expo project inside the existing cortege-hackathon repo (single repo, single deploy target for the shared server). No separate repo, no monorepo tooling (Turborepo/Nx).",
+      "success_criteria": "Consistent with the already-locked decision to extend the existing server rather than extract it. There's minimal code to share between the Vite/React web app and the Expo/RN app (at most types/constants), so multi-repo or workspace tooling overhead isn't justified."
+    }
+  ],
+  "agents": [
+    {
+      "role": "Founder/PM",
+      "owner": "Taylor",
+      "responsibilities": ["Final call on each decision point", "Prioritization of v1 scope vs. later tiers"],
+      "handoff_to_roles": ["Implementation (writing-plans/coder)"]
+    }
+  ],
+  "interventions": [
+    {
+      "trigger": "Apple/Google OAuth setup blocks progress (developer account, capability config)",
+      "risk_signal": "No working sign-in after initial setup attempt",
+      "response_action": "Fall back to email + magic link for internal testing only, keep Apple/Google as the v1 ship target",
+      "escalation_owner": "Founder/PM",
+      "recovery_steps": ["Verify Apple Developer Program + Google Cloud OAuth consent screen are provisioned", "Test with Expo AuthSession before writing app-side UI"]
+    },
+    {
+      "trigger": "On-device summarization API unavailable on target test devices",
+      "risk_signal": "Foundation Models / Gemini Nano checks return unsupported at runtime",
+      "response_action": "Ship template-string fallback as the default experience, treat native on-device summarization as progressive enhancement only",
+      "escalation_owner": "Founder/PM",
+      "recovery_steps": ["Confirm minimum OS/device requirements before writing platform-specific code", "Gate the native path behind a capability check, never assume availability"]
+    }
+  ]
+}

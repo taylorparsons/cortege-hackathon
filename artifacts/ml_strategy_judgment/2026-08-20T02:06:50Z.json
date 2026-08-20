@@ -1,0 +1,39 @@
+{
+  "ai_applicability": {
+    "broker_scan_crawling": "Not a fit for on-device/local-model inference. Visiting 44 external broker sites requires a real rendered browser session (JS execution, CAPTCHA handling) — Playwright-class automation. This must remain server-side regardless of the local-model requirement; a phone-local model has no role here beyond optionally summarizing results already fetched from the server.",
+    "scam_call_text_triage": "Strong fit. Input is short (call transcript excerpt / SMS text), output is a classification + risk score, the task is latency-sensitive (warning needed during/right after a call) and privacy-sensitive (call content ideally never leaves the device). This is the original ANCHOR/SENTINEL/SCOUT concept from CORTEGE's web app, scoped to a single on-device model.",
+    "exposure_summarization": "Low-stakes, optional fit. Turning already-fetched broker-scan JSON into a plain-language summary ('exposed on 6 of 44 sites') is nice-to-have for offline use and avoiding an API call, but broker listings are public data — not privacy-sensitive — so a server-side Claude call works equally well and is higher quality."
+  },
+  "risk_assessment": [
+    {
+      "risk": "On-device model quality gap on nuanced/novel scam patterns",
+      "severity": "High",
+      "note": "Small local models are materially weaker than a full Claude call at subtle fraud reasoning. False negatives on real fraud detection are the dangerous failure mode, not false positives."
+    },
+    {
+      "risk": "Platform fragmentation",
+      "severity": "Medium-High",
+      "note": "iOS on-device Foundation Models and Android Gemini Nano/AICore both require newer OS versions and, on Android, largely flagship-only hardware. A large share of the Android install base would get a degraded or absent feature."
+    },
+    {
+      "risk": "Scope creep back toward the full CORTEGE platform",
+      "severity": "Medium",
+      "note": "Reintroducing scam/fraud call analysis directly re-opens the 'scope too broad' criticism from the prior judged round if it's bolted onto the WARDEN broker-scan app rather than being a deliberate, separate product decision."
+    },
+    {
+      "risk": "Model maintenance and app size",
+      "severity": "Medium",
+      "note": "Bundled or downloaded model weights add app size, versioning, and evaluation burden beyond a typical CRUD mobile app."
+    },
+    {
+      "risk": "App store review friction",
+      "severity": "Medium",
+      "note": "On-device call/SMS analysis intersects with platform privacy and call-handling review (e.g. iOS CallKit/Call Directory extension limits) and can slow store approval."
+    }
+  ],
+  "alternatives": [
+    "Hybrid triage: on-device model does a fast first-pass ('does this look suspicious?'); ambiguous cases get an opt-in escalation to the cloud Claude call for deeper analysis. Bounds privacy exposure while keeping quality on hard cases.",
+    "Defer local-model entirely for v1: ship the already-scoped WARDEN broker-scan app (free scan + paid monitoring, server-side) as planned, and treat on-device scam detection as an explicit v2/separate product decision rather than blocking v1 on a harder ML problem.",
+    "Scope local-model to the low-stakes task only: use it for plain-language exposure summarization (where a wrong output isn't dangerous) and keep anything safety-critical (actual scam/fraud judgment) server-side with Claude."
+  ]
+}
